@@ -1,16 +1,31 @@
-# ai-challenge
-This repo will hold the code for the AI challenge
+# Pet Accessories Online Store Chatbot
 
-Because we will need a UI at some point if we go for the UI
+This project implements a **web service with a chatbot** for an online pet accessories store.  
+The chatbot answers product-related questions, but only registered and authenticated users can access it.
 
-We will need something like this
+## **Key Features**
 
+- User registration (`POST /users/register`).
+- Login with JWT authentication (`POST /users/login`).
+- Protected `/chat` endpoint for chatbot interaction.
+- Foundation to integrate a language model (LLM) or a knowledge base (simulated RAG).
+- Simple architecture with **Node.js + Express**.
+
+---
+
+## **Prerequisites**
+
+- Node.js >= 18
+- npm or yarn
+
+---
+
+## **Installation**
+
+```bash
+# Clone the repository
+git clone <repo-url>
+
+# Install dependencies
+npm install
 ```
-/
-  |__ api
-  |__ ui
-```
-
-The API project is the minimum required, so we should focus on that. The UI project could be on react or plain HTML it doesn't matter that much.
-
-

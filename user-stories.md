@@ -1,113 +1,90 @@
-# User Stories - Chatbot de Tienda Online de Accesorios de Mascotas
+# User Stories - Pet Accessories Online Store Chatbot
 
-## Historia 1: Registro de Usuario
-
-**Persona:**  
-Como **nuevo cliente** de la tienda online.
-
-**Historia:**  
-Quiero **crear una cuenta con mi email y contraseña**  
-Para **poder iniciar sesión y acceder al chatbot**.
-
-**Beneficio:**  
-Tendré una experiencia personalizada y segura para consultar mis pedidos.
-
-**Criterios de aceptación:**
-
-- Debo poder enviar mi email y contraseña para registrarme.
-- Recibir una respuesta confirmando el registro exitoso.
-- No puedo registrarme si el email ya existe.
-
-**Endpoint:**  
-`POST /users/register`
-
----
-
-## Historia 2: Inicio de Sesión
+## Story 1: Login
 
 **Persona:**  
-Como **usuario registrado**.
+As a **registered user**,
 
-**Historia:**  
-Quiero **iniciar sesión con mi email y contraseña**  
-Para **poder usar el chatbot con mi cuenta**.
+**Story:**  
+I want to **log in with my email and password**  
+So that I **can use the chatbot with my account**.
 
-**Beneficio:**  
-Asegura que solo usuarios registrados puedan acceder al servicio.
+**Benefit:**  
+It ensures that only registered users can access the service.
 
-**Criterios de aceptación:**
+**Acceptance Criteria:**
 
-- Puedo iniciar sesión con email y contraseña correctos.
-- Recibo un token de autenticación (JWT).
-- Recibo error si las credenciales no son correctas.
+- I can log in with correct email and password.
+- I receive an authentication token (JWT).
+- I get an error if the credentials are incorrect.
 
 **Endpoint:**  
 `POST /users/login`
 
 ---
 
-## Historia 3: Acceso al Chatbot
+## Story 2: Chatbot Access
 
 **Persona:**  
-Como **usuario autenticado**.
+As an **authenticated user**,
 
-**Historia:**  
-Quiero **enviar mensajes al chatbot**  
-Para **recibir ayuda con preguntas sobre los productos (disponibilidad, características, precios)**.
+**Story:**  
+I want to **send messages to the chatbot**  
+So that I **can get help with questions about the products (availability, features, prices)**.
 
-**Beneficio:**  
-Obtengo respuestas rápidas sin necesidad de contactar al soporte humano.
+**Benefit:**  
+I get quick answers without needing to contact human support.
 
-**Criterios de aceptación:**
+**Acceptance Criteria:**
 
-- Debo enviar un token válido para acceder al endpoint `/chat`.
-- Puedo enviar un mensaje y recibir una respuesta del chatbot.
-- Recibo error si no estoy autenticado.
+- I must send a valid token to access the `/chat` endpoint.
+- I can send a message and receive a response from the chatbot.
+- I get an error if I’m not authenticated.
 
 **Endpoint:**  
 `POST /chat`
 
 ---
 
-## Historia 4: Consulta de Productos en el Chatbot
+## Story 3: Product Queries via Chatbot
 
 **Persona:**  
-Como **usuario que busca productos para mascotas**.
+As a **user looking for pet accessories**,
 
-**Historia:**  
-Quiero **hacer preguntas sobre productos específicos (por ejemplo, correas, camas, juguetes)**  
-Para **decidir cuál comprar**.
+**Story:**  
+I want to **ask questions about specific products (e.g., leashes, beds, toys)**  
+So that I **can decide which product to buy**.
 
-**Beneficio:**  
-Me ayuda a encontrar el producto correcto rápidamente.
+**Benefit:**  
+It helps me quickly find the right product.
 
-**Criterios de aceptación:**
+**Acceptance Criteria:**
 
-- Puedo preguntar algo como “¿Tienen camas para perros grandes?”
-- El chatbot responde con información del catálogo (mock o KB).
-- Si el producto no está disponible, se indica que no hay stock.
+- I can ask something like “Do you have beds for large dogs?”
+- The chatbot responds with information from the catalog (mock or KB).
+- If the product is unavailable, it informs me about the out-of-stock status.
 
 **Endpoint:**  
 `POST /chat`
 
 ---
 
-## Historia 5: Seguridad de Sesión
+## Story 4: Session Security
 
 **Persona:**  
-Como **usuario autenticado**.
+As an **authenticated user**,
 
-**Historia:**  
-Quiero **que mi sesión esté protegida**  
-Para **asegurar que solo yo pueda acceder a mi información y al chat**.
+**Story:**  
+I want **my session to be protected**  
+So that I **can ensure only I can access my data and chat**.
 
-**Beneficio:**  
-Protege los datos de la cuenta y conversaciones.
+**Benefit:**  
+It protects account data and conversations.
 
-**Criterios de aceptación:**
+**Acceptance Criteria:**
 
-- El token expira después de un tiempo configurado (por ejemplo, 1h).
-- Intentar usar un token inválido o expirado devuelve un error 401.
+- The token expires after a configured time (e.g., 1h).
+- Using an invalid or expired token returns a 401 error.
 
 **Endpoint:**  
-`(Middleware para JWT en /chat)`
+`(JWT middleware on /chat)`
