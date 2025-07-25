@@ -29,3 +29,26 @@ git clone <repo-url>
 # Install dependencies
 npm install
 ```
+/
+  |__ api
+  |__ ui
+
+pet-accessories-chatbot/
+├── api/
+├────── src/
+│   ├────── routes/
+│   │   ├────── orders.js
+│   │   └────── chat.js
+│   ├────── controllers/
+│   ├────── services/
+│   └────── index.js
+├────── .env
+├────── .gitignore
+└────── README.md
+├────── package.json
+└────── README.md
+└── ui/
+
+```
+
+The API project is the minimum required, so we should focus on that. The UI project could be on react or plain HTML it doesn't matter that much.
