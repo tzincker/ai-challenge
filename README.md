@@ -7,8 +7,20 @@ We will need something like this
 
 ```
 /
-  |__ api
-  |__ ui
+  pet-accessories-chatbot/
+├── src/
+│   ├── api/
+│   │   ├── users.js
+│   │   └── chat.js
+│   ├── ui/
+│   │   └── chat.js
+│   ├── controllers/
+│   ├── services/
+│   └── app.js
+├── .env
+├── .gitignore
+├── package.json
+└── README.md
 ```
 
 The API project is the minimum required, so we should focus on that. The UI project could be on react or plain HTML it doesn't matter that much.
