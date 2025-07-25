@@ -1,6 +1,6 @@
 # User Stories - Pet Accessories Online Store Chatbot
 
-## Story 1: Login
+## Story 1: User Login
 
 **Persona:**  
 As a **registered user**,
@@ -10,13 +10,14 @@ I want to **log in with my email and password**
 So that I **can use the chatbot with my account**.
 
 **Benefit:**  
-It ensures that only registered users can access the service.
+It ensures that only valid users can access the chatbot service.
 
 **Acceptance Criteria:**
 
 - I can log in with correct email and password.
 - I receive an authentication token (JWT).
 - I get an error if the credentials are incorrect.
+- Users are static (no registration or database needed).
 
 **Endpoint:**  
 `POST /users/login`
