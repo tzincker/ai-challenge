@@ -1,9 +1,11 @@
-const express = require('express');
+const express = require("express");
+const cors = require("cors");
 const app = express();
 const port = 3000;
 
-const UserService = require('./services/UserService');
+const UserService = require("./services/UserService");
 
+app.use(cors());
 app.use(express.json());
 
 const userService = new UserService();
@@ -24,20 +26,23 @@ function authenticateToken(req, res, next) {
   next();
 }
 
-app.get('/', authenticateToken, (req, res) => {
-  res.send('Hello World!');
+app.get("/", authenticateToken, (req, res) => {
+  res.send("Hello World!");
 });
 
-app.post('/login', async (req, res) => {
+app.post("/login", async (req, res) => {
   const { username, password } = req.body;
-  const { accessToken, refreshToken } = await userService.login(username, password);
+  const { accessToken, refreshToken } = await userService.login(
+    username,
+    password
+  );
   if (accessToken === null) {
     return res.sendStatus(401);
   }
   res.json({ accessToken, refreshToken });
 });
 
-app.post('/token', async (req, res) => {
+app.post("/token", async (req, res) => {
   const { refreshToken } = req.body || {};
   if (!refreshToken) {
     return res.sendStatus(401);
@@ -58,8 +63,8 @@ app.delete("/logout", (req, res) => {
   return res.sendStatus(204);
 });
 
-app.post('/chat', (req, res) => {
-  res.send('this is chat!');
+app.post("/chat", (req, res) => {
+  res.send("this is chat!");
 });
 
 app.listen(port, () => {
