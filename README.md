@@ -19,7 +19,7 @@ require("crypto").randomBytes(64).toString("hex");
 
 This project implements a **web service with a chatbot** for an online pet accessories store.  
 The chatbot answers product-related questions, but only registered and authenticated users can access it.
-
+ 
 ## **Key Features**
 
 - User registration (`POST /users/register`).
