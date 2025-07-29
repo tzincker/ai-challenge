@@ -1,6 +1,6 @@
 let accessToken = null;
 let refreshToken = null;
-const API_BASE_URL = "http://localhost:3000";
+const API_BASE_URL = CONFIG.API_BASE_URL;
 
 // Ocultar chat al cargar
 document.addEventListener("DOMContentLoaded", () => {
