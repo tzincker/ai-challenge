@@ -123,4 +123,8 @@ jobs:
 
 ---
 
-¡Listo! Con estos pasos tu proyecto se desplegará automáticamente en Azure cada vez que hagas push a la rama `main`.
+## 8. Agregar el puerto en la WebApp
+IR a webapp: IACHALLENGE70
+Ir a setting:
+Ir a Environment variables
+Agregar WEBSITES_PORT y el puerto de escucha (3000) o el 8080
