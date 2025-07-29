@@ -45,6 +45,8 @@ git clone <repo-url>
 
 # Install dependencies
 npm install
+
+# Folder structure
 ```
 /
   |__ api
