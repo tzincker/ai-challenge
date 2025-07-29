@@ -44,6 +44,4 @@ jobs:
                         SALT_ROUNDS=${{ env.SALT_ROUNDS }}
 
       - name: Restart Azure Web App
-        run: az webapp restart \
-          --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-          --name IACHALLENGE70
+        run: az webapp restart --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name IACHALLENGE70
