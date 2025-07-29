@@ -29,15 +29,21 @@ jobs:
         run: |
           docker push iapocchallenge.azurecr.io/myapp:${{ github.sha }}
 
-      - name: Configure Azure Web App to use Docker image
+      - name: Configure Azure Web App to use Docker image and set environment variables
         run: |
           az webapp config container set \
-            --name IArg70Cluster \
+            --name IACHALLENGE70 \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
             --container-image-name iapocchallenge.azurecr.io/myapp:${{ github.sha }}
 
+          az webapp config appsettings set \
+            --name IACHALLENGE70 \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --settings ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }} \
+                        REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }} \
+                        SALT_ROUNDS=${{ env.SALT_ROUNDS }}
+
       - name: Restart Azure Web App
-        run: |
-          az webapp restart \
-            --name IArg70Cluster \
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }}
+        run: az webapp restart \
+          --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+          --name IACHALLENGE70
