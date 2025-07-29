@@ -34,7 +34,7 @@ jobs:
           az webapp config container set \
             --name IArg70Cluster \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --docker-custom-image-name iapocchallenge.azurecr.io/myapp:${{ github.sha }}
+            --container-image-name iapocchallenge.azurecr.io/myapp:${{ github.sha }}
 
       - name: Restart Azure Web App
         run: |
