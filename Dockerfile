@@ -1,14 +1,15 @@
-# Dockerfile
 FROM node:18
 
 WORKDIR /api
 
-COPY package*.json ./
+COPY api/package*.json ./
+
 RUN npm install
 
-COPY . .
+COPY api/src/ ./src/
+
+COPY ui/ ./ui/
 
 EXPOSE 3000
 
-CMD ["node", "index.js"]
-
+CMD ["node", "src/index.js"]
