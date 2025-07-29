@@ -1,5 +1,22 @@
 # Pet Accessories Online Store Chatbot
 
+## Run locally
+
+```bash
+node --env-file .env .\src\index.js
+```
+
+## Required environment variable
+
+ACCESS_TOKEN_SECRET
+
+### Generate a new access token secret
+
+Use the node console to execute the following command and then extract the value and use it on the environment.
+```javascript
+require("crypto").randomBytes(64).toString("hex");
+```
+
 This project implements a **web service with a chatbot** for an online pet accessories store.  
 The chatbot answers product-related questions, but only registered and authenticated users can access it.
 

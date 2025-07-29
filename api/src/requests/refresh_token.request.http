@@ -1,0 +1,7 @@
+# @prompt token
+POST http://localhost:3000/token
+Content-Type: application/json
+
+{
+  "refreshToken": "{{token}}"
+}
