@@ -8,7 +8,7 @@ const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
 class UserService {
 
   constructor() {
-    this.saltRounds = process.env.SALT_ROUNDS;
+    this.saltRounds = parseInt(process.env.SALT_ROUNDS);
     this.refreshTokens = [];
   }
 
