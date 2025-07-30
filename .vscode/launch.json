@@ -15,10 +15,10 @@
       "request": "launch",
       "runtimeArgs": [
         "--inspect-brk",
-        "${workspaceRoot}/api/node_modules/jest/bin/jest.js",
+        "${workspaceRoot}/node_modules/jest/bin/jest.js",
         "--runInBand"
       ],
-      "cwd": "${workspaceRoot}/api",
+      "cwd": "${workspaceRoot}",
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
     }

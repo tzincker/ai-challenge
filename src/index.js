@@ -8,11 +8,8 @@ const userService = new UserService();
 app.use(cors());
 app.use(express.json());
 // Servir archivos estáticos desde la carpeta 'ui'
-const uiPath = path.join(__dirname, "public");
+const uiPath = path.join( __dirname, "..", "public");
 app.use(express.static(uiPath));
-//Error: ENOENT: no such file or directory, stat '/usr/src/app/src/ui/index.html'
-//C:\Users\denf\workspace\IAPOC\api\ui\index.html
-
 
 // Middleware para validar token JWT
 function authenticateToken(req, res, next) {
