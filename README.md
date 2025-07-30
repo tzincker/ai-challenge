@@ -6,6 +6,19 @@
 node --env-file .env .\src\index.js
 ```
 
+or
+
+```bash
+npm start
+```
+
+## Run test
+
+`cd` into api and then run
+```bash
+npm test
+```
+
 ## Required environment variable
 
 ACCESS_TOKEN_SECRET
@@ -33,7 +46,7 @@ The chatbot answers product-related questions, but only registered and authentic
 ## **Prerequisites**
 
 - Node.js >= 18
-- npm or yarn
+- npm
 
 ---
 
@@ -46,18 +59,11 @@ git clone <repo-url>
 # Install dependencies
 npm install
 
-# Folder structure
-```
+```text
 /
-  |__ api
-  |__ ui
-
-pet-accessories-chatbot/
 ├── api/
 ├────── src/
-│   ├────── routes/
-│   │   ├────── orders.js
-│   │   └────── chat.js
+│   ├────── __tests__/
 │   ├────── controllers/
 │   ├────── services/
 │   └────── index.js
