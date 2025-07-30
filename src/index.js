@@ -5,10 +5,12 @@ const app = express();
 const port = process.env.PORT || 3000;
 const UserService = require("./services/UserService");
 const userService = new UserService();
+const ChatService = require("./services/ChatService");
+const chatService = new ChatService();
 app.use(cors());
 app.use(express.json());
 // Servir archivos estáticos desde la carpeta 'ui'
-const uiPath = path.join( __dirname, "..", "public");
+const uiPath = path.join(__dirname, "..", "public");
 app.use(express.static(uiPath));
 
 // Middleware para validar token JWT
@@ -33,7 +35,10 @@ app.get("/", (req, res) => {
 // Ruta de login
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
-  const { accessToken, refreshToken } = await userService.login(username, password);
+  const { accessToken, refreshToken } = await userService.login(
+    username,
+    password
+  );
   if (!accessToken) {
     return res.status(401).json({ message: "Invalid credentials" });
   }
@@ -58,11 +63,8 @@ app.delete("/logout", (req, res) => {
   userService.logout(token);
   res.sendStatus(204);
 });
-// Ruta protegida de chat (requiere token)
-app.post("/chat", authenticateToken, (req, res) => {
-  // Aquí iría la lógica del chatbot
-  res.send("this is chat!");
-});
+// Ruta protegida de chat
+app.use("/chat", authenticateToken, chatService.getRouter());
 // Iniciar servidor
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);

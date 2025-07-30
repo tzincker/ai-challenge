@@ -59,7 +59,7 @@ async function refreshAccessToken() {
 }
 
 // SEND MESSAGE
-document.getElementById("send-btn").addEventListener("click", async () => {
+async function sendChatMessage() {
   const message = document.getElementById("chat-message").value;
   if (!message.trim()) return;
 
@@ -73,7 +73,7 @@ document.getElementById("send-btn").addEventListener("click", async () => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ question: message }),
     });
 
     // Si el token expiró, intenta refrescar y reintenta
@@ -85,16 +85,28 @@ document.getElementById("send-btn").addEventListener("click", async () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ question: message }),
       });
     }
 
     const data = await res.json();
-    addMessage(data.reply || "No response from bot", "bot-message");
+    addMessage(data.answer || "No response from bot", "bot-message");
   } catch (err) {
     addMessage("Error contacting chatbot", "bot-message");
   }
-});
+}
+
+document.getElementById("send-btn").addEventListener("click", sendChatMessage);
+
+// Permitir enviar con Enter
+document
+  .getElementById("chat-message")
+  .addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendChatMessage();
+    }
+  });
 
 // LOGOUT
 document.getElementById("logout-btn").addEventListener("click", logout);
