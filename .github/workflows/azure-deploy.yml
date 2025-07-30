@@ -41,7 +41,7 @@ jobs:
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
             --settings ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }} \
                         REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }} \
-                        SALT_ROUNDS=${{ env.SALT_ROUNDS }}
+                        SALT_ROUNDS=10
 
       - name: Restart Azure Web App
         run: az webapp restart --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name IACHALLENGE70
