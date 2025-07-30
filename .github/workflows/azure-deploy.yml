@@ -21,7 +21,6 @@ jobs:
       - name: Build Docker image
         run: |
           docker build -t iapocchallenge.azurecr.io/myapp:${{ github.sha }} .
-        working-directory: ./api
 
       - name: Login to Azure Container Registry
         run: az acr login --name iapocchallenge
