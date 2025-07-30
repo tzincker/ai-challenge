@@ -1,0 +1,27 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    title="Pet Accessories Chatbot"
+    link(rel='stylesheet', type='text/css', href='/styles.css')
+  body
+    div(class="container")
+      h1="Pet Accessories Chatbot"
+      div(id="login-section")
+        h2="Login"
+        input(type="text" id="username" placeholder="Username")
+        input(type="password" id="password" placeholder="Password")
+        button(type="button" id="login-btn")="Login"
+        p(id="login-message")
+
+      div(id="chat-section" class="hidden")
+        h2="Chat"
+        div(id="chat-box")
+        div(class="chat-input")
+          input(type="text" id="chat-message" placeholder="Type your message...")
+          button(id="send-btn")="Send"
+        button(id="logout-btn", class="logout-btn")="Logout"
+    script.
+      const CONFIG = { API_BASE_URL: "!{apiBaseUrl}", };
+    script(src='/script.js')

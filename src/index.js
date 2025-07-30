@@ -7,6 +7,9 @@ const UserService = require("./services/UserService");
 const userService = new UserService();
 const ChatService = require("./services/ChatService");
 const chatService = new ChatService();
+
+app.set('views', './src/views');
+app.set('view engine', 'pug');
 app.use(cors());
 app.use(express.json());
 // Servir archivos estáticos desde la carpeta 'ui'
@@ -30,8 +33,9 @@ function authenticateToken(req, res, next) {
 }
 // Ruta raíz que sirve el index.html sin autenticación
 app.get("/", (req, res) => {
-  res.sendFile(path.join(uiPath, "index.html"));
+  res.render("index.pug", { apiBaseUrl: process.env.API_BASE_URL });
 });
+
 // Ruta de login
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
