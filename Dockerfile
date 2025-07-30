@@ -3,20 +3,18 @@ FROM node:18
 # Establecer carpeta de trabajo para el backend
 WORKDIR /api
 
-# Copiar archivos de package.json y package-lock.json del backend
+# Copiar archivos necesarios
 COPY api/package*.json ./
-
-# Instalar dependencias backend
 RUN npm install
 
-# Copiar código backend
+# Copiar código fuente backend
 COPY api/src ./src
 
-# Copiar frontend completo dentro de la imagen
+# Copiar frontend completo dentro de la imagen en /api/ui
 COPY ui ./ui
 
-# Exponer puerto donde corre la app
+# Exponer puerto donde corre el backend
 EXPOSE 3000
 
-# Comando para iniciar backend
+# Iniciar servidor backend
 CMD ["node", "src/index.js"]

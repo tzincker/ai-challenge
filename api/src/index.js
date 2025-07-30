@@ -8,7 +8,9 @@ const userService = new UserService();
 app.use(cors());
 app.use(express.json());
 // Servir archivos estáticos desde la carpeta 'ui'
-app.use(express.static(path.join(__dirname, "../../ui")));
+const uiPath = path.join(__dirname, "../ui");
+app.use(express.static(uiPath));
+
 // Middleware para validar token JWT
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
@@ -26,7 +28,7 @@ function authenticateToken(req, res, next) {
 }
 // Ruta raíz que sirve el index.html sin autenticación
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../../ui/index.html"));
+  res.sendFile(path.join(uiPath, "index.html"));
 });
 // Ruta de login
 app.post("/login", async (req, res) => {
