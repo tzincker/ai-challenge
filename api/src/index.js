@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path"); // Importante para manejar rutas
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 const UserService = require("./services/UserService");
 const userService = new UserService();
 app.use(cors());
