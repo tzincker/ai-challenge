@@ -12,11 +12,11 @@ const users = [
         password: "$2b$10$nTfn2acWjQ8jSWS.KVqAjuAPP1OO1R/Qf7mVj308Qf1IQpKEfw7qa"
     },
     {
-        username: "user3",
+        username: "user4",
         password: "$2b$10$nTfn2acWjQ8jSWS.KVqAjuAPP1OO1R/Qf7mVj308Qf1IQpKEfw7qa"
     },
     {
-        username: "user4",
+        username: "user5",
         password: "$2b$10$nTfn2acWjQ8jSWS.KVqAjuAPP1OO1R/Qf7mVj308Qf1IQpKEfw7qa"
     },
 ];

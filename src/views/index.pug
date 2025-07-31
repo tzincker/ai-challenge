@@ -10,16 +10,17 @@ html(lang="en")
       h1="Pet Accessories Chatbot"
       div(id="login-section")
         h2="Login"
-        input(type="text" id="username" placeholder="Username")
-        input(type="password" id="password" placeholder="Password")
-        button(type="button" id="login-btn")="Login"
+        input(type="text", id="username", placeholder="Username")
+        input(type="password", id="password", placeholder="Password")
+        button(type="button", id="login-btn")="Login"
         p(id="login-message")
+        a(href="/register")="Not a member, register now!"
 
       div(id="chat-section" class="hidden")
         h2="Chat"
         div(id="chat-box")
         div(class="chat-input")
-          input(type="text" id="chat-message" placeholder="Type your message...")
+          input(type="text", id="chat-message", placeholder="Type your message...")
           button(id="send-btn")="Send"
         button(id="logout-btn", class="logout-btn")="Logout"
     script.
