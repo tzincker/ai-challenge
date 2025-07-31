@@ -20,15 +20,18 @@ jobs:
 
       - name: Call OpenAI API to generate comment
         id: openai
-        uses: sktston/action-openai@v1
-        with:
-          prompt: |
-            Please review the following PR diff and generate a helpful comment for the developers:
-            ```
-            $(cat pr_diff.txt)
-            ```
-          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-          max_tokens: 150
+        run: |
+          RESPONSE=$(curl https://api.openai.com/v1/chat/completions \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.OPENAI_API_KEY }}" \
+            -d '{
+              "model": "gpt-3.5-turbo",
+              "messages": [{"role": "user", "content": "Please review the following PR diff and generate a helpful comment for the developers:\n\n'"$(cat pr_diff.txt)"'"}],
+              "max_tokens": 150
+            }')
+          echo "completion<<EOF" >> $GITHUB_OUTPUT
+          echo "$RESPONSE" | jq -r '.choices[0].message.content' >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Post comment to PR
         uses: actions/github-script@v6
@@ -41,4 +44,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: comment,
-            });
+
+            });            });
