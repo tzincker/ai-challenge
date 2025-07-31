@@ -10,7 +10,7 @@ class UserService {
   constructor(databaseService) {
     this.saltRounds = parseInt(process.env.SALT_ROUNDS);
     this.refreshTokens = [];
-    this.databaseService = databaseService;
+    this._databaseService = databaseService;
   }
 
   _generateAccessToken = (user) => {
@@ -48,7 +48,7 @@ class UserService {
   }
 
   async login(username, password) {
-    const user = await this.databaseService.getUser(username);
+    const user = await this._databaseService.getUser(username);
     if (!user) {
       return null;
     }
@@ -61,7 +61,7 @@ class UserService {
       }
       const accessToken = this._generateAccessToken(user);
       const refreshToken = jwt.sign(user, refreshTokenSecret);
-      await this.databaseService.addRefreshToken(refreshToken);
+      await this._databaseService.addRefreshToken(refreshToken);
       return { accessToken, refreshToken };
     } catch (error) {
       console.error("Unable to login user: ", error);
@@ -69,7 +69,7 @@ class UserService {
   }
 
   async register(username, password) {
-    const user = await this.databaseService.getUser(username);
+    const user = await this._databaseService.getUser(username);
     if (user) {
       return 303
     }
@@ -77,7 +77,7 @@ class UserService {
     try {
       const hashedPassword = await this.hashPassword(password);
 
-      const newUser = await this.databaseService.addUser(username, hashedPassword)
+      const newUser = await this._databaseService.addUser(username, hashedPassword)
       return !!newUser;
     } catch (error) {
       console.error("Unable to register user user: ", error);
@@ -85,7 +85,7 @@ class UserService {
   }
 
   async refreshToken(refreshToken) {
-    const tokenExists = await this.databaseService.tokenExists(refreshToken);
+    const tokenExists = await this._databaseService.tokenExists(refreshToken);
     if (!tokenExists) {
       return 403;
     }
@@ -102,8 +102,8 @@ class UserService {
     return result;
   }
 
-  logout(token) {
-    this.refreshTokens = this.refreshTokens.filter(tokenItem => tokenItem !== token);
+  async logout(token) {
+    await this._databaseService.removeToken(token);
   }
 
 }

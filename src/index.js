@@ -93,9 +93,9 @@ app.post("/token", async (req, res) => {
   res.json({ accessToken });
 });
 // Ruta para logout
-app.delete("/logout", (req, res) => {
+app.delete("/logout", async (req, res) => {
   const { token } = req.body;
-  userService.logout(token);
+  await userService.logout(token);
   res.sendStatus(204);
 });
 // Ruta protegida de chat

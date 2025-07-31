@@ -98,7 +98,7 @@ class DatabaseService {
     try {
       async function insertUser(db, username, password) {
         return new Promise((resolve, reject) => {
-          db.run(`INSERT INTO users (username, password) VALUES (?, ?)`, [username, password], function (err, row) {
+          db.run(`INSERT INTO users (username, password) VALUES (?, ?)`, [username, password], function (err) {
             if (err) {
               console.error(err.message);
               reject(err);
@@ -118,6 +118,28 @@ class DatabaseService {
 
     } catch (error) {
       console.error("Unable to add new user: ", error);
+    }
+  }
+
+  async removeToken(token) {
+    try {
+      async function deleteToken(db, token) {
+        db.run(`DELETE FROM refresh_tokens WHERE token = ?`, [token], function (err) {
+          if (err) {
+            return console.error(err.message);
+          }
+          console.log(`Removed refresh_token id : ${this.lastID}.`);
+        });
+      }
+      const foundToken = await this.getToken(token);
+      if (!foundToken) {
+        console.warn("Token no longer exists, aborting.");
+        return;
+      }
+
+      await deleteToken(this._db, token);
+    } catch (error) {
+      console.error("Unable to deelte refresh token: ", error);
     }
   }
 
