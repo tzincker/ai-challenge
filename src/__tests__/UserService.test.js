@@ -171,7 +171,7 @@ describe('UserService', () => {
     it('should return false if addUser fails', async () => {
       mockDatabaseService = new MockDatabseService();
       mockDatabaseService.addUser = jest.fn();
-      mockDatabaseService.addUser.mockImplementation((username, password, cb) => cb(new Error('fail')));
+      mockDatabaseService.addUser.mockImplementation(() => Promise.reject(new Error('fail')));
       userService = new UserService(mockDatabaseService);
 
       const spy = jest.spyOn(userService, '_hashPassword').mockReturnValue('hashed_password');
@@ -185,7 +185,7 @@ describe('UserService', () => {
       mockDatabaseService.getUser = jest.fn();
       mockDatabaseService.getUser.mockResolvedValue(null);
       userService = new UserService(mockDatabaseService);
-      const spy = jest.spyOn(userService, '_hashPassword').mockImplementation((password, cb) => cb(new Error('fail')));
+      const spy = jest.spyOn(userService, '_hashPassword').mockRejectedValue(new Error('fail'));
       const result = await userService.register('erroruser', 'password');
       expect(result).toBe(false);
       expect(spy).toHaveBeenCalled();

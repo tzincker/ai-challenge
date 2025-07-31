@@ -13,6 +13,20 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install backend dependencies
+        run: npm install
+        working-directory: ./api
+
+      - name: Run backend tests
+        run: npm test
+        working-directory: ./api
+
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
