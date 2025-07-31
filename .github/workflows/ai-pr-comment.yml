@@ -15,8 +15,9 @@ jobs:
       - name: Get PR diff
         id: diff
         run: |
+          git fetch origin ${{ github.event.pull_request.base.ref }}
           git fetch origin ${{ github.event.pull_request.head.ref }}
-          git diff origin/${{ github.event.pull_request.base.ref }} ${{ github.event.pull_request.head.ref }} > pr_diff.txt
+          git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} > pr_diff.txt
 
       - name: Call OpenAI API to generate comment
         id: openai
