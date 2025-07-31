@@ -20,7 +20,7 @@ jobs:
 
       - name: Call OpenAI API to generate comment
         id: openai
-        uses: dawidd6/action-openai@v1
+        uses: sktston/action-openai@v1
         with:
           prompt: |
             Please review the following PR diff and generate a helpful comment for the developers:
