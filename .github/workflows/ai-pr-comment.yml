@@ -60,7 +60,7 @@ jobs:
         uses: actions/github-script@v6
         with:
             github-token: ${{ secrets.GITHUB_TOKEN }}
-            completion: ${{ steps.openai.outputs.completions }
+            completion: ${{ steps.openai.outputs.completions }}
             script: |
                 const comment = inputs.completion || "No AI comment available.";
                 github.rest.issues.createComment({
