@@ -139,7 +139,7 @@ class DatabaseService {
 
       await deleteToken(this._db, token);
     } catch (error) {
-      console.error("Unable to deelte refresh token: ", error);
+      console.error("Unable to delete refresh token: ", error);
     }
   }
 
