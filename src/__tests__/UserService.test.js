@@ -61,11 +61,13 @@ describe('UserService', () => {
   describe('login', () => {
     userService = new UserService(mockDatabaseService);
     it('should return null if user not found', async () => {
+      consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       const result = await userService.login('baduser', 'password');
       expect(result).toBeNull();
     });
 
     it('should return null if password does not match', async () => {
+      consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       userService = new UserService(mockDatabaseService);
       const spy = jest.spyOn(userService, '_comparePassword').mockReturnValue(false);
       const result = await userService.login('user1', 'wrongpass');
@@ -93,6 +95,7 @@ describe('UserService', () => {
     });
 
     it('should return undefined if login fails', async () => {
+      consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       userService = new UserService(mockDatabaseService);
       const spy = jest.spyOn(userService, '_comparePassword').mockImplementation((plainPassword, hashedPassword, cb) => cb(new Error('fail')));
       jwt.sign.mockReturnValueOnce('accessToken').mockReturnValueOnce('refreshToken');
@@ -169,6 +172,7 @@ describe('UserService', () => {
     });
 
     it('should return false if addUser fails', async () => {
+      consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       mockDatabaseService = new MockDatabseService();
       mockDatabaseService.addUser = jest.fn();
       mockDatabaseService.addUser.mockImplementation(() => Promise.reject(new Error('fail')));
@@ -176,8 +180,10 @@ describe('UserService', () => {
 
       const spy = jest.spyOn(userService, '_hashPassword').mockReturnValue('hashed_password');
       const result = await userService.register('failuser', 'password');
+      
       expect(result).toBe(false);
       expect(spy).toHaveBeenCalled();
+      await expect(mockDatabaseService.addUser()).rejects.toThrow('fail');
     });
 
     it('should handle errors and return false', async () => {

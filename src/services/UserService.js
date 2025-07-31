@@ -80,7 +80,7 @@ class UserService {
       const newUser = await this.databaseService.addUser(username, hashedPassword)
       return !!newUser;
     } catch (error) {
-      console.error("Unable to register user user: ", error);
+      console.error("Unable to register user: ", error);
       return false;
     }
   }
