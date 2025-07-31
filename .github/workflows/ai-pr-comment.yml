@@ -1,0 +1,44 @@
+name: AI PR Commenter
+
+on:
+  pull_request:
+    types: [opened, edited]
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    environment: prod
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Get PR diff
+        id: diff
+        run: |
+          git fetch origin ${{ github.event.pull_request.head.ref }}
+          git diff origin/${{ github.event.pull_request.base.ref }} ${{ github.event.pull_request.head.ref }} > pr_diff.txt
+
+      - name: Call OpenAI API to generate comment
+        id: openai
+        uses: dawidd6/action-openai@v1
+        with:
+          prompt: |
+            Please review the following PR diff and generate a helpful comment for the developers:
+            ```
+            $(cat pr_diff.txt)
+            ```
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          max_tokens: 150
+
+      - name: Post comment to PR
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const comment = `${{ steps.openai.outputs.completion }}`;
+            github.rest.issues.createComment({
+              issue_number: context.payload.pull_request.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment,
+            });
