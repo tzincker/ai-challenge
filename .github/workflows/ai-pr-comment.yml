@@ -61,7 +61,7 @@ jobs:
         with:
             github-token: ${{ secrets.GITHUB_TOKEN }}
             script: |
-                const comment = ${{ steps.openai.outputs.completions }} || "No AI comment available.";
+                const comment = "${{ steps.openai.outputs.completions }}" || "No AI comment available.";
                 github.rest.issues.createComment({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
