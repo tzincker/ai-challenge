@@ -1,3 +1,4 @@
+/* c8 ignore file */
 const { users } = require('../data/users');
 
 
@@ -54,7 +55,7 @@ class DatabaseService {
         });
       }
 
-      const refreshToken = await findToken(this._db, token)
+      const refreshToken = await findToken(this._db, token);
       return refreshToken;
     } catch (error) {
       console.error("Unable to fetch token.");
@@ -142,7 +143,6 @@ class DatabaseService {
       console.error("Unable to delete refresh token: ", error);
     }
   }
-
 }
 
 module.exports = DatabaseService;

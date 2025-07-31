@@ -33,7 +33,7 @@ function authenticateToken(req, res, next) {
     console.error("Invalid token!");
     return res.sendStatus(401);
   }
-  const result = userService._verify(token);
+  const result = userService.verify(token);
   if (result === 403) {
     return res.sendStatus(403);
   }

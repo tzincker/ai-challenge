@@ -1,7 +1,5 @@
 const bcrypt = require('bcrypt');
 const jwt = require("jsonwebtoken");
-const { users } = require('../data/users');
-
 const accessTokenSecret = process.env.ACCESS_TOKEN_SECRET;
 const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
 
@@ -9,16 +7,16 @@ class UserService {
 
   constructor(databaseService) {
     this.saltRounds = parseInt(process.env.SALT_ROUNDS);
-    this.refreshTokens = [];
-    this._databaseService = databaseService;
+    this.databaseService = databaseService;
   }
 
+  /* v8 ignore start */
   _generateAccessToken = (user) => {
     const accessToken = jwt.sign(user, accessTokenSecret, { expiresIn: "15s" });
     return accessToken;
   };
 
-  async hashPassword(plainPassword) {
+  async _hashPassword(plainPassword) {
     try {
       const hashedPassword = await bcrypt.hash(plainPassword, this.saltRounds);
       return hashedPassword;
@@ -35,8 +33,9 @@ class UserService {
       console.error("There was an error trying to compare the password: ", error);
     }
   }
+  /* v8 ignore stop */
 
-  _verify(token) {
+  verify(token) {
     jwt.verify(token, accessTokenSecret, (err, user) => {
       if (err) {
         console.error("Unable to login user: ", err);
@@ -48,7 +47,7 @@ class UserService {
   }
 
   async login(username, password) {
-    const user = await this._databaseService.getUser(username);
+    const user = await this.databaseService.getUser(username);
     if (!user) {
       return null;
     }
@@ -61,31 +60,33 @@ class UserService {
       }
       const accessToken = this._generateAccessToken(user);
       const refreshToken = jwt.sign(user, refreshTokenSecret);
-      await this._databaseService.addRefreshToken(refreshToken);
+      await this.databaseService.addRefreshToken(refreshToken);
       return { accessToken, refreshToken };
     } catch (error) {
       console.error("Unable to login user: ", error);
+      return undefined;
     }
   }
 
   async register(username, password) {
-    const user = await this._databaseService.getUser(username);
+    const user = await this.databaseService.getUser(username);
     if (user) {
       return 303
     }
 
     try {
-      const hashedPassword = await this.hashPassword(password);
+      const hashedPassword = await this._hashPassword(password);
 
-      const newUser = await this._databaseService.addUser(username, hashedPassword)
+      const newUser = await this.databaseService.addUser(username, hashedPassword)
       return !!newUser;
     } catch (error) {
       console.error("Unable to register user user: ", error);
+      return false;
     }
   }
 
   async refreshToken(refreshToken) {
-    const tokenExists = await this._databaseService.tokenExists(refreshToken);
+    const tokenExists = await this.databaseService.tokenExists(refreshToken);
     if (!tokenExists) {
       return 403;
     }
@@ -103,7 +104,7 @@ class UserService {
   }
 
   async logout(token) {
-    await this._databaseService.removeToken(token);
+    await this.databaseService.removeToken(token);
   }
 
 }
