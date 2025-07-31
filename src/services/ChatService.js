@@ -18,7 +18,7 @@ try {
 }
 
 class ChatService {
-  constructor() {
+  constructor(overrideKnowledge) {
     // Initialize Fuse.js for fuzzy similarity
     this.fuse = new Fuse(knowledge, {
       keys: ["question"],
@@ -26,6 +26,7 @@ class ChatService {
     });
     // Initialize OpenAI
     this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    this.knowledge = overrideKnowledge || knowledge;
   }
 
   //Retrieve relevant context and build prompts for LLM
@@ -34,7 +35,7 @@ class ChatService {
     let context = "";
     let answer = "";
     let matchedQuestion = "";
-    const match = knowledge.find(
+    const match = this.knowledge.find(
       (item) =>
         item.question.trim().toLowerCase() === userQuestion.trim().toLowerCase()
     );

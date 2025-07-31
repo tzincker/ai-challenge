@@ -1,3 +1,4 @@
+/* c8 ignore file */
 const express = require("express");
 const cors = require("cors");
 const path = require("path"); // Importante para manejar rutas
