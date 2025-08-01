@@ -19,8 +19,15 @@ class ChatService {
     /* v8 ignore stop */
     // Initialize Fuse.js for fuzzy similarity
     this.fuse = new Fuse(this.knowledge, {
-      keys: ["question"],
-      threshold: 0.4, // Adjust for more/less tolerance
+      keys: [
+        { name: "question", weight: 0.7 },
+        { name: "answer", weight: 0.3 }
+      ],
+      threshold: 0.6, // Más tolerante para mejor búsqueda
+      ignoreLocation: true,
+      includeScore: true,
+      minMatchCharLength: 3,
+      shouldSort: true
     });
   }
 
@@ -45,18 +52,74 @@ class ChatService {
     let context = "";
     let answer = "";
     let matchedQuestion = "";
-    const match = this.knowledge.find(
+    
+    // 1. Buscar coincidencia exacta
+    const exactMatch = this.knowledge.find(
       (item) =>
         item.question.trim().toLowerCase() === userQuestion.trim().toLowerCase()
     );
-    if (match) {
-      context = match.answer;
-      answer = match.answer;
-      matchedQuestion = match.question;
+    
+    if (exactMatch) {
+      context = exactMatch.answer;
+      answer = exactMatch.answer;
+      matchedQuestion = exactMatch.question;
+      console.log(`✅ Coincidencia exacta encontrada: ${exactMatch.question}`);
+      return { prompt: "", answer, found: true, matchedQuestion, type: "exact" };
     }
-    // Build contextual prompt
-    const prompt = `Context: ${context}\nUser: ${userQuestion}\nAI:`;
-    return { prompt, answer, found: !!context, matchedQuestion };
+
+    // 2. Buscar con Fuse.js (búsqueda difusa)
+    const fuseResults = this.fuse.search(userQuestion);
+    if (fuseResults.length > 0) {
+      const bestMatch = fuseResults[0].item;
+      context = bestMatch.answer;
+      answer = bestMatch.answer;
+      matchedQuestion = bestMatch.question;
+      console.log(`🔍 Coincidencia difusa encontrada: ${bestMatch.question} (score: ${fuseResults[0].score})`);
+      return { prompt: "", answer, found: true, matchedQuestion, type: "fuzzy" };
+    }
+
+    // 3. Buscar palabras clave en preguntas y respuestas
+    const keywordMatch = this.findKeywordMatch(userQuestion);
+    if (keywordMatch) {
+      context = keywordMatch.answer;
+      answer = keywordMatch.answer;
+      matchedQuestion = keywordMatch.question;
+      console.log(`🔑 Coincidencia por palabras clave encontrada: ${keywordMatch.question}`);
+      return { prompt: "", answer, found: true, matchedQuestion, type: "keyword" };
+    }
+
+    // 4. Si no encuentra nada, construir prompt para LLM
+    const prompt = `Context: Eres un asistente de una tienda de accesorios para mascotas. Responde de manera útil y amigable.\nUser: ${userQuestion}\nAI:`;
+    console.log(`❓ No se encontró coincidencia, usando LLM para: ${userQuestion}`);
+    return { prompt, answer: "", found: false, matchedQuestion: "", type: "llm" };
+  }
+
+  // Nuevo método para buscar por palabras clave
+  findKeywordMatch(userQuestion) {
+    const userWords = userQuestion.toLowerCase().split(/\s+/);
+    let bestMatch = null;
+    let maxScore = 0;
+
+    for (const item of this.knowledge) {
+      const questionWords = item.question.toLowerCase().split(/\s+/);
+      const answerWords = item.answer.toLowerCase().split(/\s+/);
+      
+      // Contar palabras coincidentes
+      let score = 0;
+      for (const userWord of userWords) {
+        if (userWord.length > 2) { // Ignorar palabras muy cortas
+          if (questionWords.some(qw => qw.includes(userWord) || userWord.includes(qw))) score += 2;
+          if (answerWords.some(aw => aw.includes(userWord) || userWord.includes(aw))) score += 1;
+        }
+      }
+      
+      if (score > maxScore && score >= 2) { // Mínimo 2 puntos para considerar
+        maxScore = score;
+        bestMatch = item;
+      }
+    }
+
+    return bestMatch;
   }
 
   // Call the OpenAI LLM
@@ -219,21 +282,43 @@ class ChatService {
       if (!question) {
         return res.json({ answer: "Por favor, escribe una pregunta." });
       }
-      // Search for exact match in the knowledge base
-      const match = this.knowledge.find(
-        (item) =>
-          item.question.trim().toLowerCase() === question.trim().toLowerCase()
-      );
-      if (match) {
-        // If it exists, always respond with the response from the base
-        return res.json({ answer: match.answer });
+
+      console.log(`💬 Pregunta recibida: "${question}"`);
+
+      // Usar la nueva lógica de búsqueda mejorada
+      const { prompt, answer, found, matchedQuestion, type } = this.buildPrompt(question);
+      
+      if (found) {
+        // Si encontró coincidencia en knowledge base, responder directamente
+        console.log(`✅ Respondiendo desde knowledge base (${type}): ${matchedQuestion}`);
+        return res.json({ 
+          answer, 
+          source: "knowledge_base",
+          type: type,
+          matched_question: matchedQuestion 
+        });
       }
-      // If it does not exist, build prompt and consult the LLM
-      const { prompt } = this.buildPrompt(question);
+
+      // Si no encontró nada, usar LLM solo si es relevante
+      if (!this.isRelevantQuestion(question)) {
+        console.log(`❌ Pregunta no relevante para tienda de mascotas: ${question}`);
+        return res.json({ 
+          answer: "Lo siento, soy un asistente especializado en accesorios para mascotas. ¿Puedo ayudarte con alguna pregunta sobre productos para tu mascota?" 
+        });
+      }
+
+      // Usar LLM para pregunta relevante
+      console.log(`🤖 Consultando LLM para pregunta relevante: ${question}`);
       const aiAnswer = await this.callLLM(prompt);
+      
       // Add the new question/answer to the knowledge base
       this.addToKnowledge(question, aiAnswer);
-      return res.json({ answer: aiAnswer });
+      
+      return res.json({ 
+        answer: aiAnswer, 
+        source: "llm",
+        type: "generated" 
+      });
     });
     return router;
   }
