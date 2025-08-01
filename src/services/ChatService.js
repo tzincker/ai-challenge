@@ -83,6 +83,8 @@ class ChatService {
     if (exactMatch) {
       result.found = true;
       result.answer = exactMatch.answer;
+      result.type = 'exact_match';
+      result.matchedQuestion = exactMatch.question;
       result.prompt = `Context: ${exactMatch.answer}\n\nAnswer the customer's question about: "${userQuestion}"`;
       // eslint-disable-next-line no-console
       console.log('✓ Exact match found:', userQuestion);
@@ -94,6 +96,8 @@ class ChatService {
     if (fuzzyMatch) {
       result.found = true;
       result.answer = fuzzyMatch.answer;
+      result.type = 'fuzzy_match';
+      result.matchedQuestion = fuzzyMatch.question;
       result.prompt = `Context: ${fuzzyMatch.answer}\n\nThe customer asked about: "${userQuestion}". Use the context to provide a helpful and relevant response.`;
       // eslint-disable-next-line no-console
       console.log('✓ Fuzzy match found:', fuzzyMatch.question);
@@ -111,6 +115,9 @@ class ChatService {
 
       if (topMatches) {
         result.found = true;
+        result.type = 'partial_match';
+        result.answer = topMatches;
+        result.matchedQuestion = fuseResults[0].item.question;
         result.prompt = `Context: ${topMatches}\n\nThe customer asked: "${userQuestion}". Use the context to provide a helpful response, focusing on the most relevant information.`;
         // eslint-disable-next-line no-console
         console.log('✓ Partial matches found');
