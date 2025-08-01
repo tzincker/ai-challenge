@@ -1001,16 +1001,6 @@ jobs:
                 '',
                 fileChangesSummary,
                 '',
-                '---',
-                '',
-                '## 🤖 AI Analysis Summary',
-                '',
-                '### 📊 Code Quality Metrics',
-                metricsTable,
-                '',
-                '### 🎯 Quick Status',
-                quickStatus,
-                '',
                 `*Last updated: ${new Date().toISOString()}*`
               ].join('\n');
               
