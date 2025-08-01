@@ -67,6 +67,7 @@ jobs:
             --ports 11434 \
             --cpu 2 \
             --memory 4 \
+            --os-type Linux \
             --registry-login-server iapocchallenge.azurecr.io \
             --registry-username iapocchallenge \
             --registry-password ${{ secrets.AZURE_REGISTRY_PASSWORD }}
