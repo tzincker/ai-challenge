@@ -47,21 +47,76 @@ jobs:
             jq -r '.scripts | keys[]' package.json 2>/dev/null || echo "No scripts found"
           fi
 
-      - name: Run Code Quality Checks
-        id: quality
+      - name: Run ESLint Analysis
+        id: eslint
         continue-on-error: true
         run: |
-          echo "Running code quality analysis..."
+          echo "🔍 Running ESLint analysis..."
+          if ([ -f ".eslintrc.js" ] || [ -f ".eslintrc.json" ] || [ -f "eslint.config.js" ]) && jq -e '.scripts.lint' package.json > /dev/null 2>&1; then
+            npm run lint -- --format json --output-file eslint-results.json || true
+            ESLINT_ERRORS=$(jq '[.[].messages[] | select(.severity == 2)] | length' eslint-results.json 2>/dev/null || echo "0")
+            ESLINT_WARNINGS=$(jq '[.[].messages[] | select(.severity == 1)] | length' eslint-results.json 2>/dev/null || echo "0")
+            echo "::set-output name=eslint_errors::$ESLINT_ERRORS"
+            echo "::set-output name=eslint_warnings::$ESLINT_WARNINGS"
+            echo "Found $ESLINT_ERRORS errors and $ESLINT_WARNINGS warnings"
+          else
+            echo "No ESLint configuration found"
+            echo "::set-output name=eslint_errors::0"
+            echo "::set-output name=eslint_warnings::0"
+          fi
 
-          # Inicializar variables
-          ESLINT_ERRORS=0
-          ESLINT_WARNINGS=0
-          TESTS_PASSED=0
-          TESTS_FAILED=0
-          COVERAGE_FILES=0
-          AUDIT_HIGH=0
-          AUDIT_MODERATE=0
-          FORMATTING_ISSUES=0
+      - name: Run Tests
+        id: tests
+        continue-on-error: true
+        run: |
+          echo "🧪 Running tests..."
+          if jq -e '.scripts.test' package.json > /dev/null 2>&1; then
+            npm test -- --coverage --json --outputFile=test-results.json || true
+            TESTS_PASSED=$(jq '.numPassedTests // 0' test-results.json 2>/dev/null || echo "0")
+            TESTS_FAILED=$(jq '.numFailedTests // 0' test-results.json 2>/dev/null || echo "0")
+            echo "::set-output name=tests_passed::$TESTS_PASSED"
+            echo "::set-output name=tests_failed::$TESTS_FAILED"
+            echo "$TESTS_PASSED tests passed, $TESTS_FAILED tests failed"
+          else
+            echo "No test script found"
+            echo "::set-output name=tests_passed::0"
+            echo "::set-output name=tests_failed::0"
+          fi
+
+      - name: Run Security Audit
+        id: security
+        continue-on-error: true
+        run: |
+          echo "🔒 Running security audit..."
+          npm audit --json > audit-results.json || true
+          AUDIT_HIGH=$(jq '.vulnerabilities | to_entries[] | select(.value.severity == "high") | .key' audit-results.json 2>/dev/null | wc -l || echo "0")
+          AUDIT_MODERATE=$(jq '.vulnerabilities | to_entries[] | select(.value.severity == "moderate") | .key' audit-results.json 2>/dev/null | wc -l || echo "0")
+          echo "::set-output name=audit_high::$AUDIT_HIGH"
+          echo "::set-output name=audit_moderate::$AUDIT_MODERATE"
+          echo "Found $AUDIT_HIGH high and $AUDIT_MODERATE moderate vulnerabilities"
+
+      - name: Check Code Formatting
+        id: formatting
+        continue-on-error: true
+        run: |
+          echo "💅 Checking code formatting..."
+          if ([ -f ".prettierrc" ] || [ -f ".prettierrc.json" ] || [ -f "prettier.config.js" ]); then
+            npx prettier --check . > prettier-results.txt 2>&1 || PRETTIER_EXIT_CODE=$?
+            if [ "${PRETTIER_EXIT_CODE:-0}" -ne 0 ]; then
+              FORMATTING_ISSUES=$(cat prettier-results.txt | wc -l || echo "1")
+            else
+              FORMATTING_ISSUES=0
+            fi
+            echo "::set-output name=formatting_issues::$FORMATTING_ISSUES"
+            echo "Found $FORMATTING_ISSUES formatting issues"
+          else
+            echo "No Prettier configuration found"
+            echo "::set-output name=formatting_issues::0"
+          fi
+
+      - name: Collect Quality Metrics
+        id: quality
+        run: |
 
           # Verificar si existe package.json antes de continuar
           if [ ! -f "package.json" ]; then
@@ -617,6 +672,25 @@ jobs:
           echo "## 🚀 GitHub Copilot-Style AI Review Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📊 Code Quality Analysis" >> $GITHUB_STEP_SUMMARY
+          
+          # ESLint Results
+          echo "#### 🔍 ESLint Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "- Errors: ${{ steps.eslint.outputs.eslint_errors }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Warnings: ${{ steps.eslint.outputs.eslint_warnings }}" >> $GITHUB_STEP_SUMMARY
+          
+          # Test Results
+          echo "#### 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "- Tests Passed: ${{ steps.tests.outputs.tests_passed }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Tests Failed: ${{ steps.tests.outputs.tests_failed }}" >> $GITHUB_STEP_SUMMARY
+          
+          # Security Results
+          echo "#### 🔒 Security Audit" >> $GITHUB_STEP_SUMMARY
+          echo "- High Severity Issues: ${{ steps.security.outputs.audit_high }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Moderate Severity Issues: ${{ steps.security.outputs.audit_moderate }}" >> $GITHUB_STEP_SUMMARY
+          
+          # Formatting Results
+          echo "#### 💅 Code Formatting" >> $GITHUB_STEP_SUMMARY
+          echo "- Formatting Issues: ${{ steps.formatting.outputs.formatting_issues }}" >> $GITHUB_STEP_SUMMARY
           echo "| Tool | Status | Results |" >> $GITHUB_STEP_SUMMARY
           echo "|------|--------|---------|" >> $GITHUB_STEP_SUMMARY
 
