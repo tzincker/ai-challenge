@@ -154,6 +154,99 @@ jobs:
             echo "- ... and $((FILES_CHANGED - 20)) more files" >> pr_changes_summary.txt
           fi
           
+          # Generar resumen inteligente del propósito del PR
+          echo "" > pr_purpose_summary.txt
+          echo "## 📝 PR Summary" >> pr_purpose_summary.txt
+          echo "" >> pr_purpose_summary.txt
+          
+          # Analizar patrones en los archivos para determinar el propósito
+          PURPOSE=""
+          DETAILS=""
+          
+          # Detectar cambios en CI/CD
+          if echo "$MODIFIED_FILES" | grep -q "\.github/workflows"; then
+            PURPOSE="CI/CD Pipeline Configuration"
+            DETAILS="This PR modifies GitHub Actions workflows for continuous integration and deployment."
+          elif echo "$MODIFIED_FILES" | grep -q "Dockerfile\|docker-compose"; then
+            PURPOSE="Docker Configuration"
+            DETAILS="This PR updates Docker containerization setup."
+          elif echo "$MODIFIED_FILES" | grep -q "package\.json\|yarn\.lock\|package-lock\.json"; then
+            if [ $JS_FILES -gt 0 ]; then
+              PURPOSE="Feature Development & Dependencies"
+              DETAILS="This PR includes new features or updates along with dependency changes."
+            else
+              PURPOSE="Dependency Updates"
+              DETAILS="This PR focuses on updating project dependencies."
+            fi
+          elif echo "$MODIFIED_FILES" | grep -q "\.test\.\|\.spec\.\|__tests__"; then
+            PURPOSE="Testing & Quality Assurance"
+            DETAILS="This PR adds or improves test coverage and quality assurance."
+          elif echo "$MODIFIED_FILES" | grep -q "README\|\.md$"; then
+            if [ $FILES_CHANGED -eq $MD_FILES ]; then
+              PURPOSE="Documentation Update"
+              DETAILS="This PR focuses on improving project documentation."
+            else
+              PURPOSE="Feature Development with Documentation"
+              DETAILS="This PR includes feature changes along with documentation updates."
+            fi
+          elif echo "$MODIFIED_FILES" | grep -q "\.css\|\.scss\|\.sass\|\.less"; then
+            if [ $CSS_FILES -eq $FILES_CHANGED ]; then
+              PURPOSE="UI/UX Styling Updates"
+              DETAILS="This PR focuses on user interface and styling improvements."
+            else
+              PURPOSE="Feature Development with UI Changes"
+              DETAILS="This PR includes functionality changes with user interface updates."
+            fi
+          elif echo "$MODIFIED_FILES" | grep -q "config\|\.env\|\.yml\|\.yaml\|\.xml"; then
+            PURPOSE="Configuration Updates"
+            DETAILS="This PR modifies application or environment configuration."
+          elif [ $JS_FILES -gt 0 ]; then
+            if [ $FILES_CHANGED -le 3 ]; then
+              PURPOSE="Bug Fix or Minor Enhancement"
+              DETAILS="This PR addresses specific issues or makes targeted improvements."
+            else
+              PURPOSE="Feature Development"
+              DETAILS="This PR introduces new functionality or significant enhancements."
+            fi
+          else
+            PURPOSE="General Updates"
+            DETAILS="This PR contains miscellaneous updates and improvements."
+          fi
+          
+          # Agregar información específica basada en archivos
+          SPECIFIC_CHANGES=""
+          if echo "$MODIFIED_FILES" | grep -q "\.github/workflows.*\.yml"; then
+            SPECIFIC_CHANGES="$SPECIFIC_CHANGES\n- 🔄 GitHub Actions workflow automation"
+          fi
+          if echo "$MODIFIED_FILES" | grep -q "package\.json"; then
+            SPECIFIC_CHANGES="$SPECIFIC_CHANGES\n- 📦 NPM dependencies and scripts"
+          fi
+          if echo "$MODIFIED_FILES" | grep -q "\.js\|\.jsx\|\.ts\|\.tsx"; then
+            SPECIFIC_CHANGES="$SPECIFIC_CHANGES\n- 💻 JavaScript/TypeScript code changes"
+          fi
+          if echo "$MODIFIED_FILES" | grep -q "\.css\|\.scss"; then
+            SPECIFIC_CHANGES="$SPECIFIC_CHANGES\n- 🎨 Styling and visual updates"
+          fi
+          if echo "$MODIFIED_FILES" | grep -q "\.test\.\|\.spec\."; then
+            SPECIFIC_CHANGES="$SPECIFIC_CHANGES\n- 🧪 Test cases and quality assurance"
+          fi
+          if echo "$MODIFIED_FILES" | grep -q "README\|\.md"; then
+            SPECIFIC_CHANGES="$SPECIFIC_CHANGES\n- 📚 Documentation improvements"
+          fi
+          if echo "$MODIFIED_FILES" | grep -q "Dockerfile\|docker"; then
+            SPECIFIC_CHANGES="$SPECIFIC_CHANGES\n- 🐳 Docker containerization"
+          fi
+          
+          echo "**Purpose:** $PURPOSE" >> pr_purpose_summary.txt
+          echo "" >> pr_purpose_summary.txt
+          echo "$DETAILS" >> pr_purpose_summary.txt
+          
+          if [ ! -z "$SPECIFIC_CHANGES" ]; then
+            echo "" >> pr_purpose_summary.txt
+            echo "**Key Changes:**" >> pr_purpose_summary.txt
+            echo -e "$SPECIFIC_CHANGES" >> pr_purpose_summary.txt
+          fi
+          
           # Guardar estadísticas en outputs
           echo "files_changed=$FILES_CHANGED" >> $GITHUB_OUTPUT
           echo "lines_added=$LINES_ADDED" >> $GITHUB_OUTPUT
@@ -369,13 +462,21 @@ jobs:
               const configFiles = '${{ steps.diff.outputs.config_files }}';
               const otherFiles = '${{ steps.diff.outputs.other_files }}';
               
-              // Leer el resumen de archivos cambiados
+              // Leer el resumen de archivos cambiados y el propósito del PR
               const fs = require('fs');
               let fileChangesSummary = '';
+              let purposeSummary = '';
+              
               try {
                 fileChangesSummary = fs.readFileSync('pr_changes_summary.txt', 'utf8');
               } catch (error) {
                 fileChangesSummary = 'Unable to read file changes summary.';
+              }
+              
+              try {
+                purposeSummary = fs.readFileSync('pr_purpose_summary.txt', 'utf8');
+              } catch (error) {
+                purposeSummary = '**Purpose:** General Updates\n\nThis PR contains updates and improvements to the codebase.';
               }
               
               // Construir tabla de estadísticas de cambios
@@ -428,6 +529,8 @@ jobs:
                 '---',
                 '',
                 '## 🚀 PR Changes Summary',
+                '',
+                purposeSummary,
                 '',
                 '### 📊 Change Statistics',
                 changesTable,
