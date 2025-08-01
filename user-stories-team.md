@@ -3,7 +3,7 @@
 **Project**: AI-Powered Pet Accessories Store Chatbot  
 **Team**: Denisse, Tomas, Javiera, Roxana  
 **Sprint Duration**: 4 semanas  
-**Last Updated**: Julio 31, 2025
+**Last Updated**: July 31, 2025
 
 ---
 
