@@ -120,7 +120,7 @@ describe('UserService', () => {
       mockDatabaseService.tokenExists = jest.fn().mockResolvedValue(false);
       userService = new UserService(mockDatabaseService);
       const result = await userService.refreshToken('notfound');
-      expect(result).toEqual({ error: "Token inválido", status: 403 });
+      expect(result).toEqual({ error: "Invalid token", status: 403 });
     });
 
     it('should return new access token if refresh token is valid', async () => {
@@ -141,7 +141,7 @@ describe('UserService', () => {
       userService = new UserService(mockDatabaseService);
       jwt.verify.mockImplementation(() => { throw new Error('fail'); });
       const result = await userService.refreshToken('validtoken');
-      expect(result).toEqual({ error: "Token inválido o expirado", status: 403 });
+      expect(result).toEqual({ error: "Invalid or expired token", status: 403 });
     });
   });
 
@@ -176,7 +176,7 @@ describe('UserService', () => {
       userService = new UserService(mockDatabaseService);
       mockDatabaseService.addUser('existing', 'SecurePass123!');
       const result = await userService.register('existing', 'SecurePass123!');
-      expect(result).toEqual({ success: false, message: 'El nombre de usuario ya está en uso' });
+      expect(result).toEqual({ success: false, message: 'Username is already taken' });
     });
 
     it('should hash password and add user if user does not exist', async () => {
@@ -184,7 +184,7 @@ describe('UserService', () => {
       bcrypt.hash.mockResolvedValue('hashedPassword');
       const result = await userService.register('newuser', 'SecurePass123!');
       expect(bcrypt.hash).toHaveBeenCalledWith('SecurePass123!', 10);
-      expect(result).toEqual({ success: true, message: 'Usuario registrado exitosamente', user: true });
+      expect(result).toEqual({ success: true, message: 'User registered successfully', user: true });
     });
 
     it('should return false if addUser fails', async () => {
@@ -307,7 +307,7 @@ describe('UserService', () => {
       for (const weakPassword of weakPasswords) {
         const result = await userService.register('testuser', weakPassword);
         expect(result.success).toBe(false);
-        expect(result.message).toContain('La contraseña debe');
+        expect(result.message).toMatch(/Password must|Password is too common/);
       }
     });
 
