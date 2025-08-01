@@ -456,6 +456,20 @@ jobs:
 
           # Obtener archivos modificados con más detalle
           MODIFIED_FILES_DETAIL=$(git diff --name-status ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+          
+          # Leer el resumen del propósito generado anteriormente
+          if [ -f "pr_purpose_summary.txt" ]; then
+            PURPOSE_SUMMARY=$(cat pr_purpose_summary.txt)
+          else
+            PURPOSE_SUMMARY="Purpose analysis not available"
+          fi
+          
+          # Leer el resumen de cambios generado anteriormente
+          if [ -f "pr_changes_summary.txt" ]; then
+            CHANGES_SUMMARY=$(cat pr_changes_summary.txt)
+          else
+            CHANGES_SUMMARY="Changes summary not available"
+          fi
 
             RESPONSE=$(curl -s -X POST https://api.openai.com/v1/chat/completions \
             -H "Content-Type: application/json" \
