@@ -1,6 +1,6 @@
 # 🐾 Pet Accessories Store Chatbot API
 
-[![AI PR Review](https://github.com/tzincker/ai-challenge/workflows/AI%20PR%20Commenter/badge.svg)](https://github.com/tzincker/ai-challenge/actions)
+[![GitHub Copilot-Style AI Review](https://github.com/tzincker/ai-challenge/workflows/GitHub%20Copilot-Style%20AI%20PR%20Review/badge.svg)](https://github.com/tzincker/ai-challenge/actions)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org/)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
 
@@ -276,7 +276,11 @@ DATABASE_URL=your_production_database_url
 
 ### CI/CD Pipeline
 The project includes two GitHub Actions workflows:
-1. **AI PR Review** (`.github/workflows/ai-pr-comment.yml`) - Automated code quality analysis and AI-powered PR reviews
+1. **GitHub Copilot-Style AI Review** (`.github/workflows/ai-pr-comment.yml`) - Intelligent code quality analysis with:
+   - **Smart script detection** - Only runs available npm scripts
+   - **Comprehensive analysis** - ESLint, tests, security audit, formatting
+   - **AI-powered reviews** - GitHub Copilot-style feedback
+   - **Fallback system** - Ensures reviews even when OpenAI API is unavailable
 2. **Azure Deployment** (`.github/workflows/azure-deploy.yml`) - Automated deployment to Azure cloud services
 
 ---
@@ -297,14 +301,36 @@ npm install
 # Start development server
 npm start
 
+# Start with file watching (development)
+npm run dev
+
 # Run tests
 npm test
 
-# Lint code
-npx eslint .
+# Run tests with coverage
+npm run test:coverage
 
-# Format code
-npx prettier --write .
+# Run tests in watch mode
+npm run test:watch
+
+# Lint code
+npm run lint
+
+# Fix linting issues automatically
+npm run lint:fix
+
+# Format code with Prettier
+npm run format
+
+# Check code formatting
+npm run format:check
+
+# Validate code quality (lint + test)
+npm run validate
+
+# Docker commands
+npm run docker:build
+npm run docker:run
 ```
 
 ---

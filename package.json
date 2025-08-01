@@ -13,7 +13,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "npm run lint && npm run test",
+    "validate": "npm run lint && npm run test",
     "docker:build": "docker build -t pet-chatbot .",
     "docker:run": "docker run -p 3000:3000 --env-file .env pet-chatbot"
   },
