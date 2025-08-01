@@ -8,16 +8,25 @@ const registerMessage = document.getElementById('register-message');
 // Función para validar nombre de usuario
 function validateUsername(username) {
   if (!username) {
-    return { valid: false, message: "El nombre de usuario es requerido" };
+    return { valid: false, message: 'El nombre de usuario es requerido' };
   }
   if (username.length < 3) {
-    return { valid: false, message: "El nombre de usuario debe tener al menos 3 caracteres" };
+    return {
+      valid: false,
+      message: 'El nombre de usuario debe tener al menos 3 caracteres',
+    };
   }
   if (username.length > 20) {
-    return { valid: false, message: "El nombre de usuario no puede tener más de 20 caracteres" };
+    return {
+      valid: false,
+      message: 'El nombre de usuario no puede tener más de 20 caracteres',
+    };
   }
   if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-    return { valid: false, message: "Solo letras, números y guiones bajos permitidos" };
+    return {
+      valid: false,
+      message: 'Solo letras, números y guiones bajos permitidos',
+    };
   }
   return { valid: true };
 }
@@ -25,16 +34,25 @@ function validateUsername(username) {
 // Función para validar contraseña
 function validatePassword(password) {
   if (!password) {
-    return { valid: false, message: "La contraseña es requerida" };
+    return { valid: false, message: 'La contraseña es requerida' };
   }
   if (password.length < 6) {
-    return { valid: false, message: "La contraseña debe tener al menos 6 caracteres" };
+    return {
+      valid: false,
+      message: 'La contraseña debe tener al menos 6 caracteres',
+    };
   }
   if (password.length > 50) {
-    return { valid: false, message: "La contraseña no puede tener más de 50 caracteres" };
+    return {
+      valid: false,
+      message: 'La contraseña no puede tener más de 50 caracteres',
+    };
   }
   if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-    return { valid: false, message: "Debe contener mayúscula, minúscula y número" };
+    return {
+      valid: false,
+      message: 'Debe contener mayúscula, minúscula y número',
+    };
   }
   return { valid: true };
 }
@@ -45,7 +63,7 @@ function showValidationMessage(input, validation) {
   if (existing) {
     existing.remove();
   }
-  
+
   if (!validation.valid) {
     const messageDiv = document.createElement('div');
     messageDiv.className = 'validation-message error';
@@ -69,7 +87,7 @@ usernameInput.addEventListener('input', () => {
 passwordInput.addEventListener('input', () => {
   const validation = validatePassword(passwordInput.value);
   showValidationMessage(passwordInput, validation);
-  
+
   // También validar confirmación si hay algo
   if (confirmPasswordInput.value) {
     validatePasswordConfirmation();
@@ -81,17 +99,23 @@ passwordInput.addEventListener('input', () => {
 function validatePasswordConfirmation() {
   const password = passwordInput.value;
   const confirmPassword = confirmPasswordInput.value;
-  
+
   if (!confirmPassword) {
-    showValidationMessage(confirmPasswordInput, { valid: false, message: "Confirma tu contraseña" });
+    showValidationMessage(confirmPasswordInput, {
+      valid: false,
+      message: 'Confirma tu contraseña',
+    });
     return false;
   }
-  
+
   if (password !== confirmPassword) {
-    showValidationMessage(confirmPasswordInput, { valid: false, message: "Las contraseñas no coinciden" });
+    showValidationMessage(confirmPasswordInput, {
+      valid: false,
+      message: 'Las contraseñas no coinciden',
+    });
     return false;
   }
-  
+
   showValidationMessage(confirmPasswordInput, { valid: true });
   return true;
 }
@@ -105,8 +129,10 @@ confirmPasswordInput.addEventListener('input', () => {
 function checkFormValidity() {
   const usernameValid = validateUsername(usernameInput.value).valid;
   const passwordValid = validatePassword(passwordInput.value).valid;
-  const confirmValid = confirmPasswordInput.value === passwordInput.value && confirmPasswordInput.value !== '';
-  
+  const confirmValid =
+    confirmPasswordInput.value === passwordInput.value &&
+    confirmPasswordInput.value !== '';
+
   registerBtn.disabled = !(usernameValid && passwordValid && confirmValid);
 }
 
@@ -153,9 +179,10 @@ registerBtn.addEventListener('click', async () => {
     const data = await response.json();
 
     if (response.ok && data.success) {
-      registerMessage.textContent = '¡Cuenta creada exitosamente! Iniciando sesión...';
+      registerMessage.textContent =
+        '¡Cuenta creada exitosamente! Iniciando sesión...';
       registerMessage.className = 'success';
-      
+
       // Automaticamente hacer login después del registro exitoso
       setTimeout(async () => {
         try {
@@ -173,20 +200,23 @@ registerBtn.addEventListener('click', async () => {
             localStorage.setItem('tempAccessToken', loginData.accessToken);
             localStorage.setItem('tempRefreshToken', loginData.refreshToken);
             localStorage.setItem('autoLoginUsername', username);
-            
-            registerMessage.textContent = '¡Bienvenido! Redirigiendo al chat...';
-            
+
+            registerMessage.textContent =
+              '¡Bienvenido! Redirigiendo al chat...';
+
             setTimeout(() => {
               window.location.href = '/';
             }, 1000);
           } else {
-            registerMessage.textContent = '¡Cuenta creada! Ve al login para ingresar.';
+            registerMessage.textContent =
+              '¡Cuenta creada! Ve al login para ingresar.';
             setTimeout(() => {
               window.location.href = '/';
             }, 2000);
           }
         } catch (error) {
-          registerMessage.textContent = '¡Cuenta creada! Ve al login para ingresar.';
+          registerMessage.textContent =
+            '¡Cuenta creada! Ve al login para ingresar.';
           setTimeout(() => {
             window.location.href = '/';
           }, 2000);

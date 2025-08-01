@@ -13,14 +13,14 @@ class SQLiteDatabaseService {
     // Configuración de SQLite
     this.dbPath = path.join(dbDir, 'ai_challenge.db');
     this.db = null;
-    
+
     console.log(`📄 SQLite database ubicado en: ${this.dbPath}`);
   }
 
   // Conectar a SQLite
   async connect() {
     return new Promise((resolve, reject) => {
-      this.db = new sqlite3.Database(this.dbPath, (err) => {
+      this.db = new sqlite3.Database(this.dbPath, err => {
         if (err) {
           console.error('❌ Error conectando a SQLite:', err);
           reject(err);
@@ -36,7 +36,7 @@ class SQLiteDatabaseService {
   async testConnection() {
     try {
       if (!this.db) await this.connect();
-      
+
       return new Promise((resolve, reject) => {
         this.db.get("SELECT datetime('now') as now", (err, row) => {
           if (err) {
@@ -93,7 +93,7 @@ class SQLiteDatabaseService {
 
     return new Promise((resolve, reject) => {
       this.db.serialize(() => {
-        this.db.run(createUsersTable, (err) => {
+        this.db.run(createUsersTable, err => {
           if (err) {
             console.error('❌ Error creando tabla users:', err);
             reject(err);
@@ -101,7 +101,7 @@ class SQLiteDatabaseService {
           }
         });
 
-        this.db.run(createUserSessionsTable, (err) => {
+        this.db.run(createUserSessionsTable, err => {
           if (err) {
             console.error('❌ Error creando tabla user_sessions:', err);
             reject(err);
@@ -109,7 +109,7 @@ class SQLiteDatabaseService {
           }
         });
 
-        this.db.run(createPasswordResetTable, (err) => {
+        this.db.run(createPasswordResetTable, err => {
           if (err) {
             console.error('❌ Error creando tabla password_resets:', err);
             reject(err);
@@ -139,15 +139,15 @@ class SQLiteDatabaseService {
         });
       } else {
         // Para INSERT, UPDATE, DELETE
-        this.db.run(sql, params, function(err) {
+        this.db.run(sql, params, function (err) {
           if (err) {
             console.error('❌ Error en query:', err);
             reject(err);
           } else {
-            resolve({ 
+            resolve({
               rowCount: this.changes,
               insertId: this.lastID,
-              rows: []
+              rows: [],
             });
           }
         });
@@ -158,8 +158,8 @@ class SQLiteDatabaseService {
   // Cerrar conexión
   async close() {
     if (this.db) {
-      return new Promise((resolve) => {
-        this.db.close((err) => {
+      return new Promise(resolve => {
+        this.db.close(err => {
           if (err) {
             console.error('❌ Error cerrando SQLite:', err);
           } else {
@@ -184,7 +184,7 @@ class SQLiteDatabaseService {
       email,
       password_hash: passwordHash,
       created_at: new Date(),
-      updated_at: new Date()
+      updated_at: new Date(),
     };
   }
 
@@ -240,14 +240,15 @@ class SQLiteDatabaseService {
   }
 
   async deleteExpiredTokens() {
-    const sql = `DELETE FROM user_sessions WHERE expires_at <= datetime('now')`;
+    const sql = "DELETE FROM user_sessions WHERE expires_at <= datetime('now')";
     const result = await this.query(sql);
     return result;
   }
 
   // 🧹 MEJORA: Limpiar códigos de reset expirados
   async deleteExpiredPasswordResets() {
-    const sql = `DELETE FROM password_resets WHERE expires_at <= datetime('now')`;
+    const sql =
+      "DELETE FROM password_resets WHERE expires_at <= datetime('now')";
     const result = await this.query(sql);
     return result;
   }
@@ -257,10 +258,13 @@ class SQLiteDatabaseService {
     try {
       const tokensResult = await this.deleteExpiredTokens();
       const resetsResult = await this.deleteExpiredPasswordResets();
-      
-      const totalCleaned = (tokensResult.rowCount || 0) + (resetsResult.rowCount || 0);
-      console.log(`🧹 Limpiados ${tokensResult.rowCount || 0} tokens expirados y ${resetsResult.rowCount || 0} códigos de reset expirados de SQLite`);
-      
+
+      const totalCleaned =
+        (tokensResult.rowCount || 0) + (resetsResult.rowCount || 0);
+      console.log(
+        `🧹 Limpiados ${tokensResult.rowCount || 0} tokens expirados y ${resetsResult.rowCount || 0} códigos de reset expirados de SQLite`
+      );
+
       return totalCleaned;
     } catch (error) {
       console.error('Error limpiando tokens y códigos expirados:', error);
@@ -343,15 +347,21 @@ class SQLiteDatabaseService {
   // 📊 MEJORA: Método para obtener estadísticas de la base de datos
   async getDatabaseStats() {
     try {
-      const usersResult = await this.query('SELECT COUNT(*) as count FROM users');
-      const sessionsResult = await this.query('SELECT COUNT(*) as count FROM user_sessions WHERE expires_at > datetime("now")');
-      const resetsResult = await this.query('SELECT COUNT(*) as count FROM password_resets WHERE expires_at > datetime("now")');
+      const usersResult = await this.query(
+        'SELECT COUNT(*) as count FROM users'
+      );
+      const sessionsResult = await this.query(
+        'SELECT COUNT(*) as count FROM user_sessions WHERE expires_at > datetime("now")'
+      );
+      const resetsResult = await this.query(
+        'SELECT COUNT(*) as count FROM password_resets WHERE expires_at > datetime("now")'
+      );
 
       return {
         totalUsers: usersResult.rows[0]?.count || 0,
         activeSessions: sessionsResult.rows[0]?.count || 0,
         pendingResets: resetsResult.rows[0]?.count || 0,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       console.error('Error obteniendo estadísticas:', error);
