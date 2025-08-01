@@ -228,9 +228,9 @@ class ChatService {
       // Try with Ollama if enabled
       if (!answer && this.ollamaHost && process.env.OLLAMA_ENABLED === 'true') {
         try {
-          // Create a timeout promise (15 seconds)
+          // Create a timeout promise (90 seconds)
           const timeout = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Ollama timeout after 15 seconds')), 15000);
+            setTimeout(() => reject(new Error('Ollama timeout after 90 seconds')), 90000);
           });
 
           // Create the Ollama request promise
