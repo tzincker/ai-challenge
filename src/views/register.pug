@@ -3,15 +3,31 @@ html(lang="en")
   head
     meta(charset="UTF-8")
     meta(name="viewport", content="width=device-width, initial-scale=1.0")
-    title="Pet Accessories Chatbot"
+    title="Pet Accessories Chatbot - Registro"
     link(rel='stylesheet', type='text/css', href='/styles.css')
   body
     div(class="container")
       h1="Pet Accessories Chatbot"
-      div(id="login-section")
-        h2="Register"
-        form(action="/register", method="post")
-            input(type="text", id="username", name="username", placeholder="Username")
-            input(type="password", id="password", name="password", placeholder="Password")
-            button(type="submit", id="login-btn")="Register"
-        p(id="login-message")
+      div(id="register-section")
+        h2="Crear Cuenta"
+        div(class="form-group")
+          input(type="text", id="username", placeholder="Nombre de usuario")
+          div(class="validation-info")
+            small="• Entre 3 y 20 caracteres"
+            br
+            small="• Solo letras, números y guiones bajos"
+        div(class="form-group")
+          input(type="password", id="password", placeholder="Contraseña")
+          div(class="validation-info")
+            small="• Mínimo 6 caracteres"
+            br
+            small="• Al menos una mayúscula, una minúscula y un número"
+        div(class="form-group")
+          input(type="password", id="confirm-password", placeholder="Confirmar contraseña")
+        button(type="button", id="register-btn")="Crear Cuenta"
+        p(id="register-message")
+        div(class="auth-links")
+          a(href="/")="¿Ya tienes cuenta? Inicia sesión"
+    script.
+      const CONFIG = { API_BASE_URL: "!{apiBaseUrl}", };
+    script(src='/register-script.js')
