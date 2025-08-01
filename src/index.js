@@ -6,9 +6,12 @@ const bodyParser = require('body-parser')
 const app = express();
 const port = process.env.PORT || 3000;
 
-// 📄 MEJORA: Cambiar a SQLiteDatabaseService 
-const SQLiteDatabaseService = require("./services/SQLiteDatabaseService");
-const databaseService = new SQLiteDatabaseService();
+// 📄 Configuración original con SQLite en memoria que funcionaba bien
+const sqlite = require("sqlite3");
+const db = new sqlite.Database(':memory:');
+
+const DatabaseService = require("./services/DatabaseService");
+const databaseService = new DatabaseService(db);
 const UserService = require("./services/UserService");
 const userService = new UserService(databaseService);
 const ChatService = require("./services/ChatService");
@@ -136,21 +139,9 @@ app.delete("/logout", async (req, res) => {
 // Ruta protegida de chat
 app.use("/chat", authenticateToken, chatService.getRouter());
 
-// 🚀 MEJORA: Inicializar base de datos y arrancar servidor
-async function startServer() {
-  try {
-    await databaseService.testConnection();
-    await databaseService.initializeTables();
-    
-    app.listen(port, () => {
-      console.log(`🚀 Server listening on port ${port}`);
-      console.log(`📱 Frontend: http://localhost:${port}`);
-      console.log(`📝 Register: http://localhost:${port}/register`);
-    });
-  } catch (error) {
-    console.error('❌ Error starting server:', error);
-    process.exit(1);
-  }
-}
-
-startServer();
+// 🚀 Iniciar servidor
+app.listen(port, () => {
+  console.log(`🚀 Server listening on port ${port}`);
+  console.log(`📱 Frontend: http://localhost:${port}`);
+  console.log(`📝 Register: http://localhost:${port}/register`);
+});
