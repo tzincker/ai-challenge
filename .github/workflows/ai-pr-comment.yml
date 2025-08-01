@@ -447,15 +447,6 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             try {
-              // Obtener la descripción actual del PR
-              const { data: pr } = await github.rest.pulls.get({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: context.payload.pull_request.number,
-              });
-              
-              const currentBody = pr.body || '';
-              
               // Variables de análisis
               const eslintErrors = '${{ steps.quality.outputs.eslint_errors }}';
               const eslintWarnings = '${{ steps.quality.outputs.eslint_warnings }}';
@@ -536,12 +527,8 @@ jobs:
                 `${formattingIssues === '0' ? '✅' : '💅'} **Formatting**: ${formattingIssues === '0' ? 'Well formatted' : 'Needs formatting'}`
               ].join('\n');
               
-              // Construir la sección completa
-              const analysisSection = [
-                '',
-                '',
-                '---',
-                '',
+              // Construir la descripción completa del PR (reemplaza todo el contenido)
+              const newBody = [
                 '## 🚀 PR Changes Summary',
                 '',
                 purposeSummary,
@@ -567,13 +554,7 @@ jobs:
                 `*Last updated: ${new Date().toISOString()}*`
               ].join('\n');
               
-              // Remover cualquier sección de análisis AI previa
-              const cleanBody = currentBody.replace(/---\s*## 🚀 PR Changes Summary[\s\S]*?(?=---|\n##|$)/g, '');
-              
-              // Agregar la nueva sección
-              const newBody = cleanBody + analysisSection;
-              
-              // Actualizar la descripción del PR
+              // Reemplazar completamente la descripción del PR
               await github.rest.pulls.update({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -581,7 +562,7 @@ jobs:
                 body: newBody,
               });
               
-              console.log('PR description updated successfully');
+              console.log('PR description replaced successfully');
             } catch (error) {
               console.error('Failed to update PR description:', error);
               // No fallar el workflow si esto falla
