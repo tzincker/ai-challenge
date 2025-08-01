@@ -14,7 +14,7 @@ describe('ChatService', () => {
   beforeEach(() => {
     mockKnowledge = [
       { question: 'What is a dog?', answer: 'A dog is a pet.' },
-      { question: 'What is a cat?', answer: 'A cat is a pet.' }
+      { question: 'What is a cat?', answer: 'A cat is a pet.' },
     ];
     fs.readFileSync.mockReturnValue(JSON.stringify({ faqs: mockKnowledge }));
     chatService = new ChatService(mockKnowledge);
@@ -56,7 +56,9 @@ describe('ChatService', () => {
 
   describe('isRelevantQuestion', () => {
     it('returns true for relevant keywords', () => {
-      expect(chatService.isRelevantQuestion('How to buy a dog collar?')).toBe(true);
+      expect(chatService.isRelevantQuestion('How to buy a dog collar?')).toBe(
+        true
+      );
     });
 
     it('returns false for greetings', () => {
@@ -72,7 +74,11 @@ describe('ChatService', () => {
     });
 
     it('returns false for complex irrelevant question', () => {
-      expect(chatService.isRelevantQuestion('ozymandias arthropod chimera magic drill machine chair table hydrogen')).toBe(false);
+      expect(
+        chatService.isRelevantQuestion(
+          'ozymandias arthropod chimera magic drill machine chair table hydrogen'
+        )
+      ).toBe(false);
     });
 
     it('returns false for very short irrelevant question', () => {
@@ -80,15 +86,21 @@ describe('ChatService', () => {
     });
 
     it('returns true for pet-related questions', () => {
-      expect(chatService.isRelevantQuestion('What food should I give my pet?')).toBe(true);
+      expect(
+        chatService.isRelevantQuestion('What food should I give my pet?')
+      ).toBe(true);
       expect(chatService.isRelevantQuestion('How to train a dog?')).toBe(true);
-      expect(chatService.isRelevantQuestion('Cat behavior problems')).toBe(true);
+      expect(chatService.isRelevantQuestion('Cat behavior problems')).toBe(
+        true
+      );
     });
 
     it('handles empty or null input', () => {
       expect(chatService.isRelevantQuestion('')).toBe(false);
       expect(() => chatService.isRelevantQuestion(null)).toThrow(TypeError);
-      expect(() => chatService.isRelevantQuestion(undefined)).toThrow(TypeError);
+      expect(() => chatService.isRelevantQuestion(undefined)).toThrow(
+        TypeError
+      );
     });
   });
 
@@ -100,7 +112,9 @@ describe('ChatService', () => {
     });
     it('adds but faqs is not an array', () => {
       chatService.isRelevantQuestion = jest.fn().mockReturnValue(true);
-      fs.readFileSync.mockReturnValue(JSON.stringify({ faqs: { name: "perro"} }));
+      fs.readFileSync.mockReturnValue(
+        JSON.stringify({ faqs: { name: 'perro' } })
+      );
       fs.writeFileSync.mockClear();
       chatService.addToKnowledge('What is a leash?', 'A leash is...');
       expect(fs.writeFileSync).toHaveBeenCalled();
@@ -114,7 +128,9 @@ describe('ChatService', () => {
     });
     it('does not add duplicate question', () => {
       chatService.isRelevantQuestion = jest.fn().mockReturnValue(true);
-      fs.readFileSync.mockReturnValue(JSON.stringify({ faqs: [{ question: 'Q', answer: 'A' }] }));
+      fs.readFileSync.mockReturnValue(
+        JSON.stringify({ faqs: [{ question: 'Q', answer: 'A' }] })
+      );
       chatService.addToKnowledge('Q', 'A');
       expect(fs.writeFileSync).not.toHaveBeenCalled();
     });
@@ -126,10 +142,12 @@ describe('ChatService', () => {
       chatService.isRelevantQuestion = jest.fn().mockReturnValue(true);
       chatService.addToKnowledge('Q', 'A');
       expect(spy).toHaveBeenCalled();
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Error adding to knowledge.json:', expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Error adding to knowledge.json:',
+        expect.any(Error)
+      );
       spy.mockRestore();
     });
-
   });
 
   describe('getRouter', () => {
@@ -151,9 +169,9 @@ describe('ChatService', () => {
       OpenAI.prototype.chat = {
         completions: {
           create: jest.fn().mockResolvedValue({
-            choices: [{ message: { content: mockContent } }]
-          })
-        }
+            choices: [{ message: { content: mockContent } }],
+          }),
+        },
       };
       const result = await chatService.callLLM('Prompt');
       expect(result).toBe(mockContent);
@@ -162,21 +180,24 @@ describe('ChatService', () => {
     it('returns fallback on error', async () => {
       OpenAI.prototype.chat = {
         completions: {
-          create: jest.fn().mockRejectedValue(new Error('API failed'))
-        }
+          create: jest.fn().mockRejectedValue(new Error('API failed')),
+        },
       };
       const result = await chatService.callLLM('Prompt');
       expect(result).toMatch(/I'm sorry/);
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Error calling OpenAI:', expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Error calling OpenAI:',
+        expect.any(Error)
+      );
     });
 
     it('handles empty response from OpenAI', async () => {
       OpenAI.prototype.chat = {
         completions: {
           create: jest.fn().mockResolvedValue({
-            choices: []
-          })
-        }
+            choices: [],
+          }),
+        },
       };
       const result = await chatService.callLLM('Prompt');
       expect(result).toMatch(/I'm sorry/);
@@ -186,9 +207,9 @@ describe('ChatService', () => {
       OpenAI.prototype.chat = {
         completions: {
           create: jest.fn().mockResolvedValue({
-            choices: [{ message: null }]
-          })
-        }
+            choices: [{ message: null }],
+          }),
+        },
       };
       const result = await chatService.callLLM('Prompt');
       expect(result).toMatch(/I'm sorry/);
@@ -209,7 +230,9 @@ describe('ChatService', () => {
     });
 
     it('should handle missing faqs property in knowledge.json', () => {
-      fs.readFileSync.mockReturnValue(JSON.stringify({ otherProperty: 'value' }));
+      fs.readFileSync.mockReturnValue(
+        JSON.stringify({ otherProperty: 'value' })
+      );
       const chatService = new ChatService();
       expect(chatService.knowledge).toEqual([]);
     });
@@ -218,7 +241,7 @@ describe('ChatService', () => {
       const result1 = chatService.buildPrompt('what is a dog?');
       const result2 = chatService.buildPrompt('What Is A Dog?');
       const result3 = chatService.buildPrompt('WHAT IS A DOG?');
-      
+
       expect(result1.found).toBe(result2.found);
       expect(result2.found).toBe(result3.found);
     });
@@ -230,9 +253,11 @@ describe('ChatService', () => {
     });
 
     it('should prevent duplicate entries in knowledge base', () => {
-      fs.readFileSync.mockReturnValue(JSON.stringify({ faqs: [{ question: 'Test Q', answer: 'Test A' }] }));
+      fs.readFileSync.mockReturnValue(
+        JSON.stringify({ faqs: [{ question: 'Test Q', answer: 'Test A' }] })
+      );
       chatService.isRelevantQuestion = jest.fn().mockReturnValue(true);
-      
+
       chatService.addToKnowledge('Test Q', 'Test A');
       expect(fs.writeFileSync).not.toHaveBeenCalled();
     });

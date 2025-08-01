@@ -1,6 +1,7 @@
 # Paso a Paso: Desplegar Proyecto desde GitHub a Azure con Docker y Azure Web App
 
-Esta guía te ayudará a desplegar tu proyecto desde GitHub hasta Azure usando Docker y Azure Web App. Sigue cada paso cuidadosamente.
+Esta guía te ayudará a desplegar tu proyecto desde GitHub hasta Azure usando Docker y Azure Web App.
+Sigue cada paso cuidadosamente.
 
 ---
 
@@ -16,7 +17,8 @@ az login --user <username> --password <password>
 
 ## 2. Crear una Identidad Administrada Asignada por Usuario (User Assigned Managed Identity)
 
-Puedes crear la identidad desde el portal de Azure o usando la CLI, según tu arquitectura. Esta identidad se usará para asignar permisos a los recursos.
+Puedes crear la identidad desde el portal de Azure o usando la CLI, según tu arquitectura. Esta
+identidad se usará para asignar permisos a los recursos.
 
 ---
 
@@ -44,10 +46,10 @@ Desde el portal de Azure:
 1. Ve a **App Services**.
 2. Haz clic en **Create** y selecciona **Web App**.
 3. En la configuración:
-    - Selecciona **Publish: Docker Container (Select from containers)**.
-    - Escoge tu suscripción, grupo de recursos, región y un nombre para la Web App (sin guiones).
-    - Agrega asignación de rol: crea una asignación con rol **Contributor**.
-    - Selecciona la **Managed Identity** creada en el paso anterior.
+   - Selecciona **Publish: Docker Container (Select from containers)**.
+   - Escoge tu suscripción, grupo de recursos, región y un nombre para la Web App (sin guiones).
+   - Agrega asignación de rol: crea una asignación con rol **Contributor**.
+   - Selecciona la **Managed Identity** creada en el paso anterior.
 
 ---
 
@@ -64,7 +66,8 @@ az acr list --resource-group rg_grupo70 --output table
 
 ## 6. Crear variables de ambiente en GitHub
 
-En tu repositorio de GitHub, ve a **Settings > Secrets and variables > Actions** y crea las siguientes variables:
+En tu repositorio de GitHub, ve a **Settings > Secrets and variables > Actions** y crea las
+siguientes variables:
 
 - `AZURE_RESOURCE_GROUP` → con tu grupo de recursos (ejemplo: `rg_grupo70`)
 - `AZURE_CREDENTIALS` → con el JSON del Service Principal (paso 3)
@@ -73,7 +76,9 @@ En tu repositorio de GitHub, ve a **Settings > Secrets and variables > Actions**
 
 ## 7. Crear archivo GitHub Actions workflow
 
-Crea el archivo `.github/workflows/workflow.yml` con el siguiente contenido. Este workflow construye tu imagen Docker, la sube a ACR y actualiza tu Web App en Azure automáticamente cuando haces push a la rama `main`.
+Crea el archivo `.github/workflows/workflow.yml` con el siguiente contenido. Este workflow construye
+tu imagen Docker, la sube a ACR y actualiza tu Web App en Azure automáticamente cuando haces push a
+la rama `main`.
 
 ```yaml
 name: Build and Deploy
@@ -124,7 +129,6 @@ jobs:
 ---
 
 ## 8. Agregar el puerto en la WebApp
-IR a webapp: IACHALLENGE70
-Ir a setting:
-Ir a Environment variables
-Agregar WEBSITES_PORT y el puerto de escucha (3000) o el 8080
+
+IR a webapp: IACHALLENGE70 Ir a setting: Ir a Environment variables Agregar WEBSITES_PORT y el
+puerto de escucha (3000) o el 8080

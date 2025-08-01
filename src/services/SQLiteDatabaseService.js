@@ -1,4 +1,4 @@
-/* c8 ignore file */
+/* eslint-disable no-invalid-this */
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
@@ -14,18 +14,21 @@ class SQLiteDatabaseService {
     // Configuración de SQLite
     this.dbPath = path.join(dbDir, 'ai_challenge.db');
     this.db = null;
-    
+
+    // eslint-disable-next-line no-console
     console.log(`📄 SQLite database ubicado en: ${this.dbPath}`);
   }
 
   // Conectar a SQLite
   async connect() {
     return new Promise((resolve, reject) => {
-      this.db = new sqlite3.Database(this.dbPath, (err) => {
+      this.db = new sqlite3.Database(this.dbPath, err => {
         if (err) {
+          // eslint-disable-next-line no-console
           console.error('❌ Error conectando a SQLite:', err);
           reject(err);
         } else {
+          // eslint-disable-next-line no-console
           console.log('📄 Conexión exitosa a SQLite');
           resolve();
         }
@@ -37,19 +40,22 @@ class SQLiteDatabaseService {
   async testConnection() {
     try {
       if (!this.db) await this.connect();
-      
+
       return new Promise((resolve, reject) => {
-        this.db.get("SELECT datetime('now') as now", (err, row) => {
+        this.db.get('SELECT datetime(\'now\') as now', (err, row) => {
           if (err) {
+            // eslint-disable-next-line no-console
             console.error('❌ Error en test de conexión SQLite:', err);
             reject(err);
           } else {
+            // eslint-disable-next-line no-console
             console.log('✅ Conexión a SQLite exitosa:', row);
             resolve(row);
           }
         });
       });
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('❌ Error en testConnection:', err);
       throw err;
     }
@@ -94,28 +100,32 @@ class SQLiteDatabaseService {
 
     return new Promise((resolve, reject) => {
       this.db.serialize(() => {
-        this.db.run(createUsersTable, (err) => {
+        this.db.run(createUsersTable, err => {
           if (err) {
+            // eslint-disable-next-line no-console
             console.error('❌ Error creando tabla users:', err);
             reject(err);
             return;
           }
         });
 
-        this.db.run(createUserSessionsTable, (err) => {
+        this.db.run(createUserSessionsTable, err => {
           if (err) {
+            // eslint-disable-next-line no-console
             console.error('❌ Error creando tabla user_sessions:', err);
             reject(err);
             return;
           }
         });
 
-        this.db.run(createPasswordResetTable, (err) => {
+        this.db.run(createPasswordResetTable, err => {
           if (err) {
+            // eslint-disable-next-line no-console
             console.error('❌ Error creando tabla password_resets:', err);
             reject(err);
             return;
           }
+          // eslint-disable-next-line no-console
           console.log('✅ Tablas SQLite inicializadas correctamente');
           resolve();
         });
@@ -132,6 +142,7 @@ class SQLiteDatabaseService {
         // Para SELECT queries
         this.db.all(sql, params, (err, rows) => {
           if (err) {
+            // eslint-disable-next-line no-console
             console.error('❌ Error en query SELECT:', err);
             reject(err);
           } else {
@@ -140,15 +151,16 @@ class SQLiteDatabaseService {
         });
       } else {
         // Para INSERT, UPDATE, DELETE
-        this.db.run(sql, params, function(err) {
+        const stmt = this.db.run(sql, params, (err) => {
           if (err) {
+            // eslint-disable-next-line no-console
             console.error('❌ Error en query:', err);
             reject(err);
           } else {
-            resolve({ 
-              rowCount: this.changes,
-              insertId: this.lastID,
-              rows: []
+            resolve({
+              rowCount: stmt.changes,
+              insertId: stmt.lastID,
+              rows: [],
             });
           }
         });
@@ -159,11 +171,13 @@ class SQLiteDatabaseService {
   // Cerrar conexión
   async close() {
     if (this.db) {
-      return new Promise((resolve) => {
-        this.db.close((err) => {
+      return new Promise(resolve => {
+        this.db.close(err => {
           if (err) {
+            // eslint-disable-next-line no-console
             console.error('❌ Error cerrando SQLite:', err);
           } else {
+            // eslint-disable-next-line no-console
             console.log('📄 Conexión SQLite cerrada');
           }
           resolve();
@@ -185,7 +199,7 @@ class SQLiteDatabaseService {
       email,
       password_hash: passwordHash,
       created_at: new Date(),
-      updated_at: new Date()
+      updated_at: new Date(),
     };
   }
 
@@ -241,14 +255,15 @@ class SQLiteDatabaseService {
   }
 
   async deleteExpiredTokens() {
-    const sql = `DELETE FROM user_sessions WHERE expires_at <= datetime('now')`;
+    const sql = 'DELETE FROM user_sessions WHERE expires_at <= datetime(\'now\')';
     const result = await this.query(sql);
     return result;
   }
 
   // 🧹 MEJORA: Limpiar códigos de reset expirados
   async deleteExpiredPasswordResets() {
-    const sql = `DELETE FROM password_resets WHERE expires_at <= datetime('now')`;
+    const sql =
+      'DELETE FROM password_resets WHERE expires_at <= datetime(\'now\')';
     const result = await this.query(sql);
     return result;
   }
@@ -258,12 +273,17 @@ class SQLiteDatabaseService {
     try {
       const tokensResult = await this.deleteExpiredTokens();
       const resetsResult = await this.deleteExpiredPasswordResets();
-      
-      const totalCleaned = (tokensResult.rowCount || 0) + (resetsResult.rowCount || 0);
-      console.log(`🧹 Limpiados ${tokensResult.rowCount || 0} tokens expirados y ${resetsResult.rowCount || 0} códigos de reset expirados de SQLite`);
-      
+
+      const totalCleaned =
+        (tokensResult.rowCount || 0) + (resetsResult.rowCount || 0);
+      // eslint-disable-next-line no-console
+      console.log(
+        `🧹 Limpiados ${tokensResult.rowCount || 0} tokens expirados y ${resetsResult.rowCount || 0} códigos de reset expirados de SQLite`
+      );
+
       return totalCleaned;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error limpiando tokens y códigos expirados:', error);
       throw error;
     }
@@ -344,17 +364,24 @@ class SQLiteDatabaseService {
   // 📊 MEJORA: Método para obtener estadísticas de la base de datos
   async getDatabaseStats() {
     try {
-      const usersResult = await this.query('SELECT COUNT(*) as count FROM users');
-      const sessionsResult = await this.query('SELECT COUNT(*) as count FROM user_sessions WHERE expires_at > datetime("now")');
-      const resetsResult = await this.query('SELECT COUNT(*) as count FROM password_resets WHERE expires_at > datetime("now")');
+      const usersResult = await this.query(
+        'SELECT COUNT(*) as count FROM users'
+      );
+      const sessionsResult = await this.query(
+        'SELECT COUNT(*) as count FROM user_sessions WHERE expires_at > datetime("now")'
+      );
+      const resetsResult = await this.query(
+        'SELECT COUNT(*) as count FROM password_resets WHERE expires_at > datetime("now")'
+      );
 
       return {
         totalUsers: usersResult.rows[0]?.count || 0,
         activeSessions: sessionsResult.rows[0]?.count || 0,
         pendingResets: resetsResult.rows[0]?.count || 0,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error obteniendo estadísticas:', error);
       throw error;
     }
