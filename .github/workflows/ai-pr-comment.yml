@@ -20,83 +20,98 @@ jobs:
           fetch-depth: 0  # Necesario para análisis completo
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
-
-      - name: Run ESLint
-        id: eslint
-        continue-on-error: true
         run: |
-          echo "Running ESLint analysis..."
-          npx eslint . --format json --output-file eslint-results.json || true
-          
-          # Contar errores y warnings
-          ERRORS=$(jq '[.[].messages[] | select(.severity == 2)] | length' eslint-results.json 2>/dev/null || echo "0")
-          WARNINGS=$(jq '[.[].messages[] | select(.severity == 1)] | length' eslint-results.json 2>/dev/null || echo "0")
-          
-          echo "eslint_errors=$ERRORS" >> $GITHUB_OUTPUT
-          echo "eslint_warnings=$WARNINGS" >> $GITHUB_OUTPUT
-          
-          if [ "$ERRORS" -gt 0 ] || [ "$WARNINGS" -gt 0 ]; then
-            echo "ESLint found $ERRORS errors and $WARNINGS warnings"
+          if [ -f "package.json" ]; then
+            npm ci
           else
-            echo "ESLint: No issues found"
+            echo "No package.json found, skipping npm install"
           fi
 
-      - name: Run Tests
-        id: tests
+      - name: Run Code Quality Checks
+        id: quality
         continue-on-error: true
         run: |
-          echo "Running tests..."
-          npm test -- --coverage --json --outputFile=test-results.json || true
+          echo "Running code quality analysis..."
           
-          # Extraer resultados de tests
-          if [ -f "test-results.json" ]; then
-            PASSED=$(jq '.numPassedTests // 0' test-results.json)
-            FAILED=$(jq '.numFailedTests // 0' test-results.json)
-            COVERAGE=$(jq '.coverageMap // {} | keys | length' test-results.json)
+          # Inicializar variables
+          ESLINT_ERRORS=0
+          ESLINT_WARNINGS=0
+          TESTS_PASSED=0
+          TESTS_FAILED=0
+          COVERAGE_FILES=0
+          AUDIT_HIGH=0
+          AUDIT_MODERATE=0
+          FORMATTING_ISSUES=0
+          
+          # ESLint si existe configuración
+          if [ -f ".eslintrc.js" ] || [ -f ".eslintrc.json" ] || [ -f "eslint.config.js" ]; then
+            echo "Running ESLint analysis..."
+            npx eslint . --format json --output-file eslint-results.json || true
+            
+            if [ -f "eslint-results.json" ]; then
+              ESLINT_ERRORS=$(jq '[.[].messages[] | select(.severity == 2)] | length' eslint-results.json 2>/dev/null || echo "0")
+              ESLINT_WARNINGS=$(jq '[.[].messages[] | select(.severity == 1)] | length' eslint-results.json 2>/dev/null || echo "0")
+            fi
           else
-            PASSED=0
-            FAILED=0
-            COVERAGE=0
+            echo "ESLint configuration not found, skipping..."
           fi
           
-          echo "tests_passed=$PASSED" >> $GITHUB_OUTPUT
-          echo "tests_failed=$FAILED" >> $GITHUB_OUTPUT
-          echo "coverage_files=$COVERAGE" >> $GITHUB_OUTPUT
-
-      - name: Security Audit
-        id: audit
-        continue-on-error: true
-        run: |
-          echo "Running security audit..."
-          npm audit --json > audit-results.json || true
-          
-          # Contar vulnerabilidades por severidad
-          HIGH=$(jq '.vulnerabilities | to_entries[] | select(.value.severity == "high") | .key' audit-results.json 2>/dev/null | wc -l || echo "0")
-          MODERATE=$(jq '.vulnerabilities | to_entries[] | select(.value.severity == "moderate") | .key' audit-results.json 2>/dev/null | wc -l || echo "0")
-          
-          echo "audit_high=$HIGH" >> $GITHUB_OUTPUT
-          echo "audit_moderate=$MODERATE" >> $GITHUB_OUTPUT
-
-      - name: Check Code Formatting
-        id: prettier
-        continue-on-error: true
-        run: |
-          echo "Checking code formatting..."
-          npx prettier --check . > prettier-results.txt 2>&1 || true
-          
-          if [ $? -eq 0 ]; then
-            echo "formatting_issues=0" >> $GITHUB_OUTPUT
+          # Tests si existe package.json con script de test
+          if [ -f "package.json" ] && jq -e '.scripts.test' package.json > /dev/null; then
+            echo "Running tests..."
+            npm test -- --coverage --json --outputFile=test-results.json || true
+            
+            if [ -f "test-results.json" ]; then
+              TESTS_PASSED=$(jq '.numPassedTests // 0' test-results.json)
+              TESTS_FAILED=$(jq '.numFailedTests // 0' test-results.json)
+              COVERAGE_FILES=$(jq '.coverageMap // {} | keys | length' test-results.json)
+            fi
           else
-            ISSUES=$(cat prettier-results.txt | grep -c "Code style issues found" || echo "1")
-            echo "formatting_issues=$ISSUES" >> $GITHUB_OUTPUT
+            echo "No test script found, skipping tests..."
           fi
+          
+          # Security audit si existe package.json
+          if [ -f "package.json" ]; then
+            echo "Running security audit..."
+            npm audit --json > audit-results.json || true
+            
+            if [ -f "audit-results.json" ]; then
+              AUDIT_HIGH=$(jq '.vulnerabilities | to_entries[] | select(.value.severity == "high") | .key' audit-results.json 2>/dev/null | wc -l || echo "0")
+              AUDIT_MODERATE=$(jq '.vulnerabilities | to_entries[] | select(.value.severity == "moderate") | .key' audit-results.json 2>/dev/null | wc -l || echo "0")
+            fi
+          else
+            echo "No package.json found, skipping security audit..."
+          fi
+          
+          # Prettier si existe configuración
+          if [ -f ".prettierrc" ] || [ -f ".prettierrc.json" ] || [ -f "prettier.config.js" ]; then
+            echo "Checking code formatting..."
+            npx prettier --check . > prettier-results.txt 2>&1 || true
+            
+            if [ $? -ne 0 ]; then
+              FORMATTING_ISSUES=$(cat prettier-results.txt | wc -l || echo "1")
+            fi
+          else
+            echo "Prettier configuration not found, skipping formatting check..."
+          fi
+          
+          # Guardar outputs
+          echo "eslint_errors=$ESLINT_ERRORS" >> $GITHUB_OUTPUT
+          echo "eslint_warnings=$ESLINT_WARNINGS" >> $GITHUB_OUTPUT
+          echo "tests_passed=$TESTS_PASSED" >> $GITHUB_OUTPUT
+          echo "tests_failed=$TESTS_FAILED" >> $GITHUB_OUTPUT
+          echo "coverage_files=$COVERAGE_FILES" >> $GITHUB_OUTPUT
+          echo "audit_high=$AUDIT_HIGH" >> $GITHUB_OUTPUT
+          echo "audit_moderate=$AUDIT_MODERATE" >> $GITHUB_OUTPUT
+          echo "formatting_issues=$FORMATTING_ISSUES" >> $GITHUB_OUTPUT
+          
+          echo "Quality checks completed: $ESLINT_ERRORS errors, $TESTS_FAILED failed tests, $AUDIT_HIGH high vulnerabilities"
 
       - name: Get PR diff
         id: diff
@@ -265,28 +280,28 @@ jobs:
         run: |
             # Crear resumen de análisis
             ANALYSIS_SUMMARY="Code Analysis Results:
-            - ESLint: ${{ steps.eslint.outputs.eslint_errors }} errors, ${{ steps.eslint.outputs.eslint_warnings }} warnings
-            - Tests: ${{ steps.tests.outputs.tests_passed }} passed, ${{ steps.tests.outputs.tests_failed }} failed
-            - Security: ${{ steps.audit.outputs.audit_high }} high, ${{ steps.audit.outputs.audit_moderate }} moderate vulnerabilities
-            - Formatting: ${{ steps.prettier.outputs.formatting_issues }} formatting issues"
+            - ESLint: ${{ steps.quality.outputs.eslint_errors }} errors, ${{ steps.quality.outputs.eslint_warnings }} warnings
+            - Tests: ${{ steps.quality.outputs.tests_passed }} passed, ${{ steps.quality.outputs.tests_failed }} failed
+            - Security: ${{ steps.quality.outputs.audit_high }} high, ${{ steps.quality.outputs.audit_moderate }} moderate vulnerabilities
+            - Formatting: ${{ steps.quality.outputs.formatting_issues }} formatting issues"
 
             RESPONSE=$(curl -s -X POST https://api.openai.com/v1/chat/completions \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer $OPENAI_API_KEY" \
             -d @- <<EOF
             {
-            "model": "gpt-3.5-turbo",
+            "model": "gpt-4o-mini",
             "messages": [
                 {
                 "role": "system",
-                "content": "You are an expert code reviewer. Provide constructive, actionable feedback."
+                "content": "You are an expert code reviewer. Provide constructive, actionable feedback in a concise manner."
                 },
                 {
                 "role": "user",
-                "content": "Please review this PR diff and provide helpful feedback. Include analysis of the automated checks:\n\n$ANALYSIS_SUMMARY\n\nPR Diff:\n$(cat pr_diff.txt)"
+                "content": "Review this PR and provide helpful feedback. Analysis results:\n\n$ANALYSIS_SUMMARY\n\nPR Summary:\n$(cat pr_purpose_summary.txt)\n\nKey files changed (first 10 lines):\n$(head -10 pr_diff.txt)"
                 }
             ],
-            "max_tokens": 300
+            "max_tokens": 400
             }
             EOF
             )
@@ -300,8 +315,7 @@ jobs:
             echo "completions=OpenAI API failed: $ERROR" >> $GITHUB_OUTPUT
             else
             COMMENT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content')
-            # Por seguridad, si la respuesta está vacía
-            if [ -z "$COMMENT" ]; then
+            if [ -z "$COMMENT" ] || [ "$COMMENT" = "null" ]; then
                 COMMENT="No comment generated by AI."
             fi
             echo "openai_failed=false" >> $GITHUB_OUTPUT
@@ -321,33 +335,33 @@ jobs:
               echo "## 📊 Automated Analysis Results"
               echo ""
               echo "### 🔍 ESLint Analysis"
-              echo "- ❌ Errors: ${{ steps.eslint.outputs.eslint_errors }}"
-              echo "- ⚠️ Warnings: ${{ steps.eslint.outputs.eslint_warnings }}"
+              echo "- ❌ Errors: ${{ steps.quality.outputs.eslint_errors }}"
+              echo "- ⚠️ Warnings: ${{ steps.quality.outputs.eslint_warnings }}"
               echo ""
               echo "### 🧪 Test Results"
-              echo "- ✅ Passed: ${{ steps.tests.outputs.tests_passed }}"
-              echo "- ❌ Failed: ${{ steps.tests.outputs.tests_failed }}"
-              echo "- 📊 Coverage: ${{ steps.tests.outputs.coverage_files }} files"
+              echo "- ✅ Passed: ${{ steps.quality.outputs.tests_passed }}"
+              echo "- ❌ Failed: ${{ steps.quality.outputs.tests_failed }}"
+              echo "- 📊 Coverage: ${{ steps.quality.outputs.coverage_files }} files"
               echo ""
               echo "### 🔒 Security Audit"
-              echo "- 🚨 High vulnerabilities: ${{ steps.audit.outputs.audit_high }}"
-              echo "- ⚠️ Moderate vulnerabilities: ${{ steps.audit.outputs.audit_moderate }}"
+              echo "- 🚨 High vulnerabilities: ${{ steps.quality.outputs.audit_high }}"
+              echo "- ⚠️ Moderate vulnerabilities: ${{ steps.quality.outputs.audit_moderate }}"
               echo ""
               echo "### 💅 Code Formatting"
-              echo "- 📝 Formatting issues: ${{ steps.prettier.outputs.formatting_issues }}"
+              echo "- 📝 Formatting issues: ${{ steps.quality.outputs.formatting_issues }}"
               echo ""
               echo "## 🎯 Recommendations"
               echo ""
-              if [ '${{ steps.eslint.outputs.eslint_errors }}' -gt 0 ]; then
+              if [ '${{ steps.quality.outputs.eslint_errors }}' -gt 0 ]; then
                 echo "- 🔧 **Fix ESLint errors** before merging"
               fi
-              if [ '${{ steps.tests.outputs.tests_failed }}' -gt 0 ]; then
+              if [ '${{ steps.quality.outputs.tests_failed }}' -gt 0 ]; then
                 echo "- 🧪 **Fix failing tests** to ensure code quality"
               fi
-              if [ '${{ steps.audit.outputs.audit_high }}' -gt 0 ]; then
+              if [ '${{ steps.quality.outputs.audit_high }}' -gt 0 ]; then
                 echo "- 🚨 **Address high security vulnerabilities** immediately"
               fi
-              if [ '${{ steps.prettier.outputs.formatting_issues }}' -gt 0 ]; then
+              if [ '${{ steps.quality.outputs.formatting_issues }}' -gt 0 ]; then
                 echo "- 💅 **Run prettier** to fix formatting issues"
               fi
               echo "- ✅ Verify all changes work as expected"
@@ -369,10 +383,10 @@ jobs:
           echo "### 📊 Analysis Results" >> $GITHUB_STEP_SUMMARY
           echo "| Tool | Status | Results |" >> $GITHUB_STEP_SUMMARY
           echo "|------|--------|---------|" >> $GITHUB_STEP_SUMMARY
-          echo "| ESLint | ✅ | ${{ steps.eslint.outputs.eslint_errors }} errors, ${{ steps.eslint.outputs.eslint_warnings }} warnings |" >> $GITHUB_STEP_SUMMARY
-          echo "| Tests | ✅ | ${{ steps.tests.outputs.tests_passed }} passed, ${{ steps.tests.outputs.tests_failed }} failed |" >> $GITHUB_STEP_SUMMARY
-          echo "| Security | ✅ | ${{ steps.audit.outputs.audit_high }} high, ${{ steps.audit.outputs.audit_moderate }} moderate vulnerabilities |" >> $GITHUB_STEP_SUMMARY
-          echo "| Formatting | ✅ | ${{ steps.prettier.outputs.formatting_issues }} issues |" >> $GITHUB_STEP_SUMMARY
+          echo "| ESLint | ✅ | ${{ steps.quality.outputs.eslint_errors }} errors, ${{ steps.quality.outputs.eslint_warnings }} warnings |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests | ✅ | ${{ steps.quality.outputs.tests_passed }} passed, ${{ steps.quality.outputs.tests_failed }} failed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security | ✅ | ${{ steps.quality.outputs.audit_high }} high, ${{ steps.quality.outputs.audit_moderate }} moderate vulnerabilities |" >> $GITHUB_STEP_SUMMARY
+          echo "| Formatting | ✅ | ${{ steps.quality.outputs.formatting_issues }} issues |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🤖 AI Review Status" >> $GITHUB_STEP_SUMMARY
           if [ "${{ steps.openai.outputs.openai_failed }}" = "true" ]; then
@@ -433,23 +447,14 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             try {
-              // Obtener la descripción actual del PR
-              const { data: pr } = await github.rest.pulls.get({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: context.payload.pull_request.number,
-              });
-              
-              const currentBody = pr.body || '';
-              
               // Variables de análisis
-              const eslintErrors = '${{ steps.eslint.outputs.eslint_errors }}';
-              const eslintWarnings = '${{ steps.eslint.outputs.eslint_warnings }}';
-              const testsPassed = '${{ steps.tests.outputs.tests_passed }}';
-              const testsFailed = '${{ steps.tests.outputs.tests_failed }}';
-              const auditHigh = '${{ steps.audit.outputs.audit_high }}';
-              const auditModerate = '${{ steps.audit.outputs.audit_moderate }}';
-              const formattingIssues = '${{ steps.prettier.outputs.formatting_issues }}';
+              const eslintErrors = '${{ steps.quality.outputs.eslint_errors }}';
+              const eslintWarnings = '${{ steps.quality.outputs.eslint_warnings }}';
+              const testsPassed = '${{ steps.quality.outputs.tests_passed }}';
+              const testsFailed = '${{ steps.quality.outputs.tests_failed }}';
+              const auditHigh = '${{ steps.quality.outputs.audit_high }}';
+              const auditModerate = '${{ steps.quality.outputs.audit_moderate }}';
+              const formattingIssues = '${{ steps.quality.outputs.formatting_issues }}';
               
               // Variables de cambios del PR
               const filesChanged = '${{ steps.diff.outputs.files_changed }}';
@@ -522,12 +527,8 @@ jobs:
                 `${formattingIssues === '0' ? '✅' : '💅'} **Formatting**: ${formattingIssues === '0' ? 'Well formatted' : 'Needs formatting'}`
               ].join('\n');
               
-              // Construir la sección completa
-              const analysisSection = [
-                '',
-                '',
-                '---',
-                '',
+              // Construir la descripción completa del PR (reemplaza todo el contenido)
+              const newBody = [
                 '## 🚀 PR Changes Summary',
                 '',
                 purposeSummary,
@@ -553,13 +554,7 @@ jobs:
                 `*Last updated: ${new Date().toISOString()}*`
               ].join('\n');
               
-              // Remover cualquier sección de análisis AI previa
-              const cleanBody = currentBody.replace(/---\s*## 🚀 PR Changes Summary[\s\S]*?(?=---|\n##|$)/g, '');
-              
-              // Agregar la nueva sección
-              const newBody = cleanBody + analysisSection;
-              
-              // Actualizar la descripción del PR
+              // Reemplazar completamente la descripción del PR
               await github.rest.pulls.update({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -567,9 +562,17 @@ jobs:
                 body: newBody,
               });
               
-              console.log('PR description updated successfully');
+              console.log('PR description replaced successfully');
             } catch (error) {
               console.error('Failed to update PR description:', error);
               // No fallar el workflow si esto falla
             }
+
+      - name: Cleanup temporary files
+        if: always()
+        run: |
+          echo "Cleaning up temporary files..."
+          rm -f pr_diff.txt eslint-results.json test-results.json audit-results.json
+          rm -f prettier-results.txt pr_changes_summary.txt pr_purpose_summary.txt copilot_comment.txt
+          echo "Cleanup completed"
 
