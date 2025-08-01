@@ -30,10 +30,11 @@ jobs:
         run: npm test
 
       - name: Upload coverage reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage/
+          retention-days: 5
 
       - name: Login to Azure
         uses: azure/login@v2
