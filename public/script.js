@@ -185,6 +185,58 @@ document.getElementById("back-to-login-link").addEventListener("click", (e) => {
   document.getElementById("reset-message").textContent = "";
 });
 
+// Validación en tiempo real para habilitar/deshabilitar el botón
+function validateResetForm() {
+  const username = document.getElementById("reset-username").value.trim();
+  const newPassword = document.getElementById("new-password").value;
+  const confirmPassword = document.getElementById("confirm-password").value;
+  const resetBtn = document.getElementById("reset-password-btn");
+  const resetMessage = document.getElementById("reset-message");
+  
+  // Limpiar mensajes previos
+  resetMessage.textContent = "";
+  resetMessage.className = "";
+  
+  // Validaciones específicas con mensajes
+  if (username.length > 0 && username.length < 3) {
+    resetMessage.textContent = "El nombre de usuario debe tener al menos 3 caracteres";
+    resetMessage.className = "error";
+  }
+  
+  if (newPassword.length > 0 && newPassword.length < 6) {
+    resetMessage.textContent = "La contraseña debe tener al menos 6 caracteres";
+    resetMessage.className = "error";
+  }
+  
+  if (newPassword.length >= 6 && !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(newPassword)) {
+    resetMessage.textContent = "La contraseña debe contener mayúscula, minúscula y número";
+    resetMessage.className = "error";
+  }
+  
+  if (confirmPassword.length > 0 && newPassword !== confirmPassword) {
+    resetMessage.textContent = "Las contraseñas no coinciden";
+    resetMessage.className = "error";
+  }
+  
+  // Mostrar mensaje de éxito cuando todo esté correcto
+  const isValid = username.length >= 3 && 
+                  newPassword.length >= 6 && 
+                  confirmPassword === newPassword &&
+                  /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(newPassword);
+  
+  if (isValid) {
+    resetMessage.textContent = "✓ Todos los campos son válidos";
+    resetMessage.className = "success";
+  }
+  
+  resetBtn.disabled = !isValid;
+}
+
+// Agregar listeners para validación en tiempo real
+document.getElementById("reset-username").addEventListener("input", validateResetForm);
+document.getElementById("new-password").addEventListener("input", validateResetForm);
+document.getElementById("confirm-password").addEventListener("input", validateResetForm);
+
 // Validar y cambiar contraseña directamente
 document.getElementById("reset-password-btn").addEventListener("click", async () => {
   const username = document.getElementById("reset-username").value.trim();
@@ -228,6 +280,9 @@ document.getElementById("reset-password-btn").addEventListener("click", async ()
   resetBtn.textContent = "Cambiando...";
 
   try {
+    console.log('Enviando request a:', `${API_BASE_URL}/reset-password`);
+    console.log('Con datos:', { username, newPassword: '***' });
+    
     const response = await fetch(`${API_BASE_URL}/reset-password`, {
       method: 'POST',
       headers: {
@@ -236,7 +291,9 @@ document.getElementById("reset-password-btn").addEventListener("click", async ()
       body: JSON.stringify({ username, newPassword }),
     });
 
+    console.log('Response status:', response.status);
     const data = await response.json();
+    console.log('Response data:', data);
 
     if (data.success) {
       resetMessage.textContent = data.message + ' Redirigiendo al login...';
@@ -250,6 +307,7 @@ document.getElementById("reset-password-btn").addEventListener("click", async ()
       resetMessage.className = "error";
     }
   } catch (error) {
+    console.error('Error en reset password:', error);
     resetMessage.textContent = 'Error de conexión. Intenta nuevamente.';
     resetMessage.className = "error";
   } finally {

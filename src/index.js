@@ -142,6 +142,9 @@ async function startServer() {
     await databaseService.connect();
     await databaseService.initializeTables();
     
+    // Crear usuarios de prueba si no existen
+    await createTestUsers();
+    
     app.listen(port, () => {
       console.log(`🚀 Server listening on port ${port}`);
       console.log(`📱 Frontend: http://localhost:${port}`);
@@ -150,6 +153,30 @@ async function startServer() {
   } catch (error) {
     console.error('❌ Error starting server:', error);
     process.exit(1);
+  }
+}
+
+// Crear usuarios de prueba
+async function createTestUsers() {
+  const bcrypt = require('bcrypt');
+  const testUsers = [
+    { username: 'user1', password: 'Password123' },
+    { username: 'user2', password: 'Password123' },
+    { username: 'admin', password: 'Admin123' },
+    { username: 'test', password: 'Test123' }
+  ];
+
+  for (const user of testUsers) {
+    try {
+      const existingUser = await databaseService.getUser(user.username);
+      if (!existingUser) {
+        const hashedPassword = await bcrypt.hash(user.password, 10);
+        await databaseService.addUser(user.username, null, hashedPassword);
+        console.log(`✅ Usuario de prueba creado: ${user.username}`);
+      }
+    } catch (error) {
+      console.log(`ℹ️ Usuario ${user.username} ya existe o error: ${error.message}`);
+    }
   }
 }
 

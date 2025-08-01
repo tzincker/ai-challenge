@@ -262,6 +262,13 @@ button:disabled {
   background-color: #c82333;
 }
 
+#reset-message {
+  min-height: 20px;
+  margin: 10px 0;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
 /* Reset password styles */
 #reset-password-section {
   margin-top: 20px;
