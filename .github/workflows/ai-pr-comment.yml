@@ -104,6 +104,66 @@ jobs:
           git fetch origin ${{ github.event.pull_request.base.ref }}
           git fetch origin ${{ github.event.pull_request.head.ref }}
           git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} > pr_diff.txt
+          
+          # Analizar estadísticas del diff
+          echo "Analyzing PR changes..."
+          
+          # Contar archivos modificados
+          FILES_CHANGED=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | wc -l)
+          
+          # Contar líneas agregadas y eliminadas
+          DIFF_STATS=$(git diff --numstat ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+          LINES_ADDED=$(echo "$DIFF_STATS" | awk '{sum += $1} END {print sum+0}')
+          LINES_DELETED=$(echo "$DIFF_STATS" | awk '{sum += $2} END {print sum+0}')
+          
+          # Obtener lista de archivos por tipo
+          MODIFIED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+          JS_FILES=$(echo "$MODIFIED_FILES" | grep -E '\.(js|jsx|ts|tsx)$' | wc -l || echo "0")
+          CSS_FILES=$(echo "$MODIFIED_FILES" | grep -E '\.(css|scss|sass|less)$' | wc -l || echo "0")
+          JSON_FILES=$(echo "$MODIFIED_FILES" | grep -E '\.json$' | wc -l || echo "0")
+          MD_FILES=$(echo "$MODIFIED_FILES" | grep -E '\.md$' | wc -l || echo "0")
+          CONFIG_FILES=$(echo "$MODIFIED_FILES" | grep -E '\.(yml|yaml|xml|config|env)$' | wc -l || echo "0")
+          OTHER_FILES=$((FILES_CHANGED - JS_FILES - CSS_FILES - JSON_FILES - MD_FILES - CONFIG_FILES))
+          
+          # Generar resumen de cambios por archivo
+          echo "## 📁 Files Changed:" > pr_changes_summary.txt
+          echo "" >> pr_changes_summary.txt
+          echo "$MODIFIED_FILES" | head -20 | while read file; do
+            if [ ! -z "$file" ]; then
+              # Obtener stats por archivo
+              FILE_STATS=$(git diff --numstat ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} -- "$file")
+              ADDED=$(echo "$FILE_STATS" | awk '{print $1}')
+              DELETED=$(echo "$FILE_STATS" | awk '{print $2}')
+              
+              # Determinar el tipo de cambio
+              if git diff --name-status ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} -- "$file" | grep -q "^A"; then
+                STATUS="🆕 Added"
+              elif git diff --name-status ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} -- "$file" | grep -q "^D"; then
+                STATUS="🗑️ Deleted"
+              elif git diff --name-status ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} -- "$file" | grep -q "^R"; then
+                STATUS="📝 Renamed"
+              else
+                STATUS="✏️ Modified"
+              fi
+              
+              echo "- **$file** $STATUS (+$ADDED/-$DELETED)" >> pr_changes_summary.txt
+            fi
+          done
+          
+          if [ $FILES_CHANGED -gt 20 ]; then
+            echo "- ... and $((FILES_CHANGED - 20)) more files" >> pr_changes_summary.txt
+          fi
+          
+          # Guardar estadísticas en outputs
+          echo "files_changed=$FILES_CHANGED" >> $GITHUB_OUTPUT
+          echo "lines_added=$LINES_ADDED" >> $GITHUB_OUTPUT
+          echo "lines_deleted=$LINES_DELETED" >> $GITHUB_OUTPUT
+          echo "js_files=$JS_FILES" >> $GITHUB_OUTPUT
+          echo "css_files=$CSS_FILES" >> $GITHUB_OUTPUT
+          echo "json_files=$JSON_FILES" >> $GITHUB_OUTPUT
+          echo "md_files=$MD_FILES" >> $GITHUB_OUTPUT
+          echo "config_files=$CONFIG_FILES" >> $GITHUB_OUTPUT
+          echo "other_files=$OTHER_FILES" >> $GITHUB_OUTPUT
 
       - name: Call OpenAI API to generate comment
         id: openai
@@ -271,5 +331,142 @@ jobs:
                 console.error('Failed to post fallback comment:', fallbackError);
                 throw error; // Re-throw original error
               }
+            }
+
+      - name: Update PR Description with AI Analysis
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            try {
+              // Obtener la descripción actual del PR
+              const { data: pr } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.pull_request.number,
+              });
+              
+              const currentBody = pr.body || '';
+              
+              // Variables de análisis
+              const eslintErrors = '${{ steps.eslint.outputs.eslint_errors }}';
+              const eslintWarnings = '${{ steps.eslint.outputs.eslint_warnings }}';
+              const testsPassed = '${{ steps.tests.outputs.tests_passed }}';
+              const testsFailed = '${{ steps.tests.outputs.tests_failed }}';
+              const auditHigh = '${{ steps.audit.outputs.audit_high }}';
+              const auditModerate = '${{ steps.audit.outputs.audit_moderate }}';
+              const formattingIssues = '${{ steps.prettier.outputs.formatting_issues }}';
+              
+              // Variables de cambios del PR
+              const filesChanged = '${{ steps.diff.outputs.files_changed }}';
+              const linesAdded = '${{ steps.diff.outputs.lines_added }}';
+              const linesDeleted = '${{ steps.diff.outputs.lines_deleted }}';
+              const jsFiles = '${{ steps.diff.outputs.js_files }}';
+              const cssFiles = '${{ steps.diff.outputs.css_files }}';
+              const jsonFiles = '${{ steps.diff.outputs.json_files }}';
+              const mdFiles = '${{ steps.diff.outputs.md_files }}';
+              const configFiles = '${{ steps.diff.outputs.config_files }}';
+              const otherFiles = '${{ steps.diff.outputs.other_files }}';
+              
+              // Leer el resumen de archivos cambiados
+              const fs = require('fs');
+              let fileChangesSummary = '';
+              try {
+                fileChangesSummary = fs.readFileSync('pr_changes_summary.txt', 'utf8');
+              } catch (error) {
+                fileChangesSummary = 'Unable to read file changes summary.';
+              }
+              
+              // Construir tabla de estadísticas de cambios
+              const changesTable = [
+                '| Metric | Count |',
+                '|--------|-------|',
+                `| Files Changed | ${filesChanged} |`,
+                `| Lines Added | +${linesAdded} |`,
+                `| Lines Deleted | -${linesDeleted} |`,
+                `| Net Change | ${parseInt(linesAdded) - parseInt(linesDeleted)} |`
+              ].join('\n');
+              
+              // Construir tabla de tipos de archivos
+              const fileTypesTable = [
+                '| File Type | Count |',
+                '|-----------|-------|',
+                `| JavaScript/TypeScript | ${jsFiles} |`,
+                `| CSS/Styling | ${cssFiles} |`,
+                `| JSON | ${jsonFiles} |`,
+                `| Markdown | ${mdFiles} |`,
+                `| Config Files | ${configFiles} |`,
+                `| Other | ${otherFiles} |`
+              ].join('\n');
+              
+              // Construir la tabla de métricas de calidad
+              const metricsTable = [
+                '| Metric | Result |',
+                '|--------|--------|',
+                `| ESLint Errors | ${eslintErrors} |`,
+                `| ESLint Warnings | ${eslintWarnings} |`,
+                `| Tests Passed | ${testsPassed} |`,
+                `| Tests Failed | ${testsFailed} |`,
+                `| High Security Issues | ${auditHigh} |`,
+                `| Moderate Security Issues | ${auditModerate} |`,
+                `| Formatting Issues | ${formattingIssues} |`
+              ].join('\n');
+              
+              // Crear sección de estado rápido
+              const quickStatus = [
+                `${eslintErrors === '0' ? '✅' : '❌'} **ESLint**: ${eslintErrors === '0' ? 'No errors' : eslintErrors + ' errors found'}`,
+                `${testsFailed === '0' ? '✅' : '❌'} **Tests**: ${testsFailed === '0' ? 'All passing' : testsFailed + ' tests failing'}`,
+                `${auditHigh === '0' ? '✅' : '🚨'} **Security**: ${auditHigh === '0' ? 'No high vulnerabilities' : auditHigh + ' high vulnerabilities'}`,
+                `${formattingIssues === '0' ? '✅' : '💅'} **Formatting**: ${formattingIssues === '0' ? 'Well formatted' : 'Needs formatting'}`
+              ].join('\n');
+              
+              // Construir la sección completa
+              const analysisSection = [
+                '',
+                '',
+                '---',
+                '',
+                '## 🚀 PR Changes Summary',
+                '',
+                '### 📊 Change Statistics',
+                changesTable,
+                '',
+                '### 📁 File Types Modified',
+                fileTypesTable,
+                '',
+                fileChangesSummary,
+                '',
+                '---',
+                '',
+                '## 🤖 AI Analysis Summary',
+                '',
+                '### 📊 Code Quality Metrics',
+                metricsTable,
+                '',
+                '### 🎯 Quick Status',
+                quickStatus,
+                '',
+                `*Last updated: ${new Date().toISOString()}*`
+              ].join('\n');
+              
+              // Remover cualquier sección de análisis AI previa
+              const cleanBody = currentBody.replace(/---\s*## 🚀 PR Changes Summary[\s\S]*?(?=---|\n##|$)/g, '');
+              
+              // Agregar la nueva sección
+              const newBody = cleanBody + analysisSection;
+              
+              // Actualizar la descripción del PR
+              await github.rest.pulls.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.pull_request.number,
+                body: newBody,
+              });
+              
+              console.log('PR description updated successfully');
+            } catch (error) {
+              console.error('Failed to update PR description:', error);
+              // No fallar el workflow si esto falla
             }
 
