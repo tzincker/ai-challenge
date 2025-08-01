@@ -3,20 +3,19 @@ const path = require('path');
 const express = require('express');
 const Fuse = require('fuse.js');
 const { OpenAI } = require('openai');
-const Ollama = require('ollama');
-
 const knowledgePath = path.join(__dirname, '../knowledge.json');
 
 class ChatService {
   constructor(overrideKnowledge) {
+    // Set knowledge path
+    this.knowledgePath = knowledgePath;
+
     // Initialize OpenAI
     this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-    // Initialize Ollama if configured
+    // Initialize Ollama host if configured
     if (process.env.OLLAMA_ENABLED === 'true') {
-      this.ollama = new Ollama({
-        host: process.env.OLLAMA_HOST || 'http://localhost:11434',
-      });
+      this.ollamaHost = process.env.OLLAMA_HOST || 'http://localhost:11434';
     }
 
     /* v8 ignore start */
@@ -29,8 +28,8 @@ class ChatService {
         { name: 'question', weight: 0.7 },
         { name: 'answer', weight: 0.3 },
       ],
-      threshold: 0.4, // Más estricto para mejor precisión
-      distance: 100, // Permite coincidencias en un rango más amplio
+      threshold: 0.2, // Mucho más estricto para mejor precisión
+      distance: 50, // Reducir el rango de coincidencias
       ignoreLocation: true,
       includeScore: true,
       minMatchCharLength: 3,
@@ -201,60 +200,112 @@ class ChatService {
   // Call the LLM with fallback options
   async callLLM(prompt) {
     try {
-      // Intentar primero con OpenAI
+      let answer = null;
+
+      // Try with OpenAI first
       try {
+        // eslint-disable-next-line no-console
+        console.log('🤖 Trying OpenAI...');
         const completion = await this.openai.chat.completions.create({
           model: 'gpt-3.5-turbo',
           messages: [
             {
               role: 'system',
-              content:
-                'You are a helpful assistant for a pet accessories store.',
+              content: 'You are a helpful assistant for a pet accessories store.',
             },
             { role: 'user', content: prompt },
           ],
         });
-        return completion.choices[0].message.content.trim();
+        answer = completion.choices[0].message.content.trim();
+        // eslint-disable-next-line no-console
+        console.log('✅ OpenAI responded successfully');
+        return answer;
       } catch (openAiError) {
         // eslint-disable-next-line no-console
         console.error('Error calling OpenAI:', openAiError);
+      }
 
-        // Fallback a Ollama si está habilitado
-        if (this.ollama && process.env.OLLAMA_ENABLED === 'true') {
-          try {
+      // Try with Ollama if enabled
+      if (!answer && this.ollamaHost && process.env.OLLAMA_ENABLED === 'true') {
+        try {
+          // Create a timeout promise (90 seconds)
+          const timeout = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Ollama timeout after 90 seconds')), 90000);
+          });
+
+          // Create the Ollama request promise
+          const ollamaRequest = async () => {
             // eslint-disable-next-line no-console
-            console.log('Falling back to Ollama');
-            const response = await this.ollama.chat({
-              model: process.env.OLLAMA_MODEL || 'mistral',
-              messages: [
-                {
-                  role: 'system',
-                  content:
-                    'You are a helpful assistant for a pet accessories store.',
-                },
-                {
-                  role: 'user',
-                  content: prompt,
-                },
-              ],
+            console.log('🤖 Trying Ollama...');
+            const response = await fetch(`${this.ollamaHost}/api/chat`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: process.env.OLLAMA_MODEL || 'gemma:2b',
+                messages: [
+                  {
+                    role: 'system',
+                    content: 'You are a helpful assistant for a pet accessories store.',
+                  },
+                  {
+                    role: 'user',
+                    content: prompt,
+                  },
+                ],
+                stream: false,
+              }),
             });
-            return response.message.content.trim();
+
+            if (!response.ok) {
+              throw new Error(`Ollama responded with status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data.message.content.trim();
+          };
+
+          try {
+            // Race between the request and the timeout
+            answer = await Promise.race([ollamaRequest(), timeout]);
+            // eslint-disable-next-line no-console
+            console.log('✅ Ollama responded successfully');
+            return answer;
           } catch (ollamaError) {
             // eslint-disable-next-line no-console
-            console.error('Ollama error:', ollamaError);
+            console.log('❌ Ollama failed:', ollamaError.message);
           }
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.log('❌ Ollama request failed:', error.message);
         }
-
-        // Si Ollama falla o no está habilitado, usar el matching local con Fuse
-        const matches = this.fuse.search(prompt);
-        if (matches.length > 0) {
-          return matches[0].item.answer;
-        }
-        return 'I\'m sorry, I\'m having trouble processing your request right now. Please try again.';
       }
+
+      // Try with knowledge base as last resort
+      if (!answer) {
+        // eslint-disable-next-line no-console
+        console.log('🔍 Searching in knowledge base...');
+        const matches = this.fuse.search(prompt);
+        if (matches.length > 0 && matches[0].score < 0.3) {
+          answer = matches[0].item.answer;
+          // eslint-disable-next-line no-console
+          console.log('✅ Found answer in knowledge base');
+          return answer;
+        }
+        // eslint-disable-next-line no-console
+        console.log('❌ No match found in knowledge base');
+      }
+
+      // If all attempts failed
+      if (!answer) {
+        return 'I\'m sorry, I\'m having trouble processing your request right now. Please try asking about our pet products again!';
+      }
+
+      return answer;
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error('Error al procesar la pregunta:', error);
+      console.error('❌ Error processing question:', error.message);
       return 'I\'m sorry, I\'m having trouble processing your request right now. Please try asking about our pet products again!';
     }
   }
@@ -281,8 +332,19 @@ class ChatService {
       'toy',
       'leash',
       'bowl',
+      'animal',
+      'mascota',
+      'perro',
+      'gato',
+      'juguete',
+      'comida',
+      'bebida',
+      'agua',
+      'jaula',
+      'casa', 
+      'cama'
     ];
-    const irrelevantWords = ['hello', 'hi', 'hey', 'test'];
+    const irrelevantWords = ['hello', 'hi', 'hey', 'test', 'hola'];
 
     question = question.toLowerCase();
 
