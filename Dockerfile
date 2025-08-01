@@ -7,10 +7,11 @@ WORKDIR /usr/src/app
 # Copiar archivos de dependencias
 COPY package*.json ./
 
-# Instalar dependencias
-RUN npm install
+# Instalar dependencias y recompilar módulos nativos
+RUN npm ci --only=production
+RUN npm rebuild sqlite3
 
-# Copiar código fuente
+# Copiar código fuente (excluyendo node_modules)
 COPY . .
 
 # Exponer puerto
