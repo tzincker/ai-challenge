@@ -1,17 +1,38 @@
 {
-  "name": "api",
+  "name": "pet-accessories-chatbot-api",
   "version": "1.0.0",
-  "description": "ai challenge api",
-  "main": "index.js",
+  "description": "AI-powered chatbot API for pet accessories store with JWT authentication and intelligent product recommendations",
+  "main": "src/index.js",
   "scripts": {
     "start": "node --env-file .env .\\src\\index.js",
-    "test": "jest"
+    "dev": "node --env-file .env --watch .\\src\\index.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "validate": "npm run lint && npm run test",
+    "docker:build": "docker build -t pet-chatbot .",
+    "docker:run": "docker run -p 3000:3000 --env-file .env pet-chatbot"
   },
+  "keywords": [
+    "chatbot",
+    "api",
+    "pet-accessories",
+    "jwt",
+    "express",
+    "nodejs",
+    "ai",
+    "rag",
+    "authentication"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/tzincker/ai-challenge.git"
   },
-  "author": "",
+  "author": "group70",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/tzincker/ai-challenge/issues"
