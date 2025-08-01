@@ -263,8 +263,71 @@ jobs:
             echo "- ... and $((FILES_CHANGED - 20)) more files" >> pr_changes_summary.txt
           fi
 
-          # Generar resumen inteligente del propósito del PR usando OpenAI
-          echo "" > pr_purpose_summary.txt
+          # Generar encabezado con métricas clave
+          echo "# 🚀 GitHub Copilot-Style AI Review Summary" > pr_purpose_summary.txt
+          echo "" >> pr_purpose_summary.txt
+          echo "## 📊 Code Quality Analysis" >> pr_purpose_summary.txt
+          echo "" >> pr_purpose_summary.txt
+          
+          # ESLint Results
+          echo "### 🔍 ESLint Analysis" >> pr_purpose_summary.txt
+          echo "- Errors: ${{ steps.quality.outputs.eslint_errors }}" >> pr_purpose_summary.txt
+          echo "- Warnings: ${{ steps.quality.outputs.eslint_warnings }}" >> pr_purpose_summary.txt
+          echo "" >> pr_purpose_summary.txt
+          
+          # Test Results
+          echo "### 🧪 Test Results" >> pr_purpose_summary.txt
+          echo "- Tests Passed: ${{ steps.quality.outputs.tests_passed }}" >> pr_purpose_summary.txt
+          echo "- Tests Failed: ${{ steps.quality.outputs.tests_failed }}" >> pr_purpose_summary.txt
+          echo "" >> pr_purpose_summary.txt
+          
+          # Security Results
+          echo "### 🔒 Security Audit" >> pr_purpose_summary.txt
+          echo "- High Severity Issues: ${{ steps.quality.outputs.audit_high }}" >> pr_purpose_summary.txt
+          echo "- Moderate Severity Issues: ${{ steps.quality.outputs.audit_moderate }}" >> pr_purpose_summary.txt
+          echo "" >> pr_purpose_summary.txt
+          
+          # Status Table
+          echo "### 🎯 Quick Status" >> pr_purpose_summary.txt
+          echo "| Tool | Status | Results |" >> pr_purpose_summary.txt
+          echo "|------|--------|---------|" >> pr_purpose_summary.txt
+          
+          # ESLint Status
+          if [ "${{ steps.quality.outputs.eslint_errors }}" = "0" ]; then
+            echo "| ESLint | ✅ Clean | ${{ steps.quality.outputs.eslint_errors }} errors, ${{ steps.quality.outputs.eslint_warnings }} warnings |" >> pr_purpose_summary.txt
+          else
+            echo "| ESLint | ❌ Issues | ${{ steps.quality.outputs.eslint_errors }} errors, ${{ steps.quality.outputs.eslint_warnings }} warnings |" >> pr_purpose_summary.txt
+          fi
+          
+          # Tests Status
+          if [ "${{ steps.quality.outputs.tests_failed }}" = "0" ]; then
+            echo "| Tests | ✅ Passing | ${{ steps.quality.outputs.tests_passed }} passed, ${{ steps.quality.outputs.tests_failed }} failed |" >> pr_purpose_summary.txt
+          else
+            echo "| Tests | ❌ Failing | ${{ steps.quality.outputs.tests_passed }} passed, ${{ steps.quality.outputs.tests_failed }} failed |" >> pr_purpose_summary.txt
+          fi
+          
+          # Security Status
+          if [ "${{ steps.quality.outputs.audit_high }}" = "0" ]; then
+            echo "| Security | ✅ Secure | ${{ steps.quality.outputs.audit_high }} high, ${{ steps.quality.outputs.audit_moderate }} moderate |" >> pr_purpose_summary.txt
+          else
+            echo "| Security | 🚨 Alert | ${{ steps.quality.outputs.audit_high }} high, ${{ steps.quality.outputs.audit_moderate }} moderate |" >> pr_purpose_summary.txt
+          fi
+          
+          # PR Statistics
+          echo "" >> pr_purpose_summary.txt
+          echo "### 📈 PR Statistics" >> pr_purpose_summary.txt
+          echo "- 📁 Files changed: $FILES_CHANGED" >> pr_purpose_summary.txt
+          echo "- ➕ Lines added: $LINES_ADDED" >> pr_purpose_summary.txt
+          echo "- ➖ Lines deleted: $LINES_DELETED" >> pr_purpose_summary.txt
+          if [ -n "${{ steps.quality.outputs.js_files }}" ]; then
+            echo "- 💻 Code files: ${{ steps.quality.outputs.js_files }}" >> pr_purpose_summary.txt
+          fi
+          if [ -n "${{ steps.quality.outputs.md_files }}" ]; then
+            echo "- 📚 Documentation: ${{ steps.quality.outputs.md_files }}" >> pr_purpose_summary.txt
+          fi
+          echo "" >> pr_purpose_summary.txt
+          
+          # Original PR Summary
           echo "## 📝 PR Summary" >> pr_purpose_summary.txt
           echo "" >> pr_purpose_summary.txt
 
