@@ -1,6 +1,7 @@
 # Contributing to Pet Accessories Chatbot API
 
-Thank you for your interest in contributing to our project! This document provides guidelines and information for contributors.
+Thank you for your interest in contributing to our project! This document provides guidelines and
+information for contributors.
 
 ## 🚀 Getting Started
 
@@ -23,6 +24,7 @@ Thank you for your interest in contributing to our project! This document provid
 ## 🛠️ Development Workflow
 
 ### Branch Naming Convention
+
 - `feature/` - New features
 - `bugfix/` - Bug fixes
 - `hotfix/` - Critical fixes
@@ -34,6 +36,7 @@ Example: `feature/add-product-recommendations`
 ### Making Changes
 
 1. **Create a feature branch**:
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -41,17 +44,20 @@ Example: `feature/add-product-recommendations`
 2. **Make your changes** following our coding standards
 
 3. **Run tests** to ensure everything works:
+
    ```bash
    npm test
    npm run lint
    ```
 
 4. **Commit your changes** with descriptive messages:
+
    ```bash
    git commit -m "feat: add product recommendation engine"
    ```
 
 5. **Push to your fork**:
+
    ```bash
    git push origin feature/your-feature-name
    ```
@@ -61,18 +67,21 @@ Example: `feature/add-product-recommendations`
 ## 📝 Code Standards
 
 ### Code Style
+
 - Follow **ESLint** configuration
 - Use **Prettier** for formatting
 - Write descriptive variable and function names
 - Add comments for complex logic
 
 ### Testing
+
 - Write tests for new features
 - Maintain test coverage above 80%
 - Test both success and error scenarios
 - Use descriptive test names
 
 ### Commit Messages
+
 Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
 
 - `feat:` - New features
@@ -88,6 +97,7 @@ Example: `feat(chat): add fuzzy search for product queries`
 ## 🧪 Testing Guidelines
 
 ### Running Tests
+
 ```bash
 # Run all tests
 npm test
@@ -100,12 +110,14 @@ npm run test:coverage
 ```
 
 ### Writing Tests
+
 - Place tests in `src/__tests__/` directory
 - Use descriptive test names
 - Test edge cases and error conditions
 - Mock external dependencies
 
 ### Test Structure
+
 ```javascript
 describe('ServiceName', () => {
   describe('methodName', () => {
@@ -123,11 +135,13 @@ describe('ServiceName', () => {
 ## 📚 Documentation
 
 ### API Documentation
+
 - Update API examples in `src/requests/`
 - Document new endpoints in README
 - Include request/response examples
 
 ### Code Documentation
+
 - Add JSDoc comments for functions
 - Document complex algorithms
 - Explain business logic decisions
@@ -135,6 +149,7 @@ describe('ServiceName', () => {
 ## 🔍 Code Review Process
 
 ### Before Submitting PR
+
 - [ ] All tests pass
 - [ ] Code follows style guidelines
 - [ ] Documentation is updated
@@ -142,6 +157,7 @@ describe('ServiceName', () => {
 - [ ] Environment variables documented
 
 ### PR Requirements
+
 - **Clear title** describing the change
 - **Detailed description** of what was changed and why
 - **Link to related issues** if applicable
@@ -149,6 +165,7 @@ describe('ServiceName', () => {
 - **Breaking changes** clearly marked
 
 ### Review Criteria
+
 - Code quality and maintainability
 - Test coverage and quality
 - Performance implications
@@ -191,6 +208,7 @@ For new features, please:
 ## 🎉 Recognition
 
 Contributors will be recognized in:
+
 - GitHub contributors list
 - Release notes for significant contributions
 - README acknowledgments section
