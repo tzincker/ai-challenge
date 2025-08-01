@@ -193,27 +193,26 @@ class UserService {
     }
   }
 
-  async resetPassword(username, resetCode, newPassword) {
-    // Validar nueva contraseña
+  // Reset de contraseña simplificado - solo requiere usuario y nueva contraseña
+  async resetPassword(username, newPassword) {
+    // Validar entrada
+    if (!username || typeof username !== 'string' || username.trim().length < 3) {
+      return { success: false, message: "Nombre de usuario inválido" };
+    }
+
     const passwordValidation = this.validatePassword(newPassword);
     if (!passwordValidation.valid) {
       return { success: false, message: passwordValidation.message };
     }
 
-    const user = await this.databaseService.getUser(username);
+    const user = await this.databaseService.getUser(username.trim());
     if (!user) {
       return { success: false, message: "Usuario no encontrado" };
     }
 
     try {
-      const isValidCode = await this.databaseService.verifyPasswordResetCode(user.id, resetCode);
-      if (!isValidCode) {
-        return { success: false, message: "Código de recuperación inválido o expirado" };
-      }
-
       const hashedPassword = await this._hashPassword(newPassword);
       await this.databaseService.updateUserPasswordById(user.id, hashedPassword);
-      await this.databaseService.deletePasswordResetCode(user.id);
       
       // 🔐 MEJORA DE SEGURIDAD: Invalidar todas las sesiones activas del usuario
       await this.databaseService.removeAllUserRefreshTokens(user.id);
@@ -226,5 +225,7 @@ class UserService {
   }
 
 }
+
+module.exports = UserService;
 
 module.exports = UserService;

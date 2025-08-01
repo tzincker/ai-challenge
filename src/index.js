@@ -93,15 +93,15 @@ app.post("/request-password-reset", async (req, res) => {
 
 // Ruta para resetear password
 app.post("/reset-password", async (req, res) => {
-  const { username, resetCode, newPassword } = req.body;
+  const { username, newPassword } = req.body;
   
-  if (!username || !resetCode || !newPassword) {
+  if (!username || !newPassword) {
     return res.status(400).json({ 
-      message: "Se requieren nombre de usuario, código de reset y nueva contraseña" 
+      message: "Se requieren nombre de usuario y nueva contraseña" 
     });
   }
 
-  const result = await userService.resetPassword(username, resetCode, newPassword);
+  const result = await userService.resetPassword(username, newPassword);
   
   if (!result.success) {
     return res.status(400).json({ message: result.message });

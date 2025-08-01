@@ -7,6 +7,8 @@ html(lang="en")
     link(rel='stylesheet', type='text/css', href='/styles.css')
   body
     div(class="container")
+      div(class="pet-image")
+        img(src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDE1MCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxjaXJjbGUgY3g9Ijc1IiBjeT0iNzUiIHI9Ijc1IiBmaWxsPSIjRkY5QjQyIi8+CjxjaXJjbGUgY3g9Ijc1IiBjeT0iNzUiIHI9IjY1IiBmaWxsPSIjRkZBNjUyIi8+CjxjaXJjbGUgY3g9IjYwIiBjeT0iNjAiIHI9IjgiIGZpbGw9IiMzMzMiLz4KPGNpcmNsZSBjeD0iOTAiIGN5PSI2MCIgcj0iOCIgZmlsbD0iIzMzMyIvPgo8cGF0aCBkPSJNNTAgODBMNzUgNzBMMTAwIDgwTDc1IDkwWiIgZmlsbD0iIzIyMiIvPgo8ZWxsaXBzZSBjeD0iMzUiIGN5PSI0NSIgcng9IjIwIiByeT0iMjUiIGZpbGw9IiNGRkE2NTIiLz4KPGVsbGlwc2UgY3g9IjExNSIgY3k9IjQ1IiByeD0iMjAiIHJ5PSIyNSIgZmlsbD0iI0ZGQTY1MiIvPgo8cGF0aCBkPSJNNjAgMTAwQzY1IDEwNSA3MCA5MCA3NSA5MEM4MCA5MCA4NSAxMDUgOTAgMTAwIiBzdHJva2U9IiMzMzMiIHN0cm9rZS13aWR0aD0iMyIgZmlsbD0ibm9uZSIvPgo8L3N2Zz4=", alt="Pet Chatbot Dog")
       h1="Pet Accessories Chatbot"
       div(id="login-section")
         h2="Login"
@@ -29,16 +31,24 @@ html(lang="en")
 
       div(id="reset-password-section" class="hidden")
         h2="Recuperar Contraseña"
-        div(id="reset-step-1")
-          p="Ingresa tu nombre de usuario para recibir un código de recuperación:"
-          input(type="text", id="reset-username", placeholder="Nombre de usuario")
-          button(type="button", id="request-reset-btn")="Solicitar Código"
-        div(id="reset-step-2" class="hidden")
-          p="Ingresa el código de recuperación y tu nueva contraseña:"
-          input(type="text", id="reset-code", placeholder="Código de recuperación")
-          input(type="password", id="new-password", placeholder="Nueva contraseña")
-          input(type="password", id="confirm-password", placeholder="Confirmar contraseña")
-          button(type="button", id="reset-password-btn")="Cambiar Contraseña"
+        div(class="pet-image")
+          img(src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDEyMCAxMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiByeD0iNjAiIGZpbGw9IiNGRkY4REMiLz4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0NSIgcj0iNSIgZmlsbD0iIzMzMyIvPgo8Y2lyY2xlIGN4PSI4MCIgY3k9IjQ1IiByPSI1IiBmaWxsPSIjMzMzIi8+CjxwYXRoIGQ9Ik00MCA2NUw2MCA1NUw4MCA2NUw2MCA3NVoiIGZpbGw9IiM4ODgiLz4KPGVsbGlwc2UgY3g9IjI1IiBjeT0iMzAiIHJ4PSIxNSIgcnk9IjIwIiBmaWxsPSIjRkZGOERDIi8+CjxlbGxpcHNlIGN4PSI5NSIgY3k9IjMwIiByeD0iMTUiIHJ5PSIyMCIgZmlsbD0iI0ZGRjhEQyIvPgo8L3N2Zz4=", alt="Reset Password Dog")
+        p="Ingresa tu nombre de usuario y tu nueva contraseña:"
+        div(class="form-group")
+          input(type="text", id="reset-username", placeholder="Nombre de usuario", required)
+          div(class="validation-message" id="username-validation")
+        div(class="form-group")
+          input(type="password", id="new-password", placeholder="Nueva contraseña", required)
+          div(class="validation-info")
+            small="• Mínimo 8 caracteres"
+            small="• Al menos una mayúscula"
+            small="• Al menos una minúscula" 
+            small="• Al menos un número"
+          div(class="validation-message" id="password-validation")
+        div(class="form-group")
+          input(type="password", id="confirm-password", placeholder="Confirmar contraseña", required)
+          div(class="validation-message" id="confirm-validation")
+        button(type="button", id="reset-password-btn", disabled)="Cambiar Contraseña"
         p(id="reset-message")
         a(href="#", id="back-to-login-link")="Volver al login"
     script.
