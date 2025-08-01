@@ -2,9 +2,39 @@ let accessToken = null;
 let refreshToken = null;
 const API_BASE_URL = CONFIG.API_BASE_URL;
 
-// Ocultar chat al cargar
+// Ocultar chat al cargar y verificar auto-login
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("chat-section").classList.add("hidden");
+  
+  // Verificar si viene del registro con tokens temporales
+  const tempAccessToken = localStorage.getItem('tempAccessToken');
+  const tempRefreshToken = localStorage.getItem('tempRefreshToken');
+  const autoLoginUsername = localStorage.getItem('autoLoginUsername');
+  
+  if (tempAccessToken && tempRefreshToken && autoLoginUsername) {
+    // Limpiar storage temporal
+    localStorage.removeItem('tempAccessToken');
+    localStorage.removeItem('tempRefreshToken');
+    localStorage.removeItem('autoLoginUsername');
+    
+    // Configurar tokens y mostrar chat
+    accessToken = tempAccessToken;
+    refreshToken = tempRefreshToken;
+    
+    // Mostrar mensaje de bienvenida
+    const loginMessage = document.getElementById("login-message");
+    loginMessage.textContent = `¡Bienvenido ${autoLoginUsername}! Tu cuenta ha sido creada exitosamente.`;
+    loginMessage.className = "success";
+    
+    // Ocultar login y mostrar chat
+    setTimeout(() => {
+      document.getElementById("login-section").classList.add("hidden");
+      document.getElementById("chat-section").classList.remove("hidden");
+      
+      // Mensaje de bienvenida en el chat
+      addMessage(`¡Hola ${autoLoginUsername}! Tu cuenta ha sido creada exitosamente. ¡Bienvenido al chatbot de accesorios para mascotas! 🐾`, "bot-message");
+    }, 2000);
+  }
 });
 
 // LOGIN

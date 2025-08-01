@@ -153,12 +153,45 @@ registerBtn.addEventListener('click', async () => {
     const data = await response.json();
 
     if (response.ok && data.success) {
-      registerMessage.textContent = '¡Cuenta creada exitosamente! Redirigiendo...';
+      registerMessage.textContent = '¡Cuenta creada exitosamente! Iniciando sesión...';
       registerMessage.className = 'success';
       
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 2000);
+      // Automaticamente hacer login después del registro exitoso
+      setTimeout(async () => {
+        try {
+          const loginResponse = await fetch(`${CONFIG.API_BASE_URL}/login`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username, password }),
+          });
+
+          if (loginResponse.ok) {
+            const loginData = await loginResponse.json();
+            // Guardar tokens en localStorage para transferir a la página principal
+            localStorage.setItem('tempAccessToken', loginData.accessToken);
+            localStorage.setItem('tempRefreshToken', loginData.refreshToken);
+            localStorage.setItem('autoLoginUsername', username);
+            
+            registerMessage.textContent = '¡Bienvenido! Redirigiendo al chat...';
+            
+            setTimeout(() => {
+              window.location.href = '/';
+            }, 1000);
+          } else {
+            registerMessage.textContent = '¡Cuenta creada! Ve al login para ingresar.';
+            setTimeout(() => {
+              window.location.href = '/';
+            }, 2000);
+          }
+        } catch (error) {
+          registerMessage.textContent = '¡Cuenta creada! Ve al login para ingresar.';
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 2000);
+        }
+      }, 1500);
     } else {
       registerMessage.textContent = data.message || 'Error al crear la cuenta';
       registerMessage.className = 'error';

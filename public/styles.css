@@ -1,0 +1,225 @@
+/* Reset y estilos base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f5f5f5;
+  padding: 20px;
+}
+
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+h1 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 30px;
+}
+
+h2 {
+  color: #444;
+  margin-bottom: 20px;
+}
+
+/* Estilos de formularios */
+input[type="text"], input[type="password"] {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+input[type="text"]:focus, input[type="password"]:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0,123,255,0.3);
+}
+
+/* Estados de validación para inputs */
+input.valid {
+  border-color: #28a745;
+  box-shadow: 0 0 5px rgba(40,167,69,0.3);
+}
+
+input.invalid {
+  border-color: #dc3545;
+  box-shadow: 0 0 5px rgba(220,53,69,0.3);
+}
+
+/* Grupos de formulario y validaciones */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.validation-info {
+  margin-top: 5px;
+  margin-bottom: 10px;
+}
+
+.validation-info small {
+  color: #666;
+  font-size: 12px;
+  display: block;
+  margin: 2px 0;
+}
+
+.validation-message {
+  margin-top: 5px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.validation-message.error {
+  color: #dc3545;
+}
+
+.validation-message.success {
+  color: #28a745;
+}
+
+button {
+  background-color: #007bff;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-bottom: 10px;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+/* Clases de utilidad */
+.hidden {
+  display: none !important;
+}
+
+.error {
+  color: #dc3545;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+.success {
+  color: #28a745;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+/* Enlaces de autenticación */
+.auth-links {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.auth-links a {
+  color: #007bff;
+  text-decoration: none;
+  display: inline-block;
+  margin: 5px 0;
+}
+
+.auth-links a:hover {
+  text-decoration: underline;
+}
+
+/* Chat styles */
+#chat-box {
+  height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 5px;
+  background-color: #fafafa;
+}
+
+.message {
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border-radius: 5px;
+  max-width: 80%;
+}
+
+.user-message {
+  background-color: #007bff;
+  color: white;
+  margin-left: auto;
+  text-align: right;
+}
+
+.bot-message {
+  background-color: #e9ecef;
+  color: #333;
+}
+
+.chat-input {
+  display: flex;
+  gap: 10px;
+}
+
+.chat-input input {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.logout-btn {
+  background-color: #dc3545;
+  margin-top: 20px;
+}
+
+.logout-btn:hover {
+  background-color: #c82333;
+}
+
+/* Reset password styles */
+#reset-password-section {
+  margin-top: 20px;
+}
+
+#reset-password-section p {
+  margin-bottom: 15px;
+  color: #666;
+}
+
+#reset-step-1, #reset-step-2 {
+  margin-bottom: 20px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    margin: 10px;
+    padding: 20px;
+  }
+  
+  .chat-input {
+    flex-direction: column;
+  }
+  
+  .message {
+    max-width: 95%;
+  }
+}
