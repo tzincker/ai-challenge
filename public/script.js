@@ -5,6 +5,20 @@ const API_BASE_URL = CONFIG.API_BASE_URL;
 // Ocultar chat al cargar y verificar auto-login
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("chat-section").classList.add("hidden");
+
+  // Add Enter key listener for login
+  document.getElementById("password").addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      document.getElementById("login-btn").click();
+    }
+  });
+
+  // Add Enter key listener for chat messages
+  document.getElementById("chat-message").addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      document.getElementById("send-btn").click();
+    }
+  });
   
   // Verificar si viene del registro con tokens temporales
   const tempAccessToken = localStorage.getItem('tempAccessToken');
@@ -23,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // Mostrar mensaje de bienvenida
     const loginMessage = document.getElementById("login-message");
-    loginMessage.textContent = `¡Bienvenido ${autoLoginUsername}! Tu cuenta ha sido creada exitosamente.`;
+    loginMessage.textContent = `Welcome ${autoLoginUsername}! Your account has been created successfully.`;
     loginMessage.className = "success";
     
     // Ocultar login y mostrar chat
@@ -204,22 +218,22 @@ function validateResetForm() {
   
   // Validaciones específicas con mensajes
   if (username.length > 0 && username.length < 3) {
-    resetMessage.textContent = "El nombre de usuario debe tener al menos 3 caracteres";
+    resetMessage.textContent = "Username must be at least 3 characters long";
     resetMessage.className = "error";
   }
   
   if (newPassword.length > 0 && newPassword.length < 6) {
-    resetMessage.textContent = "La contraseña debe tener al menos 6 caracteres";
+    resetMessage.textContent = "Password must be at least 6 characters long";
     resetMessage.className = "error";
   }
   
   if (newPassword.length >= 6 && !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(newPassword)) {
-    resetMessage.textContent = "La contraseña debe contener mayúscula, minúscula y número";
+    resetMessage.textContent = "Password must contain uppercase, lowercase and number";
     resetMessage.className = "error";
   }
   
   if (confirmPassword.length > 0 && newPassword !== confirmPassword) {
-    resetMessage.textContent = "Las contraseñas no coinciden";
+    resetMessage.textContent = "Passwords do not match";
     resetMessage.className = "error";
   }
   
@@ -230,7 +244,7 @@ function validateResetForm() {
                   /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(newPassword);
   
   if (isValid) {
-    resetMessage.textContent = "✓ Todos los campos son válidos";
+    resetMessage.textContent = "✓ All fields are valid";
     resetMessage.className = "success";
   }
   
@@ -251,38 +265,38 @@ document.getElementById("reset-password-btn").addEventListener("click", async ()
 
   // Validaciones
   if (!username) {
-    resetMessage.textContent = "Por favor ingresa tu nombre de usuario";
+    resetMessage.textContent = "Please enter your username";
     resetMessage.className = "error";
     return;
   }
 
   if (!newPassword) {
-    resetMessage.textContent = "Por favor ingresa la nueva contraseña";
+    resetMessage.textContent = "Please enter your new password";
     resetMessage.className = "error";
     return;
   }
 
   if (newPassword !== confirmPassword) {
-    resetMessage.textContent = "Las contraseñas no coinciden";
+    resetMessage.textContent = "Passwords do not match";
     resetMessage.className = "error";
     return;
   }
 
   if (newPassword.length < 6) {
-    resetMessage.textContent = "La contraseña debe tener al menos 6 caracteres";
+    resetMessage.textContent = "Password must be at least 6 characters long";
     resetMessage.className = "error";
     return;
   }
 
   if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(newPassword)) {
-    resetMessage.textContent = "La contraseña debe contener mayúscula, minúscula y número";
+    resetMessage.textContent = "Password must contain uppercase, lowercase and number";
     resetMessage.className = "error";
     return;
   }
 
   const resetBtn = document.getElementById("reset-password-btn");
   resetBtn.disabled = true;
-  resetBtn.textContent = "Cambiando...";
+  resetBtn.textContent = "Changing...";
 
   try {
     console.log('Enviando request a:', `${API_BASE_URL}/reset-password`);
@@ -301,22 +315,22 @@ document.getElementById("reset-password-btn").addEventListener("click", async ()
     console.log('Response data:', data);
 
     if (data.success) {
-      resetMessage.textContent = data.message + ' Redirigiendo al login...';
+      resetMessage.textContent = data.message + ' Redirecting to login...';
       resetMessage.className = "success";
       
       setTimeout(() => {
         document.getElementById("back-to-login-link").click();
       }, 2000);
     } else {
-      resetMessage.textContent = data.message || 'Error al cambiar contraseña';
+      resetMessage.textContent = data.message || 'Error changing password';
       resetMessage.className = "error";
     }
   } catch (error) {
-    console.error('Error en reset password:', error);
-    resetMessage.textContent = 'Error de conexión. Intenta nuevamente.';
+    console.error('Error in reset password:', error);
+    resetMessage.textContent = 'Connection error. Please try again.';
     resetMessage.className = "error";
   } finally {
     resetBtn.disabled = false;
-    resetBtn.textContent = "Cambiar Contraseña";
+    resetBtn.textContent = "Reset Password";
   }
 });

@@ -573,8 +573,6 @@ jobs:
           echo "- 💻 Code files: ${{ steps.diff.outputs.js_files }}" >> $GITHUB_STEP_SUMMARY
           echo "- 📚 Documentation: ${{ steps.diff.outputs.md_files }}" >> $GITHUB_STEP_SUMMARY
 
-      # Comment posting step removed intentionally
-
       - name: Update PR Description with AI Analysis
         uses: actions/github-script@v7
         if: always()

@@ -19,7 +19,7 @@ html(lang="en")
         div(class="auth-links")
           a(href="/register")="Not a member, register now!"
           br
-          a(href="#", id="forgot-password-link")="¿Olvidaste tu contraseña?"
+          a(href="#", id="forgot-password-link")="Forgot your password?"
 
       div(id="chat-section" class="hidden")
         h2="Chat"
@@ -30,27 +30,27 @@ html(lang="en")
         button(id="logout-btn", class="logout-btn")="Logout"
 
       div(id="reset-password-section" class="hidden")
-        h2="Recuperar Contraseña"
+        h2="Reset Password"
         div(class="pet-image")
           img(src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDEyMCAxMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiByeD0iNjAiIGZpbGw9IiNGRkY4REMiLz4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0NSIgcj0iNSIgZmlsbD0iIzMzMyIvPgo8Y2lyY2xlIGN4PSI4MCIgY3k9IjQ1IiByPSI1IiBmaWxsPSIjMzMzIi8+CjxwYXRoIGQ9Ik00MCA2NUw2MCA1NUw4MCA2NUw2MCA3NVoiIGZpbGw9IiM4ODgiLz4KPGVsbGlwc2UgY3g9IjI1IiBjeT0iMzAiIHJ4PSIxNSIgcnk9IjIwIiBmaWxsPSIjRkZGOERDIi8+CjxlbGxpcHNlIGN4PSI5NSIgY3k9IjMwIiByeD0iMTUiIHJ5PSIyMCIgZmlsbD0iI0ZGRjhEQyIvPgo8L3N2Zz4=", alt="Reset Password Dog")
-        p="Ingresa tu nombre de usuario y tu nueva contraseña:"
+        p="Enter your username and new password:"
         div(class="form-group")
-          input(type="text", id="reset-username", placeholder="Nombre de usuario", required)
+          input(type="text", id="reset-username", placeholder="Username", required)
           div(class="validation-message" id="username-validation")
         div(class="form-group")
-          input(type="password", id="new-password", placeholder="Nueva contraseña", required)
+          input(type="password", id="new-password", placeholder="New password", required)
           div(class="validation-info")
-            small="• Mínimo 8 caracteres"
-            small="• Al menos una mayúscula"
-            small="• Al menos una minúscula" 
-            small="• Al menos un número"
+            small="• Minimum 8 characters"
+            small="• At least one uppercase letter"
+            small="• At least one lowercase letter" 
+            small="• At least one number"
           div(class="validation-message" id="password-validation")
         div(class="form-group")
-          input(type="password", id="confirm-password", placeholder="Confirmar contraseña", required)
+          input(type="password", id="confirm-password", placeholder="Confirm password", required)
           div(class="validation-message" id="confirm-validation")
-        button(type="button", id="reset-password-btn")="Cambiar Contraseña"
+        button(type="button", id="reset-password-btn")="Reset Password"
         p(id="reset-message")
-        a(href="#", id="back-to-login-link")="Volver al login"
+        a(href="#", id="back-to-login-link")="Back to login"
     script.
       const CONFIG = { API_BASE_URL: "!{apiBaseUrl}", };
     script(src='/script.js')
