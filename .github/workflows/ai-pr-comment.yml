@@ -74,8 +74,8 @@ jobs:
             npm test -- --coverage --json --outputFile=test-results.json || true
             TESTS_PASSED=$(jq '.numPassedTests // 0' test-results.json 2>/dev/null || echo "0")
             TESTS_FAILED=$(jq '.numFailedTests // 0' test-results.json 2>/dev/null || echo "0")
-            echo "::set-output name=tests_passed::$TESTS_PASSED"
-            echo "::set-output name=tests_failed::$TESTS_FAILED"
+            echo "tests_passed=$TESTS_PASSED" >> $GITHUB_OUTPUT
+            echo "tests_failed=$TESTS_FAILED" >> $GITHUB_OUTPUT
             echo "$TESTS_PASSED tests passed, $TESTS_FAILED tests failed"
           else
             echo "No test script found"
@@ -91,8 +91,8 @@ jobs:
           npm audit --json > audit-results.json || true
           AUDIT_HIGH=$(jq '.vulnerabilities | to_entries[] | select(.value.severity == "high") | .key' audit-results.json 2>/dev/null | wc -l || echo "0")
           AUDIT_MODERATE=$(jq '.vulnerabilities | to_entries[] | select(.value.severity == "moderate") | .key' audit-results.json 2>/dev/null | wc -l || echo "0")
-          echo "::set-output name=audit_high::$AUDIT_HIGH"
-          echo "::set-output name=audit_moderate::$AUDIT_MODERATE"
+          echo "audit_high=$AUDIT_HIGH" >> $GITHUB_OUTPUT
+          echo "audit_moderate=$AUDIT_MODERATE" >> $GITHUB_OUTPUT
           echo "Found $AUDIT_HIGH high and $AUDIT_MODERATE moderate vulnerabilities"
 
       - name: Check Code Formatting
@@ -107,7 +107,7 @@ jobs:
             else
               FORMATTING_ISSUES=0
             fi
-            echo "::set-output name=formatting_issues::$FORMATTING_ISSUES"
+            echo "formatting_issues=$FORMATTING_ISSUES" >> $GITHUB_OUTPUT
             echo "Found $FORMATTING_ISSUES formatting issues"
           else
             echo "No Prettier configuration found"
@@ -311,29 +311,53 @@ jobs:
           # Extraer PURPOSE y DETAILS del resultado de la IA
           PURPOSE=$(echo $OPENAI_RESPONSE | jq -r '.choices[0].message.content' | jq -r '.purpose')
           DETAILS=$(echo $OPENAI_RESPONSE | jq -r '.choices[0].message.content' | jq -r '.details')
-          # Si la llamada a la API falla, usar análisis de respaldo basado en patrones
+          # Si la llamada a la API falla, usar análisis avanzado basado en patrones (estilo Copilot)
           if [ -z "$PURPOSE" ] || [ -z "$DETAILS" ]; then
-            echo "AI analysis failed, using fallback pattern analysis..."
+            echo "OpenAI API analysis failed, using GitHub Copilot-style pattern analysis..."
 
-            # Solicitar otro análisis a la IA con un prompt más específico
-            OPENAI_RESPONSE=$(curl -s https://api.openai.com/v1/chat/completions \
-              -H "Content-Type: application/json" \
-              -H "Authorization: Bearer $OPENAI_API_KEY" \
-              -d "{
-                \"model\": \"gpt-3.5-turbo\",
-                \"messages\": [
-                  {
-                    \"role\": \"system\",
-                    \"content\": \"You are an expert code reviewer. Analyze the file changes and determine if this PR is primarily: 1) Documentation, 2) Testing, 3) Feature Development, 4) Bug Fix, 5) Configuration, or 6) Dependency Update. Return only a JSON with 'purpose' (category) and 'details' (one sentence description).\"
-                  },
-                  {
-                    \"role\": \"user\",
-                    \"content\": \"Files changed: $MODIFIED_FILES\"
-                  }
-                ],
-                \"temperature\": 0.2
-              }"
-            )
+            # Análisis avanzado basado en el contenido del PR
+            PR_CONTENT=$(git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+            
+            # Detectar patrones de cambio específicos
+            CONTAINS_TESTS=$(echo "$PR_CONTENT" | grep -iE 'test|spec|assert|describe|it\(' && echo "true" || echo "false")
+            CONTAINS_DOCS=$(echo "$PR_CONTENT" | grep -iE 'readme|documentation|docs|comment|/**' && echo "true" || echo "false")
+            CONTAINS_SECURITY=$(echo "$PR_CONTENT" | grep -iE 'security|auth|password|encrypt|token' && echo "true" || echo "false")
+            CONTAINS_PERF=$(echo "$PR_CONTENT" | grep -iE 'performance|optimize|cache|speed|timeout' && echo "true" || echo "false")
+            CONTAINS_API=$(echo "$PR_CONTENT" | grep -iE 'api|endpoint|route|controller|service' && echo "true" || echo "false")
+            CONTAINS_UI=$(echo "$PR_CONTENT" | grep -iE 'component|style|css|layout|template' && echo "true" || echo "false")
+            
+            # Análisis inteligente del propósito del PR
+            if [[ "$CONTAINS_TESTS" == "true" ]]; then
+              PURPOSE="Test Enhancement"
+              DETAILS="This PR improves test coverage and quality assurance measures."
+            elif [[ "$CONTAINS_SECURITY" == "true" ]]; then
+              PURPOSE="Security Improvement"
+              DETAILS="This PR enhances security measures and authentication processes."
+            elif [[ "$CONTAINS_DOCS" == "true" ]]; then
+              PURPOSE="Documentation Update"
+              DETAILS="This PR improves code documentation and project guides."
+            elif [[ "$CONTAINS_PERF" == "true" ]]; then
+              PURPOSE="Performance Optimization"
+              DETAILS="This PR includes performance improvements and optimizations."
+            elif [[ "$CONTAINS_API" == "true" ]]; then
+              PURPOSE="API Enhancement"
+              DETAILS="This PR modifies API functionality and endpoints."
+            elif [[ "$CONTAINS_UI" == "true" ]]; then
+              PURPOSE="UI/UX Update"
+              DETAILS="This PR includes user interface and experience improvements."
+            else
+              # Análisis basado en estadísticas de cambio
+              if [ $JS_FILES -gt 0 ]; then
+                PURPOSE="Code Enhancement"
+                DETAILS="This PR updates application logic and functionality."
+              elif [ $CONFIG_FILES -gt 0 ]; then
+                PURPOSE="Configuration Update"
+                DETAILS="This PR modifies project configuration and settings."
+              else
+                PURPOSE="General Update"
+                DETAILS="This PR includes various improvements across the project."
+              fi
+            fi
 
             # Intentar extraer PURPOSE y DETAILS del segundo intento
             FALLBACK_PURPOSE=$(echo $OPENAI_RESPONSE | jq -r '.choices[0].message.content' | jq -r '.purpose')
@@ -504,15 +528,24 @@ jobs:
           echo "completions=$COMMENT" >> $GITHUB_OUTPUT
           fi
 
-      - name: Fallback to GitHub Copilot Style Review
+      - name: Enhanced Copilot-Style Fallback Review
         id: copilot
         if: steps.openai.outputs.openai_failed == 'true'
         run: |
-          echo "Generating GitHub Copilot-style fallback review..."
+          echo "Generating enhanced GitHub Copilot-style review..."
 
-          # Obtener información del PR
+          # Obtener información detallada del PR
           PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_BODY="${{ github.event.pull_request.body }}"
           FILES_CHANGED="${{ steps.diff.outputs.files_changed }}"
+          
+          # Análisis avanzado del contenido
+          DIFF_CONTENT=$(git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+          
+          # Detectar patrones específicos para un análisis más preciso
+          CONTAINS_BREAKING_CHANGES=$(echo "$DIFF_CONTENT" | grep -iE 'BREAKING|DEPRECATED|REMOVAL' && echo "true" || echo "false")
+          CONTAINS_DEPENDENCIES=$(echo "$PR_BODY$DIFF_CONTENT" | grep -iE 'dependency|upgrade|update|bump|version' && echo "true" || echo "false")
+          CONTAINS_MIGRATIONS=$(echo "$DIFF_CONTENT" | grep -iE 'migration|schema|database|model' && echo "true" || echo "false")
 
           # Determinar el tipo de PR basado en archivos modificados y contenido
           MODIFIED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
