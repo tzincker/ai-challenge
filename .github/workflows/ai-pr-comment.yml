@@ -21,83 +21,137 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
-
-      - name: Run ESLint
-        id: eslint
-        continue-on-error: true
         run: |
-          echo "Running ESLint analysis..."
-          npx eslint . --format json --output-file eslint-results.json || true
-          
-          # Contar errores y warnings
-          ERRORS=$(jq '[.[].messages[] | select(.severity == 2)] | length' eslint-results.json 2>/dev/null || echo "0")
-          WARNINGS=$(jq '[.[].messages[] | select(.severity == 1)] | length' eslint-results.json 2>/dev/null || echo "0")
-          
-          echo "eslint_errors=$ERRORS" >> $GITHUB_OUTPUT
-          echo "eslint_warnings=$WARNINGS" >> $GITHUB_OUTPUT
-          
-          if [ "$ERRORS" -gt 0 ] || [ "$WARNINGS" -gt 0 ]; then
-            echo "ESLint found $ERRORS errors and $WARNINGS warnings"
+          if [ -f "package.json" ]; then
+            echo "Installing dependencies..."
+            npm ci --no-audit --no-fund --ignore-scripts
           else
-            echo "ESLint: No issues found"
+            echo "No package.json found, skipping npm install"
           fi
 
-      - name: Run Tests
-        id: tests
-        continue-on-error: true
+      - name: Validate project structure
         run: |
-          echo "Running tests..."
-          npm test -- --coverage --json --outputFile=test-results.json || true
+          echo "Validating project structure..."
+          echo "📦 Package.json exists: $([ -f "package.json" ] && echo "✅" || echo "❌")"
+          echo "🔧 ESLint config: $([ -f ".eslintrc.js" ] || [ -f ".eslintrc.json" ] && echo "✅" || echo "❌")"
+          echo "💅 Prettier config: $([ -f ".prettierrc" ] || [ -f ".prettierrc.json" ] && echo "✅" || echo "❌")"
+          echo "🧪 Jest config: $([ -f "jest.config.js" ] && echo "✅" || echo "❌")"
           
-          # Extraer resultados de tests
-          if [ -f "test-results.json" ]; then
-            PASSED=$(jq '.numPassedTests // 0' test-results.json)
-            FAILED=$(jq '.numFailedTests // 0' test-results.json)
-            COVERAGE=$(jq '.coverageMap // {} | keys | length' test-results.json)
-          else
-            PASSED=0
-            FAILED=0
-            COVERAGE=0
+          if [ -f "package.json" ]; then
+            echo "📜 Available npm scripts:"
+            jq -r '.scripts | keys[]' package.json 2>/dev/null || echo "No scripts found"
           fi
-          
-          echo "tests_passed=$PASSED" >> $GITHUB_OUTPUT
-          echo "tests_failed=$FAILED" >> $GITHUB_OUTPUT
-          echo "coverage_files=$COVERAGE" >> $GITHUB_OUTPUT
 
-      - name: Security Audit
-        id: audit
+      - name: Run Code Quality Checks
+        id: quality
         continue-on-error: true
         run: |
-          echo "Running security audit..."
-          npm audit --json > audit-results.json || true
+          echo "Running code quality analysis..."
           
-          # Contar vulnerabilidades por severidad
-          HIGH=$(jq '.vulnerabilities | to_entries[] | select(.value.severity == "high") | .key' audit-results.json 2>/dev/null | wc -l || echo "0")
-          MODERATE=$(jq '.vulnerabilities | to_entries[] | select(.value.severity == "moderate") | .key' audit-results.json 2>/dev/null | wc -l || echo "0")
+          # Inicializar variables
+          ESLINT_ERRORS=0
+          ESLINT_WARNINGS=0
+          TESTS_PASSED=0
+          TESTS_FAILED=0
+          COVERAGE_FILES=0
+          AUDIT_HIGH=0
+          AUDIT_MODERATE=0
+          FORMATTING_ISSUES=0
           
-          echo "audit_high=$HIGH" >> $GITHUB_OUTPUT
-          echo "audit_moderate=$MODERATE" >> $GITHUB_OUTPUT
-
-      - name: Check Code Formatting
-        id: prettier
-        continue-on-error: true
-        run: |
-          echo "Checking code formatting..."
-          npx prettier --check . > prettier-results.txt 2>&1 || true
-          
-          if [ $? -eq 0 ]; then
+          # Verificar si existe package.json antes de continuar
+          if [ ! -f "package.json" ]; then
+            echo "No package.json found, skipping all npm-based checks..."
+            echo "eslint_errors=0" >> $GITHUB_OUTPUT
+            echo "eslint_warnings=0" >> $GITHUB_OUTPUT
+            echo "tests_passed=0" >> $GITHUB_OUTPUT
+            echo "tests_failed=0" >> $GITHUB_OUTPUT
+            echo "coverage_files=0" >> $GITHUB_OUTPUT
+            echo "audit_high=0" >> $GITHUB_OUTPUT
+            echo "audit_moderate=0" >> $GITHUB_OUTPUT
             echo "formatting_issues=0" >> $GITHUB_OUTPUT
-          else
-            ISSUES=$(cat prettier-results.txt | grep -c "Code style issues found" || echo "1")
-            echo "formatting_issues=$ISSUES" >> $GITHUB_OUTPUT
+            exit 0
           fi
+          
+          # ESLint solo si existe configuración Y script
+          if ([ -f ".eslintrc.js" ] || [ -f ".eslintrc.json" ] || [ -f "eslint.config.js" ]) && jq -e '.scripts.lint' package.json > /dev/null 2>&1; then
+            echo "Running ESLint analysis..."
+            npm run lint -- --format json --output-file eslint-results.json 2>/dev/null || true
+            
+            if [ -f "eslint-results.json" ]; then
+              ESLINT_ERRORS=$(jq '[.[].messages[] | select(.severity == 2)] | length' eslint-results.json 2>/dev/null || echo "0")
+              ESLINT_WARNINGS=$(jq '[.[].messages[] | select(.severity == 1)] | length' eslint-results.json 2>/dev/null || echo "0")
+            fi
+          elif [ -f ".eslintrc.js" ] || [ -f ".eslintrc.json" ] || [ -f "eslint.config.js" ]; then
+            echo "ESLint config found but no 'lint' script in package.json, running directly..."
+            npx eslint . --format json --output-file eslint-results.json 2>/dev/null || true
+            
+            if [ -f "eslint-results.json" ]; then
+              ESLINT_ERRORS=$(jq '[.[].messages[] | select(.severity == 2)] | length' eslint-results.json 2>/dev/null || echo "0")
+              ESLINT_WARNINGS=$(jq '[.[].messages[] | select(.severity == 1)] | length' eslint-results.json 2>/dev/null || echo "0")
+            fi
+          else
+            echo "ESLint configuration not found, skipping..."
+          fi
+          
+          # Tests solo si existe script de test
+          if jq -e '.scripts.test' package.json > /dev/null 2>&1; then
+            echo "Running tests..."
+            npm test -- --coverage --json --outputFile=test-results.json 2>/dev/null || true
+            
+            if [ -f "test-results.json" ]; then
+              TESTS_PASSED=$(jq '.numPassedTests // 0' test-results.json 2>/dev/null || echo "0")
+              TESTS_FAILED=$(jq '.numFailedTests // 0' test-results.json 2>/dev/null || echo "0")
+              COVERAGE_FILES=$(jq '.coverageMap // {} | keys | length' test-results.json 2>/dev/null || echo "0")
+            fi
+          else
+            echo "No test script found in package.json, skipping tests..."
+          fi
+          
+          # Security audit
+          echo "Running security audit..."
+          npm audit --json > audit-results.json 2>/dev/null || true
+          
+          if [ -f "audit-results.json" ]; then
+            AUDIT_HIGH=$(jq '.vulnerabilities | to_entries[] | select(.value.severity == "high") | .key' audit-results.json 2>/dev/null | wc -l || echo "0")
+            AUDIT_MODERATE=$(jq '.vulnerabilities | to_entries[] | select(.value.severity == "moderate") | .key' audit-results.json 2>/dev/null | wc -l || echo "0")
+          fi
+          
+          # Prettier solo si existe configuración Y script
+          if ([ -f ".prettierrc" ] || [ -f ".prettierrc.json" ] || [ -f "prettier.config.js" ]) && jq -e '.scripts.format' package.json > /dev/null 2>&1; then
+            echo "Checking code formatting with npm script..."
+            npm run format:check > prettier-results.txt 2>&1 || PRETTIER_EXIT_CODE=$?
+            
+            if [ "${PRETTIER_EXIT_CODE:-0}" -ne 0 ]; then
+              FORMATTING_ISSUES=$(cat prettier-results.txt | wc -l || echo "1")
+            fi
+          elif [ -f ".prettierrc" ] || [ -f ".prettierrc.json" ] || [ -f "prettier.config.js" ]; then
+            echo "Prettier config found but no 'format' script, checking directly..."
+            npx prettier --check . > prettier-results.txt 2>&1 || PRETTIER_EXIT_CODE=$?
+            
+            if [ "${PRETTIER_EXIT_CODE:-0}" -ne 0 ]; then
+              FORMATTING_ISSUES=$(cat prettier-results.txt | wc -l || echo "1")
+            fi
+          else
+            echo "Prettier configuration not found, skipping formatting check..."
+          fi
+          
+          # Guardar outputs
+          echo "eslint_errors=$ESLINT_ERRORS" >> $GITHUB_OUTPUT
+          echo "eslint_warnings=$ESLINT_WARNINGS" >> $GITHUB_OUTPUT
+          echo "tests_passed=$TESTS_PASSED" >> $GITHUB_OUTPUT
+          echo "tests_failed=$TESTS_FAILED" >> $GITHUB_OUTPUT
+          echo "coverage_files=$COVERAGE_FILES" >> $GITHUB_OUTPUT
+          echo "audit_high=$AUDIT_HIGH" >> $GITHUB_OUTPUT
+          echo "audit_moderate=$AUDIT_MODERATE" >> $GITHUB_OUTPUT
+          echo "formatting_issues=$FORMATTING_ISSUES" >> $GITHUB_OUTPUT
+          
+          echo "Quality checks completed: $ESLINT_ERRORS errors, $TESTS_FAILED failed tests, $AUDIT_HIGH high vulnerabilities"
 
       - name: Get PR diff
         id: diff
@@ -315,4 +369,12 @@ jobs:
               issue_number: context.payload.pull_request.number,
               body: comment
             });
+
+      - name: Cleanup temporary files
+        if: always()
+        run: |
+          echo "Cleaning up temporary files..."
+          rm -f pr_diff.txt eslint-results.json test-results.json audit-results.json
+          rm -f prettier-results.txt pr_changes_summary.txt pr_purpose_summary.txt copilot_comment.txt
+          echo "Cleanup completed"
 
