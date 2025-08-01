@@ -106,42 +106,49 @@ describe('UserService', () => {
   });
 
   describe('refreshToken', () => {
-    it('should return 403 if refresh token is not found', async () => {
+    it('should return error object if refresh token is not found', async () => {
+      mockDatabaseService = new MockDatabseService();
+      mockDatabaseService.tokenExists = jest.fn().mockResolvedValue(false);
       userService = new UserService(mockDatabaseService);
       const result = await userService.refreshToken('notfound');
-      expect(result).toBe(403);
+      expect(result).toEqual({ error: "Token inválido", status: 403 });
     });
 
     it('should return new access token if refresh token is valid', async () => {
+      mockDatabaseService = new MockDatabseService();
+      mockDatabaseService.tokenExists = jest.fn().mockResolvedValue(true);
+      jwt.verify.mockReturnValue({ username: 'user1' });
       userService = new UserService(mockDatabaseService);
-      jwt.verify.mockImplementation((token, secret, cb) => cb(null, { username: 'user1' }));
       const spy = jest.spyOn(userService, '_generateAccessToken').mockReturnValue('newAccessToken');
       const result = await userService.refreshToken('validtoken');
       expect(result).toEqual({ accessToken: 'newAccessToken' });
       expect(spy).toHaveBeenCalled();
     });
 
-    it('should return 403 if jwt.verify fails', async () => {
+    it('should return error object if jwt.verify fails', async () => {
+      mockDatabaseService = new MockDatabseService();
+      mockDatabaseService.tokenExists = jest.fn().mockResolvedValue(true);
+      mockDatabaseService.removeRefreshToken = jest.fn();
       userService = new UserService(mockDatabaseService);
-      jwt.verify.mockImplementation((token, secret, cb) => cb(new Error('fail')));
+      jwt.verify.mockImplementation(() => { throw new Error('fail'); });
       const result = await userService.refreshToken('validtoken');
-      expect(result).toBe(403);
+      expect(result).toEqual({ error: "Token inválido o expirado", status: 403 });
     });
   });
 
   describe('verify', () => {
-    it('should return 403 if jwt.verify fails', () => {
+    it('should return null if jwt.verify fails', () => {
       userService = new UserService(mockDatabaseService);
-      jwt.verify.mockImplementation((token, secret, cb) => cb(new Error('fail')));
+      jwt.verify.mockImplementation(() => { throw new Error('fail'); });
       const result = userService.verify('badtoken');
-      expect(result).toBeUndefined();
+      expect(result).toBeNull();
     });
 
     it('should return user if jwt.verify succeeds', () => {
       userService = new UserService(mockDatabaseService);
-      jwt.verify.mockImplementation((token, secret, cb) => cb(null, { username: 'user1' }));
+      jwt.verify.mockReturnValue({ username: 'user1' });
       const result = userService.verify('goodtoken');
-      expect(result).toBeUndefined();
+      expect(result).toEqual({ username: 'user1' });
     });
   });
 
@@ -158,16 +165,16 @@ describe('UserService', () => {
 
     it('should return error if user already exists', async () => {
       userService = new UserService(mockDatabaseService);
-      mockDatabaseService.addUser('existing', 'Password123');
-      const result = await userService.register('existing', 'Password123');
+      mockDatabaseService.addUser('existing', 'SecurePass123!');
+      const result = await userService.register('existing', 'SecurePass123!');
       expect(result).toEqual({ success: false, message: 'El nombre de usuario ya está en uso' });
     });
 
     it('should hash password and add user if user does not exist', async () => {
       userService = new UserService(mockDatabaseService);
       bcrypt.hash.mockResolvedValue('hashedPassword');
-      const result = await userService.register('newuser', 'Password123');
-      expect(bcrypt.hash).toHaveBeenCalledWith('Password123', 10);
+      const result = await userService.register('newuser', 'SecurePass123!');
+      expect(bcrypt.hash).toHaveBeenCalledWith('SecurePass123!', 10);
       expect(result).toEqual({ success: true, message: 'Usuario registrado exitosamente', user: true });
     });
 
@@ -179,7 +186,7 @@ describe('UserService', () => {
       userService = new UserService(mockDatabaseService);
 
       const spy = jest.spyOn(userService, '_hashPassword').mockReturnValue('hashed_password');
-      const result = await userService.register('failuser', 'Password123');
+      const result = await userService.register('failuser', 'SecurePass123!');
       
       expect(result).toEqual({ success: false, message: 'Error interno del servidor' });
       expect(spy).toHaveBeenCalled();
@@ -192,7 +199,7 @@ describe('UserService', () => {
       mockDatabaseService.getUser.mockResolvedValue(null);
       userService = new UserService(mockDatabaseService);
       const spy = jest.spyOn(userService, '_hashPassword').mockRejectedValue(new Error('fail'));
-      const result = await userService.register('erroruser', 'Password123');
+      const result = await userService.register('erroruser', 'SecurePass123!');
       expect(result).toEqual({ success: false, message: 'Error interno del servidor' });
       expect(spy).toHaveBeenCalled();
     });

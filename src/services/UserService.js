@@ -36,14 +36,12 @@ class UserService {
   /* v8 ignore stop */
 
   verify(token) {
-    jwt.verify(token, accessTokenSecret, (err, user) => {
-      if (err) {
-        console.error("Unable to login user: ", err);
-        return 403;
-      }
-
-      return user;
-    });
+    try {
+      return jwt.verify(token, accessTokenSecret);
+    } catch (err) {
+      console.error("Unable to verify token: ", err.message);
+      return null;
+    }
   }
 
   async login(username, password) {
@@ -97,21 +95,28 @@ class UserService {
   }
 
   async refreshToken(refreshToken) {
-    const tokenExists = await this.databaseService.tokenExists(refreshToken);
-    if (!tokenExists) {
-      return 403;
-    }
-
-    const result = jwt.verify(refreshToken, refreshTokenSecret, (err, user) => {
-      if (err) {
-        console.error("Unable to refresh token: ", err);
-        return 403;
+    try {
+      const tokenExists = await this.databaseService.tokenExists(refreshToken);
+      if (!tokenExists) {
+        return { error: "Token inválido", status: 403 };
       }
 
-      const accessToken = this._generateAccessToken(user);
+      const decoded = jwt.verify(refreshToken, refreshTokenSecret);
+      const accessToken = this._generateAccessToken(decoded);
+      
       return { accessToken };
-    });
-    return result;
+    } catch (err) {
+      console.error("Unable to refresh token: ", err.message);
+      
+      // Si el token es inválido, eliminarlo de la base de datos
+      try {
+        await this.databaseService.removeRefreshToken(refreshToken);
+      } catch (removeError) {
+        console.error("Error removing invalid token:", removeError);
+      }
+      
+      return { error: "Token inválido o expirado", status: 403 };
+    }
   }
 
   async logout(token) {
@@ -148,6 +153,11 @@ class UserService {
     if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
       return { valid: false, message: "La contraseña debe contener al menos una mayúscula, una minúscula y un número" };
     }
+    // 🔐 MEJORA: Validar contra contraseñas comunes
+    const commonPasswords = ['123456', 'password', '123456789', '12345678', '12345', '1234567', 'password123', 'admin'];
+    if (commonPasswords.some(common => password.toLowerCase().includes(common.toLowerCase()))) {
+      return { valid: false, message: "La contraseña es demasiado común. Elige una más segura" };
+    }
     return { valid: true };
   }
 
@@ -165,15 +175,17 @@ class UserService {
     expiresAt.setMinutes(expiresAt.getMinutes() + 15); // 15 minutos de expiración
 
     try {
+      // 🧹 MEJORA: Limpiar códigos anteriores antes de crear uno nuevo
+      await this.databaseService.deletePasswordResetCode(user.id);
       await this.databaseService.storePasswordResetCode(user.id, resetCode, expiresAt.toISOString());
       
       // En un proyecto real, aquí enviarías el código por email/SMS
-      console.log(`🔑 Código de recuperación para ${username}: ${resetCode} (válido por 15 minutos)`);
+      console.log(`🔑 Código de recuperación generado para ${username} (válido por 15 minutos)`);
       
       return { 
         success: true, 
-        message: "Si el usuario existe, se enviará un código de recuperación",
-        resetCode: resetCode // Solo para desarrollo - remover en producción
+        message: "Si el usuario existe, se enviará un código de recuperación"
+        // 🔐 MEJORA DE SEGURIDAD: Removido resetCode de la respuesta
       };
     } catch (error) {
       console.error("Error storing password reset code:", error);
@@ -202,8 +214,11 @@ class UserService {
       const hashedPassword = await this._hashPassword(newPassword);
       await this.databaseService.updateUserPasswordById(user.id, hashedPassword);
       await this.databaseService.deletePasswordResetCode(user.id);
+      
+      // 🔐 MEJORA DE SEGURIDAD: Invalidar todas las sesiones activas del usuario
+      await this.databaseService.removeAllUserRefreshTokens(user.id);
 
-      return { success: true, message: "Contraseña actualizada exitosamente" };
+      return { success: true, message: "Contraseña actualizada exitosamente. Todas las sesiones han sido cerradas por seguridad." };
     } catch (error) {
       console.error("Error resetting password:", error);
       return { success: false, message: "Error interno del servidor" };

@@ -5,11 +5,10 @@ const path = require("path"); // Importante para manejar rutas
 const bodyParser = require('body-parser')
 const app = express();
 const port = process.env.PORT || 3000;
-const sqlite = require("sqlite3");
-const db = new sqlite.Database(':memory:');
 
-const DatabaseService = require("./services/DatabaseService");
-const databaseService = new DatabaseService(db);
+// 📄 MEJORA: Cambiar a SQLiteDatabaseService 
+const SQLiteDatabaseService = require("./services/SQLiteDatabaseService");
+const databaseService = new SQLiteDatabaseService();
 const UserService = require("./services/UserService");
 const userService = new UserService(databaseService);
 const ChatService = require("./services/ChatService");
@@ -31,13 +30,16 @@ function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
   if (!token) {
-    console.error("Invalid token!");
-    return res.sendStatus(401);
+    console.error("No token provided!");
+    return res.status(401).json({ error: "Token requerido" });
   }
+  
   const result = userService.verify(token);
-  if (result === 403) {
-    return res.sendStatus(403);
+  if (!result) {
+    console.error("Invalid or expired token!");
+    return res.status(403).json({ error: "Token inválido o expirado" });
   }
+  
   req.user = result; // Asignamos el usuario decodificado al request
   next();
 }
@@ -111,12 +113,19 @@ app.post("/token", async (req, res) => {
   if (!refreshToken) {
     return res.sendStatus(403);
   }
+  
   const result = await userService.refreshToken(refreshToken);
-  if (!result) {
+  
+  // 🔄 MEJORA: Manejar nuevos formatos de error
+  if (result.error) {
+    return res.status(result.status || 403).json({ error: result.error });
+  }
+  
+  if (!result.accessToken) {
     return res.sendStatus(403);
   }
-  const { accessToken } = result;
-  res.json({ accessToken });
+  
+  res.json({ accessToken: result.accessToken });
 });
 // Ruta para logout
 app.delete("/logout", async (req, res) => {
@@ -126,7 +135,22 @@ app.delete("/logout", async (req, res) => {
 });
 // Ruta protegida de chat
 app.use("/chat", authenticateToken, chatService.getRouter());
-// Iniciar servidor
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
-});
+
+// 🚀 MEJORA: Inicializar base de datos y arrancar servidor
+async function startServer() {
+  try {
+    await databaseService.testConnection();
+    await databaseService.initializeTables();
+    
+    app.listen(port, () => {
+      console.log(`🚀 Server listening on port ${port}`);
+      console.log(`📱 Frontend: http://localhost:${port}`);
+      console.log(`📝 Register: http://localhost:${port}/register`);
+    });
+  } catch (error) {
+    console.error('❌ Error starting server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();

@@ -245,14 +245,25 @@ class SQLiteDatabaseService {
     return result;
   }
 
+  // 🧹 MEJORA: Limpiar códigos de reset expirados
+  async deleteExpiredPasswordResets() {
+    const sql = `DELETE FROM password_resets WHERE expires_at <= datetime('now')`;
+    const result = await this.query(sql);
+    return result;
+  }
+
   // Alias para compatibilidad con PostgreSQL
   async cleanExpiredTokens() {
     try {
-      const result = await this.deleteExpiredTokens();
-      console.log(`🧹 Limpiados ${result.rowCount || 0} tokens expirados de SQLite`);
-      return result.rowCount || 0;
+      const tokensResult = await this.deleteExpiredTokens();
+      const resetsResult = await this.deleteExpiredPasswordResets();
+      
+      const totalCleaned = (tokensResult.rowCount || 0) + (resetsResult.rowCount || 0);
+      console.log(`🧹 Limpiados ${tokensResult.rowCount || 0} tokens expirados y ${resetsResult.rowCount || 0} códigos de reset expirados de SQLite`);
+      
+      return totalCleaned;
     } catch (error) {
-      console.error('Error limpiando tokens expirados:', error);
+      console.error('Error limpiando tokens y códigos expirados:', error);
       throw error;
     }
   }
@@ -285,6 +296,11 @@ class SQLiteDatabaseService {
 
   async removeRefreshToken(refreshToken) {
     await this.deleteRefreshToken(refreshToken);
+  }
+
+  // 🔄 MEJORA: Alias para compatibilidad
+  async removeToken(refreshToken) {
+    await this.removeRefreshToken(refreshToken);
   }
 
   async updateUserPassword(usernameOrEmail, newPasswordHash) {
@@ -322,6 +338,25 @@ class SQLiteDatabaseService {
   async deletePasswordResetCode(userId) {
     const sql = 'DELETE FROM password_resets WHERE user_id = ?';
     await this.query(sql, [userId]);
+  }
+
+  // 📊 MEJORA: Método para obtener estadísticas de la base de datos
+  async getDatabaseStats() {
+    try {
+      const usersResult = await this.query('SELECT COUNT(*) as count FROM users');
+      const sessionsResult = await this.query('SELECT COUNT(*) as count FROM user_sessions WHERE expires_at > datetime("now")');
+      const resetsResult = await this.query('SELECT COUNT(*) as count FROM password_resets WHERE expires_at > datetime("now")');
+
+      return {
+        totalUsers: usersResult.rows[0]?.count || 0,
+        activeSessions: sessionsResult.rows[0]?.count || 0,
+        pendingResets: resetsResult.rows[0]?.count || 0,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('Error obteniendo estadísticas:', error);
+      throw error;
+    }
   }
 }
 
