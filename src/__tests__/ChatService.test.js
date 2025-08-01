@@ -1,13 +1,10 @@
 const ChatService = require('../services/ChatService');
 const express = require('express');
 const fs = require('fs');
-const path = require('path');
 const { OpenAI } = require('openai');
 
 jest.mock('openai');
 jest.mock('fs');
-
-const knowledgePath = path.join(__dirname, '../knowledge.json');
 
 describe('ChatService', () => {
   let chatService;
@@ -51,6 +48,16 @@ describe('ChatService', () => {
     it('returns false for short/generic', () => {
       expect(chatService.isRelevantQuestion('Hi')).toBe(false);
     });
+    it('returns false for irrelevant question', () => {
+      expect(chatService.isRelevantQuestion('ozymandias')).toBe(false);
+    });
+    it('returns false for irrelevant question', () => {
+      expect(chatService.isRelevantQuestion('ozymandias arthropod chimera magic drill machine chair table hydrogen')).toBe(false);
+    });
+
+    it('returns false for irrelevant very question', () => {
+      expect(chatService.isRelevantQuestion('lol x')).toBe(false);
+    });
   });
 
   describe('addToKnowledge', () => {
@@ -58,6 +65,13 @@ describe('ChatService', () => {
       chatService.isRelevantQuestion = jest.fn().mockReturnValue(false);
       chatService.addToKnowledge('Hi', 'Hello!');
       expect(fs.writeFileSync).not.toHaveBeenCalled();
+    });
+    it('adds but faqs is not an array', () => {
+      chatService.isRelevantQuestion = jest.fn().mockReturnValue(true);
+      fs.readFileSync.mockReturnValue(JSON.stringify({ faqs: { name: "perro"} }));
+      fs.writeFileSync.mockClear();
+      chatService.addToKnowledge('What is a leash?', 'A leash is...');
+      expect(fs.writeFileSync).toHaveBeenCalled();
     });
     it('adds relevant and non-existing question', () => {
       chatService.isRelevantQuestion = jest.fn().mockReturnValue(true);
@@ -72,6 +86,15 @@ describe('ChatService', () => {
       chatService.addToKnowledge('Q', 'A');
       expect(fs.writeFileSync).not.toHaveBeenCalled();
     });
+
+    it('should throw an error if it cannot add  to the file', () => {
+      consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
+      const spy = jest.spyOn(fs, 'readFileSync').mockImplementation((path, data) => cb(new Error('fail')))
+      chatService.isRelevantQuestion = jest.fn().mockReturnValue(true);
+      chatService.addToKnowledge('Q', 'A');
+      expect(spy).toHaveBeenCalled();
+    });
+
   });
 
   describe('getRouter', () => {
@@ -79,6 +102,12 @@ describe('ChatService', () => {
       const router = chatService.getRouter();
       expect(router).toBeInstanceOf(express.Router().constructor);
     });
+
+    it('returns an express router', () => {
+      const router = chatService.getRouter();
+      expect(router).toBeInstanceOf(express.Router().constructor);
+    });
+
   });
 
   describe('callLLM', () => {
@@ -95,6 +124,7 @@ describe('ChatService', () => {
       expect(result).toBe(mockContent);
     });
     it('returns fallback on error', async () => {
+      consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
       OpenAI.prototype.chat = {
         completions: {
           create: jest.fn().mockRejectedValue(new Error('fail'))

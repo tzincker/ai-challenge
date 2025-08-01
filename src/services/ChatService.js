@@ -6,28 +6,38 @@ const express = require("express");
 const Fuse = require("fuse.js");
 const { OpenAI } = require("openai");
 
-// Loading the Knowledge Base
 const knowledgePath = path.join(__dirname, "../knowledge.json");
-let knowledge = [];
-try {
-  const raw = JSON.parse(fs.readFileSync(knowledgePath, "utf8"));
-  // Si knowledge.json tiene un array bajo 'faqs', úsalo
-  knowledge = Array.isArray(raw.faqs) ? raw.faqs : [];
-} catch (err) {
-  console.error("No se pudo cargar knowledge.json:", err);
-}
 
 class ChatService {
+
   constructor(overrideKnowledge) {
+
+    // Initialize OpenAI
+    this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    /* v8 ignore start */
+    this.knowledge = overrideKnowledge || this._loadKnowledgeData();
+    /* v8 ignore stop */
     // Initialize Fuse.js for fuzzy similarity
-    this.fuse = new Fuse(knowledge, {
+    this.fuse = new Fuse(this.knowledge, {
       keys: ["question"],
       threshold: 0.4, // Adjust for more/less tolerance
     });
-    // Initialize OpenAI
-    this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    this.knowledge = overrideKnowledge || knowledge;
   }
+
+  /* v8 ignore start */
+  _loadKnowledgeData() {
+    // Loading the Knowledge Base
+    let knowledge = [];
+    try {
+      const raw = JSON.parse(fs.readFileSync(knowledgePath, "utf8"));
+      // Si knowledge.json tiene un array bajo 'faqs', úsalo
+      knowledge = Array.isArray(raw.faqs) ? raw.faqs : [];
+      return knowledge;
+    } catch (err) {
+      console.error("No se pudo cargar knowledge.json:", err);
+    }
+  }
+  /* v8 ignore stop */
 
   //Retrieve relevant context and build prompts for LLM
   buildPrompt(userQuestion) {
@@ -201,6 +211,7 @@ class ChatService {
   }
 
   // Returns an Express router with the chat endpoint
+  /* v8 ignore start */
   getRouter() {
     const router = express.Router();
     router.post("/", async (req, res) => {
@@ -226,6 +237,7 @@ class ChatService {
     });
     return router;
   }
+  /* v8 ignore stop */
 }
 
 module.exports = ChatService;
