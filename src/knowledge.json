@@ -64,6 +64,331 @@
       "id": "FAQ014",
       "question": "what sizes are available for dog collars",
       "answer": "We offer dog collars in various sizes to suit the needs of different breeds and sizes of dogs. Our sizes typically range from extra small to extra large, catering to small breeds like Chihuahuas or large breeds like Great Danes. Depending on the brand and style, specific size charts may be available to help you find the perfect fit for your furry friend. If you have a specific size in mind, feel free to let me know, and I can provide more detailed information."
+    },
+    {
+      "id": "FAQ015",
+      "question": "collar",
+      "answer": "¡Tenemos una gran variedad de collares para mascotas! Ofrecemos collares de cuero, nylon, con diseños reflectantes, ajustables y más. ¿Para qué tipo de mascota necesitas el collar y qué características prefieres?"
+    },
+    {
+      "id": "FAQ016", 
+      "question": "juguete",
+      "answer": "¡Excelente! Tenemos muchos juguetes para mascotas. Disponemos de pelotas, huesos de juguete, cuerdas, juguetes interactivos, peluches y más. ¿Para qué tipo de mascota es el juguete?"
+    },
+    {
+      "id": "FAQ017",
+      "question": "tamaños",
+      "answer": "Ofrecemos productos en diferentes tamaños: XS (extra pequeño), S (pequeño), M (mediano), L (grande) y XL (extra grande). El tamaño específico depende del producto. ¿Qué producto necesitas y para qué tamaño de mascota?"
+    },
+    {
+      "id": "FAQ018",
+      "question": "dog",
+      "answer": "Hello! I see you're looking for dog products! 🐕 We have an amazing range of accessories for dogs:\\n\\n**Available Categories:**\\n👕 **Dog Clothing** - Coats, sweaters, vests\\n👟 **Dog Shoes** - Boots, paw protectors\\n🎾 **Toys** - Balls, bones, ropes, interactive toys\\n🏷️ **Collars & Leashes** - Leather, nylon, reflective\\n🛏️ **Beds & Blankets** - Comfortable and durable\\n🍽️ **Food & Water Bowls** - Stainless steel, ceramic\\n\\nWhich category interests you most? Just let me know and I'll help you find the perfect product for your furry friend!"
+    },
+    {
+      "id": "FAQ019",
+      "question": "perro",
+      "answer": "¡Perfecto! Tenemos todo lo que tu perro necesita! 🐕\\n\\n**Categorías disponibles:**\\n🦴 **Vestimenta para perros** - Abrigos, suéteres, chalecos\\n👟 **Zapatos para perros** - Botitas, protectores de patas\\n🎾 **Juguetes** - Pelotas, huesos, cuerdas\\n🏷️ **Collares y correas** - Cuero, nylon, reflectantes\\n🛏️ **Camas y mantas** - Cómodas y resistentes\\n🍽️ **Comederos y bebederos** - Acero inoxidable, cerámica\\n\\n¿Qué categoría te interesa más? ¡Solo dímelo y te ayudo a encontrar el producto perfecto!"
+    },
+    {
+      "id": "FAQ020",
+      "question": "productos para perros",
+      "answer": "¡Excelente! Somos especialistas en productos para perros. Ofrecemos: collares (cuero, nylon, reflectantes), juguetes (pelotas, huesos, cuerdas), camas y mantas, platos y bebederos, champús y productos de higiene, correas y arneses. ¿Qué necesita tu perro?"
+    },
+    {
+      "id": "FAQ021",
+      "question": "vestimenta para perros",
+      "answer": "¡Genial! Tenemos una hermosa colección de vestimenta para perros! 👕🐕\\n\\n**Nuestra línea de ropa incluye:**\\n🧥 **Abrigos de invierno** - Impermeables y térmicos\\n🧶 **Suéteres** - Lana y algodón, varios colores\\n🦺 **Chalecos** - Reflectantes para paseos nocturnos\\n👗 **Disfraces** - Para ocasiones especiales\\n🏖️ **Ropa de verano** - Camisetas ligeras\\n\\n**Tallas disponibles:** XS, S, M, L, XL\\n\\n¿Qué tipo de vestimenta buscas para tu perro? ¿Necesitas ayuda con las tallas?"
+    },
+    {
+      "id": "FAQ022",
+      "question": "zapatos para perros",
+      "answer": "¡Excelente elección! Los zapatos protegen las patitas de tu perro! 👟🐾\\n\\n**Nuestra colección de calzado:**\\n🥾 **Botitas impermeables** - Para días lluviosos\\n👟 **Zapatos deportivos** - Para caminatas largas\\n🧦 **Calcetines antideslizantes** - Para interiores\\n❄️ **Botas de invierno** - Protección contra frío y sal\\n🏖️ **Protectores de verano** - Contra asfalto caliente\\n\\n**Tallas:** 1, 2, 3, 4, 5 (según el tamaño de la pata)\\n\\n¿Para qué ocasión necesitas los zapatos? ¿Conoces la talla de las patas de tu perro?"
+    },
+    {
+      "id": "FAQ023",
+      "question": "dog clothing",
+      "answer": "Wonderful! We have an amazing dog clothing collection! 👕🐕\\n\\n**Our clothing line includes:**\\n🧥 **Winter coats** - Waterproof and thermal\\n🧶 **Sweaters** - Wool and cotton, various colors\\n🦺 **Vests** - Reflective for nighttime walks\\n👗 **Costumes** - For special occasions\\n🏖️ **Summer wear** - Light t-shirts\\n\\n**Available sizes:** XS, S, M, L, XL\\n\\nWhat type of clothing are you looking for your dog? Need help with sizing?"
+    },
+    {
+      "id": "FAQ024",
+      "question": "dog shoes",
+      "answer": "Great choice! Dog shoes protect your pup's paws! 👟🐾\\n\\n**Our footwear collection:**\\n🥾 **Waterproof boots** - For rainy days\\n👟 **Athletic shoes** - For long walks\\n🧦 **Non-slip socks** - For indoors\\n❄️ **Winter boots** - Protection against cold and salt\\n🏖️ **Summer protectors** - Against hot pavement\\n\\n**Sizes:** 1, 2, 3, 4, 5 (based on paw size)\\n\\nWhat occasion do you need the shoes for? Do you know your dog's paw size?"
+    },
+    {
+      "id": "FAQ025",
+      "question": "ropa para perros",
+      "answer": "¡Perfecto! La ropa para perros no solo es adorable, sino también funcional! 🐕👕\\n\\n**¿Por qué usar ropa para perros?**\\n• Protección contra el frío\\n• Mantiene el pelaje limpio\\n• Protección solar\\n• Comodidad en interiores\\n\\n**Tipos disponibles:**\\n🧥 Abrigos térmicos\\n🧶 Suéteres de lana\\n👕 Camisetas de algodón\\n🦺 Chalecos reflectantes\\n\\n¿Tu perro es de raza pequeña, mediana o grande? ¡Te ayudo a elegir la talla perfecta!"
+    },
+    {
+      "id": "FAQ026",
+      "question": "how to measure dog for clothes",
+      "answer": "Great question! Proper sizing ensures comfort! 📏🐕\\n\\n**How to measure your dog:**\\n\\n📐 **Neck circumference** - Around the base of the neck\\n📐 **Chest circumference** - Around the widest part of the chest\\n📐 **Back length** - From neck to base of tail\\n📐 **Belly circumference** - Around the belly (for full coverage)\\n\\n**Pro tips:**\\n• Measure when your dog is standing\\n• Add 1-2 inches for comfort\\n• Check our size chart for each item\\n\\nNeed help choosing the right size? Just tell me your dog's measurements!"
+    },
+    {
+      "id": "FAQ027",
+      "question": "frequent questions",
+      "answer": "Here are our most frequently asked questions! 🤔💡\\n\\n**🐕 Dog Products**\\n• What sizes are available?\\n• How to measure my dog?\\n• Best materials for sensitive skin?\\n\\n**👕 Clothing & Accessories**\\n• Do you have winter coats?\\n• How to choose the right shoe size?\\n• Waterproof options available?\\n\\n**🛒 Store Information**\\n• Shipping and returns policy\\n• Product care instructions\\n• Size exchange options\\n\\nWhat specific question can I help you with?"
+    },
+    {
+      "id": "FAQ028",
+      "question": "preguntas frecuentes",
+      "answer": "¡Aquí tienes nuestras preguntas más frecuentes! 🤔💡\\n\\n**🐕 Productos para Perros**\\n• ¿Qué tallas están disponibles?\\n• ¿Cómo medir a mi perro?\\n• ¿Mejores materiales para piel sensible?\\n\\n**👕 Ropa y Accesorios**\\n• ¿Tienen abrigos de invierno?\\n• ¿Cómo elegir la talla de zapatos?\\n• ¿Opciones impermeables disponibles?\\n\\n**🛒 Información de la Tienda**\\n• Política de envíos y devoluciones\\n• Instrucciones de cuidado\\n• Opciones de cambio de talla\\n\\n¿Con qué pregunta específica puedo ayudarte?"
+    },
+    {
+      "id": "FAQ029",
+      "question": "care instructions",
+      "answer": "Great question! Proper care extends product life! 🧼✨\\n\\n**Clothing care:**\\n• Machine wash cold, gentle cycle\\n• Air dry recommended\\n• No bleach or fabric softener\\n\\n**Shoe care:**\\n• Remove dirt with damp cloth\\n• Air dry completely\\n• Check straps regularly\\n\\n**Collar care:**\\n• Wipe clean regularly\\n• Check for wear and tear\\n• Replace if damaged\\n\\nNeed specific care instructions for a product?"
+    },
+    {
+      "id": "FAQ030",
+      "question": "shipping and returns",
+      "answer": "We want you and your pet to be completely satisfied! 📦💝\\n\\n**Shipping:**\\n• Free shipping on orders over $50\\n• 3-5 business days standard delivery\\n• Express shipping available\\n\\n**Returns:**\\n• 30-day return policy\\n• Items must be unused with tags\\n• Free returns for size exchanges\\n\\n**Need help?** Contact us anytime for assistance with your order!"
+    },
+    {
+      "id": "FAQ031",
+      "question": "collar",
+      "answer": "Great choice! We have an amazing selection of collars! 🐕🏷️\\n\\n**Collar Types:**\\n🔗 **Classic Collars** - Leather, nylon, fabric\\n💡 **LED/Reflective** - For nighttime safety\\n🎨 **Designer Collars** - Stylish patterns and colors\\n⚙️ **Training Collars** - Martingale, no-pull designs\\n🏃 **Sport Collars** - Waterproof, durable materials\\n\\n**Available Sizes:** XS to XXL\\n\\nWhat type of collar are you looking for? I can help you find the perfect fit!"
+    },
+    {
+      "id": "FAQ032",
+      "question": "leash",
+      "answer": "Perfect! We have excellent leashes for every need! 🦮\\n\\n**Leash Options:**\\n🎯 **Standard Leashes** - 4ft, 6ft, 8ft lengths\\n🔄 **Retractable Leashes** - Adjustable length\\n🏃 **Training Leashes** - Long lines for recall training\\n🚶 **Walking Leashes** - Comfortable grip handles\\n🌊 **Waterproof Leashes** - For all weather conditions\\n\\n**Materials:** Leather, nylon, rope, chain\\n\\nWhat kind of activities will you be doing with your dog?"
+    },
+    {
+      "id": "FAQ033",
+      "question": "toys",
+      "answer": "Awesome! Toys are essential for happy pets! 🎾🐕\\n\\n**Toy Categories:**\\n🎾 **Fetch Toys** - Balls, frisbees, sticks\\n🧩 **Puzzle Toys** - Interactive, treat-dispensing\\n🧸 **Plush Toys** - Soft, cuddly companions\\n🦴 **Chew Toys** - Durable, teeth-cleaning\\n🎵 **Squeaky Toys** - Fun sounds and textures\\n💪 **Rope Toys** - Tug-of-war, teeth cleaning\\n\\n**Size Options:** Small, Medium, Large\\n\\nWhat type of play does your pet enjoy most?"
+    },
+    {
+      "id": "FAQ034",
+      "question": "bed",
+      "answer": "Excellent! Every pet deserves a comfortable bed! 🛏️😴\\n\\n**Bed Types:**\\n☁️ **Orthopedic Beds** - Memory foam, joint support\\n🏠 **Cave Beds** - Cozy, enclosed feeling\\n🌡️ **Heated Beds** - Warmth for cold nights\\n❄️ **Cooling Beds** - Gel-infused for hot weather\\n🚗 **Travel Beds** - Portable, foldable\\n🧼 **Waterproof Beds** - Easy to clean\\n\\n**Sizes:** XS to XXL\\n\\nWhat size is your pet, and do they prefer enclosed or open sleeping spaces?"
+    },
+    {
+      "id": "FAQ035",
+      "question": "food bowl",
+      "answer": "Great choice! Proper feeding bowls are important! 🍽️\\n\\n**Bowl Options:**\\n🥄 **Stainless Steel** - Hygienic, dishwasher safe\\n🏺 **Ceramic Bowls** - Heavy, non-slip, decorative\\n🌿 **Bamboo Bowls** - Eco-friendly, sustainable\\n📏 **Elevated Bowls** - Better posture, easier eating\\n🐌 **Slow Feed Bowls** - Prevents fast eating\\n💧 **Water Fountains** - Fresh, filtered water\\n\\n**Sizes:** Small, Medium, Large, Extra Large\\n\\nWhat size is your pet, and do they eat quickly or slowly?"
+    },
+    {
+      "id": "FAQ036",
+      "question": "treats",
+      "answer": "Yummy! Treats are perfect for training and bonding! 🦴🍖\\n\\n**Treat Types:**\\n🏋️ **Training Treats** - Small, soft, quick rewards\\n🦷 **Dental Chews** - Teeth cleaning, breath freshening\\n🥩 **Freeze-Dried** - Pure meat, high protein\\n🌾 **Natural Treats** - Organic, grain-free options\\n🧩 **Puzzle Treats** - Mental stimulation\\n🎂 **Special Occasion** - Birthday, holiday treats\\n\\n**Flavors:** Chicken, beef, salmon, sweet potato\\n\\nWhat's your pet's favorite flavor, and what do you use treats for?"
+    },
+    {
+      "id": "FAQ037",
+      "question": "harness",
+      "answer": "Smart choice! Harnesses are great for comfort and control! 🦮\\n\\n**Harness Types:**\\n👕 **Vest Harness** - Comfortable, even pressure distribution\\n🏃 **Sport Harness** - For active dogs, hiking, running\\n🚫 **No-Pull Harness** - Front-clip, reduces pulling\\n🚗 **Car Harness** - Safety during travel\\n👶 **Puppy Harness** - Adjustable, gentle training\\n🎽 **Step-In Harness** - Easy to put on\\n\\n**Materials:** Mesh, nylon, leather, neoprene\\n\\nDoes your dog pull on walks, or do you need it for specific activities?"
+    },
+    {
+      "id": "FAQ038",
+      "question": "grooming",
+      "answer": "Excellent! Regular grooming keeps pets healthy and happy! ✂️🧼\\n\\n**Grooming Supplies:**\\n🪥 **Brushes & Combs** - For different coat types\\n✂️ **Nail Clippers** - Safe, precise trimming\\n🛁 **Shampoos** - Gentle, pet-safe formulas\\n👂 **Ear Cleaners** - Prevent infections\\n🦷 **Toothbrushes** - Dental health\\n🧽 **Grooming Wipes** - Quick cleanups\\n\\n**For All Coat Types:** Short, long, curly, double-coat\\n\\nWhat type of coat does your pet have, and what grooming challenges do you face?"
+    },
+    {
+      "id": "FAQ039",
+      "question": "travel",
+      "answer": "Perfect for adventures with your pet! ✈️🚗\\n\\n**Travel Essentials:**\\n🎒 **Carriers** - Airline approved, comfortable\\n🚗 **Car Seats** - Safety harnesses, booster seats\\n🏕️ **Travel Beds** - Portable, familiar comfort\\n🍽️ **Travel Bowls** - Collapsible, lightweight\\n🧳 **Travel Bags** - Organize all pet supplies\\n📋 **ID Tags** - Emergency contact information\\n\\n**Safety First:** Always secure pets during travel\\n\\nWhat type of travel are you planning - car trips, flights, or camping?"
+    },
+    {
+      "id": "FAQ040",
+      "question": "safety",
+      "answer": "Safety first! We have everything to keep your pet secure! 🛡️\\n\\n**Safety Products:**\\n🏷️ **ID Tags** - Name, phone, address\\n💡 **LED Collars** - Visibility at night\\n🦺 **Reflective Gear** - Vests, leashes, collars\\n🔒 **Safety Gates** - Keep pets in safe areas\\n🚗 **Car Restraints** - Harnesses, barriers\\n🏠 **Pet Alarms** - Motion sensors, cameras\\n\\n**Emergency Preparedness:** First aid kits available\\n\\nWhat safety concerns do you have for your pet?"
+    },
+    {
+      "id": "FAQ041",
+      "question": "winter gear",
+      "answer": "Keep your pet warm and cozy! ❄️🧥\\n\\n**Winter Essentials:**\\n🧥 **Winter Coats** - Waterproof, insulated\\n🧣 **Sweaters** - Wool, fleece, various styles\\n🥾 **Snow Boots** - Paw protection, traction\\n🧤 **Paw Balm** - Prevents cracking, salt damage\\n🏠 **Heated Beds** - Extra warmth indoors\\n☂️ **Rain Gear** - Waterproof jackets\\n\\n**Size Guide:** Measure chest, neck, back length\\n\\nHow cold does it get in your area, and does your pet get cold easily?"
+    },
+    {
+      "id": "FAQ042",
+      "question": "summer gear",
+      "answer": "Keep your pet cool and comfortable! ☀️🏖️\\n\\n**Summer Essentials:**\\n❄️ **Cooling Mats** - Gel-filled, no electricity needed\\n👕 **Light Shirts** - UV protection, breathable\\n🥾 **Paw Protectors** - Against hot pavement\\n💧 **Water Bottles** - Portable hydration\\n⛱️ **Shade Tents** - Outdoor protection\\n🏊 **Life Jackets** - Water safety\\n\\n**Heat Safety:** Never leave pets in cars\\n\\nDoes your pet spend a lot of time outdoors during hot weather?"
+    },
+    {
+      "id": "FAQ043",
+      "question": "training",
+      "answer": "Training makes for better relationships! 🎓🐕\\n\\n**Training Supplies:**\\n🦴 **Training Treats** - High-value rewards\\n🔔 **Clickers** - Positive reinforcement\\n🎯 **Target Sticks** - Focus and direction\\n🏷️ **Training Collars** - Gentle guidance\\n📚 **Training Guides** - Step-by-step instructions\\n🧩 **Puzzle Toys** - Mental stimulation\\n\\n**Training Goals:** Basic obedience, tricks, behavior\\n\\nWhat training goals do you have for your pet?"
+    },
+    {
+      "id": "FAQ044",
+      "question": "puppy",
+      "answer": "Puppies are the best! Welcome to pet parenthood! 🐶👶\\n\\n**Puppy Essentials:**\\n🍼 **Puppy Food** - Age-appropriate nutrition\\n🧸 **Soft Toys** - Comfort and play\\n🦷 **Teething Toys** - Soothe sore gums\\n🏠 **Training Pads** - House training help\\n🎒 **Small Carriers** - Vet visits, travel\\n📏 **Adjustable Collars** - Growing pups\\n\\n**Puppy-Proofing:** Safe, appropriate sizes\\n\\nHow old is your puppy, and what's your biggest challenge right now?"
+    },
+    {
+      "id": "FAQ045",
+      "question": "senior dog",
+      "answer": "Senior pets deserve extra comfort and care! 👴🐕💕\\n\\n**Senior Pet Needs:**\\n🛏️ **Orthopedic Beds** - Joint support, memory foam\\n🚶 **Easy-Grip Harnesses** - Gentle, supportive\\n🍽️ **Elevated Bowls** - Easier eating position\\n💊 **Supplement Treats** - Joint health support\\n🛤️ **Ramps** - Easy access to furniture\\n🧘 **Comfort Items** - Soft blankets, heating pads\\n\\n**Health Focus:** Regular vet checkups important\\n\\nWhat comfort improvements is your senior pet needing?"
+    },
+    {
+      "id": "FAQ046",
+      "question": "cat",
+      "answer": "Meow! We love cats too! 🐱 Here's what we have for feline friends:\\n\\n**Cat Essentials:**\\n🏠 **Scratching Posts** - Various heights and materials\\n🧸 **Cat Toys** - Feathers, balls, interactive\\n🍽️ **Food Bowls** - Whisker-friendly designs\\n🛏️ **Cat Beds** - Cozy caves, window perches\\n🎣 **Wand Toys** - Interactive play sessions\\n🌿 **Catnip Products** - Toys, sprays, plants\\n\\n**Special Features:** Anti-slip bases, easy cleaning\\n\\nWhat does your cat love to do most - play, sleep, or scratch?"
+    },
+    {
+      "id": "FAQ047",
+      "question": "small dog",
+      "answer": "Small dogs, big personalities! 🐕‍🦺✨\\n\\n**Perfect for Small Breeds:**\\n👕 **XS-S Clothing** - Chihuahua to Beagle sizes\\n🎒 **Small Carriers** - Airline approved, comfortable\\n🦴 **Mini Toys** - Appropriate sizing\\n🏷️ **Lightweight Collars** - Won't weigh them down\\n🍽️ **Small Bowls** - Perfect portion control\\n🛏️ **Cozy Beds** - Cave-style, security\\n\\n**Safety First:** Avoid items too large or heavy\\n\\nWhat breed is your small dog, and what are you looking for?"
+    },
+    {
+      "id": "FAQ048",
+      "question": "large dog",
+      "answer": "Big dogs need big love and sturdy products! 🐕‍🦮💪\\n\\n**Built for Large Breeds:**\\n🏷️ **Heavy-Duty Collars** - Extra strong materials\\n🦮 **Strong Leashes** - Reinforced, comfortable grip\\n🛏️ **XL Beds** - Extra room, orthopedic support\\n🧸 **Durable Toys** - Won't break easily\\n🍽️ **Large Bowls** - Adequate food/water capacity\\n🚗 **Big Car Gear** - Barriers, large carriers\\n\\n**Weight Capacity:** All items tested for large breeds\\n\\nWhat breed is your large dog, and what specific needs do they have?"
+    },
+    {
+      "id": "FAQ049",
+      "question": "outdoor",
+      "answer": "Adventure awaits! Gear up for outdoor fun! 🏔️🌲\\n\\n**Outdoor Adventures:**\\n🎒 **Hiking Packs** - Let your dog carry supplies\\n💧 **Portable Water** - Collapsible bowls, bottles\\n🥾 **All-Terrain Boots** - Rock, sand, snow protection\\n🦺 **Visibility Gear** - Bright colors, reflective\\n🏕️ **Camping Beds** - Portable, weather-resistant\\n🎾 **Fetch Toys** - Floating, glow-in-dark\\n\\n**Weather Ready:** Rain, snow, heat protection\\n\\nWhat outdoor activities do you enjoy with your pet?"
+    },
+    {
+      "id": "FAQ050",
+      "question": "indoor",
+      "answer": "Make your home pet paradise! 🏠💝\\n\\n**Indoor Comfort:**\\n🛏️ **Cozy Beds** - Memory foam, heated options\\n🏠 **Pet Furniture** - Steps, ramps, perches\\n🧸 **Quiet Toys** - No squeaking for apartments\\n🍽️ **Non-Slip Bowls** - Stable feeding stations\\n🧼 **Easy-Clean Items** - Machine washable\\n🎮 **Interactive Toys** - Mental stimulation\\n\\n**Home Integration:** Stylish designs that match decor\\n\\nHow can we make your home more comfortable for your pet?"
+    },
+    {
+      "id": "FAQ051",
+      "question": "health",
+      "answer": "Pet health is our priority! 🏥💊\\n\\n**Health & Wellness:**\\n🦷 **Dental Care** - Toothbrushes, dental chews\\n💊 **Pill Pockets** - Easy medication giving\\n⚖️ **Weight Management** - Slow feeders, portion control\\n🏃 **Exercise Gear** - Encourage active lifestyle\\n🧘 **Stress Relief** - Calming products, comfort items\\n📋 **Health Monitors** - Track activity, health\\n\\n**Preventive Care:** Regular grooming, dental hygiene\\n\\nAre there any specific health concerns for your pet?"
+    },
+    {
+      "id": "FAQ052",
+      "question": "birthday",
+      "answer": "Let's celebrate your furry friend! 🎂🎉\\n\\n**Birthday Specials:**\\n🎂 **Birthday Treats** - Special occasion flavors\\n🎁 **Gift Sets** - Toy and treat combinations\\n👑 **Party Accessories** - Hats, bandanas\\n📸 **Photo Props** - Memorable pictures\\n🎈 **Party Toys** - Extra special playtime\\n🏆 **Personalized Items** - Custom name tags, bowls\\n\\n**Make it Special:** Every pet deserves celebration\\n\\nHow old is your pet turning, and how do you want to celebrate?"
+    },
+    {
+      "id": "FAQ053",
+      "question": "gift",
+      "answer": "Perfect gift ideas for pet lovers! 🎁🐾\\n\\n**Gift Ideas:**\\n🎁 **Starter Kits** - Everything new pet parents need\\n💝 **Luxury Sets** - Premium toys, beds, accessories\\n🎄 **Holiday Bundles** - Seasonal treats and toys\\n🏷️ **Personalized Gifts** - Custom engravings\\n💳 **Gift Cards** - Let them choose favorites\\n📦 **Surprise Boxes** - Monthly treat subscriptions\\n\\n**For Any Budget:** Thoughtful options $10-$200+\\n\\nWho are you shopping for, and what's your budget range?"
+    },
+    {
+      "id": "FAQ054",
+      "question": "new pet",
+      "answer": "Congratulations on your new family member! 🎉🐾\\n\\n**New Pet Essentials:**\\n🍽️ **Food & Water Bowls** - Stainless steel recommended\\n🛏️ **Comfortable Bed** - Size-appropriate\\n🏷️ **ID Collar & Tags** - Safety first\\n🧸 **Welcome Toys** - Comfort and entertainment\\n🎒 **Carrier** - Vet visits, travel\\n🧼 **Grooming Basics** - Brush, nail clippers\\n\\n**Getting Started:** Everything in one convenient package\\n\\nWhat type of pet did you just get, and what size are they?"
+    },
+    {
+      "id": "FAQ055",
+      "question": "exercise",
+      "answer": "Keep your pet fit and healthy! 💪🏃\\n\\n**Exercise Equipment:**\\n🎾 **Fetch Toys** - Balls, frisbees, launchers\\n🏃 **Running Gear** - Hands-free leashes, harnesses\\n🏊 **Swimming Gear** - Life jackets, floating toys\\n🧗 **Agility Equipment** - Jumps, tunnels, weaves\\n⚖️ **Weight Management** - Slow feeders, puzzle toys\\n📱 **Activity Trackers** - Monitor exercise levels\\n\\n**Stay Active:** Regular exercise prevents health issues\\n\\nWhat activities does your pet enjoy, and how active are they currently?"
+    },
+    {
+      "id": "FAQ056",
+      "question": "materials",
+      "answer": "Quality materials matter for pet safety! 🧵✅\\n\\n**Safe Materials:**\\n🐄 **Genuine Leather** - Durable, comfortable, ages well\\n🧶 **Nylon** - Strong, lightweight, easy to clean\\n🌿 **Organic Cotton** - Soft, breathable, hypoallergenic\\n🔧 **Stainless Steel** - Rust-resistant, hygienic\\n🏔️ **Silicone** - Flexible, non-toxic, dishwasher safe\\n🎋 **Bamboo** - Eco-friendly, antimicrobial\\n\\n**Avoid:** Toxic materials, sharp edges, small parts\\n\\nDoes your pet have any material sensitivities or allergies?"
+    },
+    {
+      "id": "FAQ057",
+      "question": "sizes",
+      "answer": "Getting the right size is crucial! 📏📐\\n\\n**Size Guidelines:**\\n📏 **Measure First** - Neck, chest, length, weight\\n👶 **XS (2-5 lbs)** - Chihuahua, Yorkshire Terrier\\n🐕 **S (6-15 lbs)** - Pomeranian, Jack Russell\\n🐕‍🦺 **M (16-35 lbs)** - Beagle, Cocker Spaniel\\n🦮 **L (36-65 lbs)** - Labrador, Golden Retriever\\n🐕‍🦮 **XL (66+ lbs)** - German Shepherd, Great Dane\\n\\n**Pro Tip:** When in doubt, size up for comfort\\n\\nWhat's your pet's weight and breed? I can help you choose the right size!"
+    },
+    {
+      "id": "FAQ058",
+      "question": "washing",
+      "answer": "Keep everything clean and fresh! 🧼✨\\n\\n**Washing Instructions:**\\n👕 **Clothing** - Cold water, gentle cycle, air dry\\n🛏️ **Beds** - Remove covers, machine wash cold\\n🧸 **Toys** - Top rack dishwasher or hand wash\\n🏷️ **Collars** - Wipe clean, avoid soaking leather\\n🎒 **Carriers** - Disassemble, wash separately\\n🍽️ **Bowls** - Dishwasher safe, daily cleaning\\n\\n**Drying:** Air dry recommended for longevity\\n\\nNeed specific care instructions for any particular item?"
+    },
+    {
+      "id": "FAQ059",
+      "question": "warranty",
+      "answer": "We stand behind our products! 🛡️💯\\n\\n**Warranty Coverage:**\\n🔧 **Manufacturing Defects** - Full replacement\\n📅 **Time Period** - 1 year from purchase\\n📸 **Proof Required** - Photo of defect\\n💳 **Easy Process** - Contact customer service\\n🚚 **Free Shipping** - For warranty replacements\\n⚡ **Quick Resolution** - 3-5 business days\\n\\n**Not Covered:** Normal wear, damage from misuse\\n\\nHave you experienced any issues with a recent purchase?"
+    },
+    {
+      "id": "FAQ060",
+      "question": "allergies",
+      "answer": "We understand sensitive pets need special care! 🤧💕\\n\\n**Hypoallergenic Options:**\\n🌿 **Natural Materials** - Organic cotton, bamboo\\n🚫 **No Harsh Chemicals** - Gentle, safe dyes\\n🧼 **Easy to Clean** - Reduce allergen buildup\\n🏥 **Vet Approved** - Recommended materials\\n🔬 **Tested Safe** - No toxic substances\\n💨 **Breathable Fabrics** - Prevent irritation\\n\\n**Common Allergens:** Latex, certain dyes, synthetic materials\\n\\nWhat specific allergies does your pet have?"
+    },
+    {
+      "id": "FAQ061",
+      "question": "waterproof",
+      "answer": "Stay dry in any weather! 🌧️☂️\\n\\n**Waterproof Products:**\\n🧥 **Rain Coats** - Fully waterproof, breathable\\n🥾 **Waterproof Boots** - Dry paws guaranteed\\n🛏️ **Waterproof Beds** - Accident-proof covers\\n🎒 **Travel Gear** - Weather-resistant carriers\\n🏷️ **Waterproof Collars** - Won't smell when wet\\n🦮 **All-Weather Leashes** - Rain or shine ready\\n\\n**Technology:** Advanced water-resistant coatings\\n\\nDo you need protection from rain, snow, or swimming?"
+    },
+    {
+      "id": "FAQ062",
+      "question": "reflective",
+      "answer": "Safety first with high visibility! 🌙💡\\n\\n**Reflective Safety Gear:**\\n🏷️ **LED Collars** - Battery powered, multiple colors\\n🦺 **Reflective Vests** - 360-degree visibility\\n🦮 **Light-Up Leashes** - See and be seen\\n👕 **Reflective Clothing** - Built-in safety strips\\n🎾 **Glow Toys** - Fun and visible\\n🔦 **Clip-On Lights** - Attach to any gear\\n\\n**Essential for:** Evening walks, early morning, camping\\n\\nWhat time of day do you usually walk your pet?"
+    },
+    {
+      "id": "FAQ063",
+      "question": "personalized",
+      "answer": "Make it uniquely theirs! ✨🎨\\n\\n**Personalization Options:**\\n🏷️ **Engraved Tags** - Name, phone, address\\n🍽️ **Custom Bowls** - Pet's name, special message\\n👕 **Embroidered Clothing** - Names, fun sayings\\n🛏️ **Monogrammed Beds** - Elegant personalization\\n🎒 **Custom Carriers** - Name tags, color choices\\n🏆 **Photo Products** - Your pet's picture\\n\\n**Lead Time:** 5-7 business days for custom items\\n\\nWhat would you like to personalize for your pet?"
+    },
+    {
+      "id": "FAQ064",
+      "question": "subscription",
+      "answer": "Never run out of favorites! 📦🔄\\n\\n**Subscription Services:**\\n🦴 **Monthly Treats** - New flavors delivered\\n🧸 **Toy Surprise Box** - 2-3 toys monthly\\n🧼 **Grooming Supplies** - Shampoo, brushes\\n🍽️ **Food & Treats** - Regular deliveries\\n💝 **Mixed Boxes** - Toys, treats, accessories\\n⚙️ **Customizable** - Choose preferences\\n\\n**Benefits:** Save 15%, never forget, try new products\\n\\nWhat type of subscription interests you most?"
+    },
+    {
+      "id": "FAQ065",
+      "question": "eco friendly",
+      "answer": "Love your pet, love the planet! 🌍💚\\n\\n**Eco-Friendly Options:**\\n🎋 **Bamboo Products** - Sustainable, biodegradable\\n♻️ **Recycled Materials** - Plastic bottles to toys\\n🌿 **Organic Cotton** - No pesticides, natural\\n🏺 **Natural Rubber** - Latex-free, earth-safe\\n📦 **Minimal Packaging** - Reduced waste\\n🌱 **Plant-Based** - Biodegradable options\\n\\n**Environmental Impact:** Reduce your pawprint\\n\\nHow important is eco-friendliness in your pet product choices?"
+    },
+    {
+      "id": "GREETING001",
+      "question": "hello",
+      "answer": "Hello! Welcome to our Pet Accessories Store! 🐾 I'm here to help you find the perfect products for your furry friend. How can I assist you today? Are you looking for collars, toys, beds, food bowls, or something else for your pet?"
+    },
+    {
+      "id": "GREETING002",
+      "question": "hi",
+      "answer": "Hi there! 👋 Welcome to our pet store! I'm your virtual assistant and I'm excited to help you find amazing products for your pet. What can I help you with today?"
+    },
+    {
+      "id": "GREETING003",
+      "question": "hey",
+      "answer": "Hey! 😊 Great to see you at our Pet Accessories Store! I'm here to help you discover the best products for your beloved pet. What are you looking for today?"
+    },
+    {
+      "id": "GREETING004",
+      "question": "good morning",
+      "answer": "Good morning! ☀️ Welcome to our Pet Accessories Store! I hope you and your pet are having a wonderful day. How can I help you find the perfect accessories for your furry companion today?"
+    },
+    {
+      "id": "GREETING005",
+      "question": "good afternoon",
+      "answer": "Good afternoon! 🌞 Welcome to our store! I'm here to help you explore our amazing collection of pet accessories. What can I help you find for your pet today?"
+    },
+    {
+      "id": "GREETING006",
+      "question": "good evening",
+      "answer": "Good evening! 🌙 Welcome to our Pet Accessories Store! Even though it's getting late, I'm here and ready to help you find exactly what your pet needs. How can I assist you?"
+    },
+    {
+      "id": "HELP001",
+      "question": "help",
+      "answer": "I'm happy to help! 🤝 Here's what I can assist you with: \\n\\n🐕 **Dog Products**: Collars, leashes, toys, beds, food bowls\\n🐱 **Cat Products**: Scratching posts, toys, beds, litter accessories\\n🏪 **Store Info**: Sizes, materials, shipping, returns\\n🔍 **Product Search**: Just tell me what you're looking for!\\n\\nWhat would you like to know about?"
+    },
+    {
+      "id": "HELP002",
+      "question": "what can you help me with",
+      "answer": "Great question! I can help you with everything related to pet accessories! 🐾\\n\\n**I can assist with:**\\n• Finding the right collar size for your pet\\n• Choosing safe materials and toys\\n• Product recommendations based on your pet's needs\\n• Information about shipping and returns\\n• Answering questions about our products\\n\\nJust ask me anything about pet accessories and I'll do my best to help!"
+    },
+    {
+      "id": "THANKS001",
+      "question": "thank you",
+      "answer": "You're very welcome! 😊 I'm so glad I could help you and your pet today. If you have any other questions about our products, don't hesitate to ask. Have a wonderful day with your furry friend! 🐾"
+    },
+    {
+      "id": "THANKS002",
+      "question": "thanks",
+      "answer": "My pleasure! 🎉 It was great helping you find what you need for your pet. Feel free to come back anytime if you have more questions. Take care and give your pet some extra love from us! ❤️"
+    },
+    {
+      "id": "BYE001",
+      "question": "goodbye",
+      "answer": "Goodbye! 👋 Thank you for visiting our Pet Accessories Store today. I hope you found everything you were looking for. Come back soon, and give your pet a hug from all of us! 🐾💕"
+    },
+    {
+      "id": "BYE002",
+      "question": "bye",
+      "answer": "Bye for now! 🌟 It was wonderful helping you today. Remember, we're always here when you need anything for your furry friend. Have a fantastic day! 🐾"
+    },
+    {
+      "id": "STORE001",
+      "question": "about your store",
+      "answer": "Welcome to our Pet Accessories Store! 🏪 We're passionate about providing high-quality, safe, and fun products for pets of all sizes. \\n\\n**What we offer:**\\n• Premium collars and leashes\\n• Engaging toys and treats\\n• Comfortable beds and furniture\\n• Feeding accessories\\n• Grooming supplies\\n• Safety and travel gear\\n\\nWe believe every pet deserves the best, and we're here to help you find exactly what your furry friend needs!"
+    },
+    {
+      "id": "CONTACT001",
+      "question": "how to contact",
+      "answer": "You can reach us right here through this chat! 💬 I'm available 24/7 to help answer your questions about our products. \\n\\nFor other inquiries, you can also:\\n• Browse our full product catalog\\n• Check our FAQ section\\n• Contact our customer service team\\n\\nI'm here to make your shopping experience as smooth as possible. What can I help you with?"
     }
   ]
 }
