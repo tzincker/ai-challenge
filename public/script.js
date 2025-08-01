@@ -187,7 +187,14 @@ async function logout() {
 function addMessage(text, className) {
   const chatBox = document.getElementById('chat-box');
   const msgDiv = document.createElement('div');
-  msgDiv.textContent = text;
+  
+  // Convert Markdown-style formatting and handle newlines
+  const formattedText = text
+    .replace(/\n\n/g, '<br><br>')  // Double newlines to double breaks
+    .replace(/\n/g, '<br>')        // Single newlines to single breaks
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Bold text
+
+  msgDiv.innerHTML = formattedText;
   msgDiv.classList.add('message', className);
   chatBox.appendChild(msgDiv);
   chatBox.scrollTop = chatBox.scrollHeight;

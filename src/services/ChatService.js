@@ -198,7 +198,8 @@ class ChatService {
         return 'I\'m sorry, I\'m having trouble processing your request right now. Please try again.';
       }
 
-      return completion.choices[0].message.content;
+      // Ensure newlines are properly escaped for the frontend
+      return completion.choices[0].message.content.replace(/\\n/g, '\n');
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Error calling OpenAI:', error);
@@ -321,7 +322,7 @@ class ChatService {
           `✅ Respondiendo desde knowledge base (${type}): ${matchedQuestion}`
         );
         return res.json({
-          answer,
+          answer: answer.replace(/\\n/g, '\n'),
           source: 'knowledge_base',
           type: type,
           matched_question: matchedQuestion,
