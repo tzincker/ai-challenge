@@ -286,7 +286,7 @@ jobs:
             echo "| Tool | Status | Results |"
             echo "|------|--------|---------|"
           } > pr_purpose_summary.txt
-          
+
           {
             # Status Table
             if [ "${{ steps.quality.outputs.eslint_errors }}" = "0" ]; then
@@ -323,7 +323,7 @@ jobs:
               echo "✅ OpenAI API: Active and responding" >> pr_purpose_summary.txt
             fi
           }
-          
+
           # PR Statistics
           echo "" >> pr_purpose_summary.txt
           echo "### 📈 PR Statistics" >> pr_purpose_summary.txt
@@ -333,7 +333,7 @@ jobs:
           echo "💻 Code files: $JS_FILES" >> pr_purpose_summary.txt
           echo "📚 Documentation: $MD_FILES" >> pr_purpose_summary.txt
           echo "" >> pr_purpose_summary.txt
-          
+
           # Original PR Summary
           echo "## 📝 PR Summary" >> pr_purpose_summary.txt
           echo "" >> pr_purpose_summary.txt
@@ -489,14 +489,14 @@ jobs:
           echo "**Purpose:** $PURPOSE" >> pr_purpose_summary.txt
           echo "" >> pr_purpose_summary.txt
           echo "$DETAILS" >> pr_purpose_summary.txt
-          
+
           # Agregar detalles específicos si están disponibles
           if [ ! -z "$SPECIFIC_CHANGES" ]; then
             echo "" >> pr_purpose_summary.txt
             echo "**🔍 Detected Changes:**" >> pr_purpose_summary.txt
             echo -e "$SPECIFIC_CHANGES" >> pr_purpose_summary.txt
           fi
-          
+
           # Agregar estadísticas del PR
           echo "" >> pr_purpose_summary.txt
           echo "**📊 PR Statistics:**" >> pr_purpose_summary.txt
@@ -526,14 +526,14 @@ jobs:
 
           # Obtener archivos modificados con más detalle
           MODIFIED_FILES_DETAIL=$(git diff --name-status ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
-          
+
           # Leer el resumen del propósito generado anteriormente
           if [ -f "pr_purpose_summary.txt" ]; then
             PURPOSE_SUMMARY=$(cat pr_purpose_summary.txt)
           else
             PURPOSE_SUMMARY="Purpose analysis not available"
           fi
-          
+
           # Leer el resumen de cambios generado anteriormente
           if [ -f "pr_changes_summary.txt" ]; then
             CHANGES_SUMMARY=$(cat pr_changes_summary.txt)
@@ -616,10 +616,10 @@ jobs:
           PR_TITLE="${{ github.event.pull_request.title }}"
           PR_BODY="${{ github.event.pull_request.body }}"
           FILES_CHANGED="${{ steps.diff.outputs.files_changed }}"
-          
+
           # Análisis avanzado del contenido
           DIFF_CONTENT=$(git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
-          
+
           # Detectar patrones específicos para un análisis más preciso
           CONTAINS_BREAKING_CHANGES=$(echo "$DIFF_CONTENT" | grep -iE 'BREAKING|DEPRECATED|REMOVAL' && echo "true" || echo "false")
           CONTAINS_DEPENDENCIES=$(echo "$PR_BODY$DIFF_CONTENT" | grep -iE 'dependency|upgrade|update|bump|version' && echo "true" || echo "false")
@@ -627,10 +627,10 @@ jobs:
 
           # Determinar el tipo de PR basado en archivos modificados y contenido
           MODIFIED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
-          
+
           # Analizar el contenido de los cambios para una mejor clasificación
           DIFF_CONTENT=$(git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
-          
+
           # Determinar el propósito principal del PR
           if echo "$PR_TITLE" | grep -iE "fix|bug|issue|error|crash|problem|resolve" > /dev/null; then
             PR_TYPE="🐛 Bug Fix"
@@ -802,22 +802,22 @@ jobs:
           echo "## 🚀 GitHub Copilot-Style AI Review Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📊 Code Quality Analysis" >> $GITHUB_STEP_SUMMARY
-          
+
           # ESLint Results
           echo "#### 🔍 ESLint Analysis" >> $GITHUB_STEP_SUMMARY
           echo "- Errors: ${{ steps.eslint.outputs.eslint_errors }}" >> $GITHUB_STEP_SUMMARY
           echo "- Warnings: ${{ steps.eslint.outputs.eslint_warnings }}" >> $GITHUB_STEP_SUMMARY
-          
+
           # Test Results
           echo "#### 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
           echo "- Tests Passed: ${{ steps.tests.outputs.tests_passed }}" >> $GITHUB_STEP_SUMMARY
           echo "- Tests Failed: ${{ steps.tests.outputs.tests_failed }}" >> $GITHUB_STEP_SUMMARY
-          
+
           # Security Results
           echo "#### 🔒 Security Audit" >> $GITHUB_STEP_SUMMARY
           echo "- High Severity Issues: ${{ steps.security.outputs.audit_high }}" >> $GITHUB_STEP_SUMMARY
           echo "- Moderate Severity Issues: ${{ steps.security.outputs.audit_moderate }}" >> $GITHUB_STEP_SUMMARY
-          
+
           # Formatting Results
           echo "#### 💅 Code Formatting" >> $GITHUB_STEP_SUMMARY
           echo "- Formatting Issues: ${{ steps.formatting.outputs.formatting_issues }}" >> $GITHUB_STEP_SUMMARY

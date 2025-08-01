@@ -85,7 +85,7 @@ document.getElementById('login-btn').addEventListener('click', async () => {
     // Mensaje de bienvenida automático en inglés
     setTimeout(() => {
       addMessage(
-        'Hello! Welcome to our Pet Accessories Store! 🐾 I\'m here to help you find the perfect products for your furry friend. How can I assist you today?',
+        "Hello! Welcome to our Pet Accessories Store! 🐾 I'm here to help you find the perfect products for your furry friend. How can I assist you today?",
         'bot-message'
       );
     }, 500);
@@ -187,7 +187,7 @@ async function logout() {
 function addMessage(text, className) {
   const chatBox = document.getElementById('chat-box');
   const msgDiv = document.createElement('div');
-  
+
   // Convert Markdown-style formatting and handle newlines
   const formattedText = text
     .replace(/\n\n/g, '<br><br>') // Double newlines to double breaks

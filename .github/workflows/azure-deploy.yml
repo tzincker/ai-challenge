@@ -72,7 +72,7 @@ jobs:
         run: |
           # Get Ollama service FQDN
           OLLAMA_HOST="http://$(az container show -g ${{ secrets.AZURE_RESOURCE_GROUP }} -n ollama-service --query ipAddress.fqdn -o tsv):11434"
-          
+
           az webapp config container set \
             --name IACHALLENGE70 \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \

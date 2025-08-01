@@ -203,8 +203,7 @@ registerBtn.addEventListener('click', async () => {
             localStorage.setItem('tempRefreshToken', loginData.refreshToken);
             localStorage.setItem('autoLoginUsername', username);
 
-            registerMessage.textContent =
-              'Welcome! Redirecting to chat...';
+            registerMessage.textContent = 'Welcome! Redirecting to chat...';
 
             setTimeout(() => {
               window.location.href = '/';

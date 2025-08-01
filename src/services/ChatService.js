@@ -1,11 +1,9 @@
 const fs = require('fs');
 const path = require('path');
-
 const express = require('express');
-
 const Fuse = require('fuse.js');
 const { OpenAI } = require('openai');
-const Ollama = require("ollama");
+const Ollama = require('ollama');
 
 const knowledgePath = path.join(__dirname, '../knowledge.json');
 
@@ -13,18 +11,18 @@ class ChatService {
   constructor(overrideKnowledge) {
     // Initialize OpenAI
     this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    
+
     // Initialize Ollama if configured
     if (process.env.OLLAMA_ENABLED === 'true') {
       this.ollama = new Ollama({
-        host: process.env.OLLAMA_HOST || 'http://localhost:11434'
+        host: process.env.OLLAMA_HOST || 'http://localhost:11434',
       });
     }
 
     /* v8 ignore start */
     this.knowledge = overrideKnowledge || this._loadKnowledgeData();
     /* v8 ignore stop */
-    
+
     // Initialize Fuse.js for fuzzy similarity
     this.fuse = new Fuse(this.knowledge, {
       keys: [
@@ -38,7 +36,7 @@ class ChatService {
       minMatchCharLength: 3,
       shouldSort: true,
       findAllMatches: true,
-      useExtendedSearch: true // Habilita búsqueda avanzada
+      useExtendedSearch: true, // Habilita búsqueda avanzada
     });
   }
 
@@ -106,11 +104,12 @@ class ChatService {
     // If no match found, try to find partial matches in the knowledge base
     const fuseResults = this.fuse.search(userQuestion);
     if (fuseResults.length > 0) {
-      const topMatches = fuseResults.slice(0, 2)
+      const topMatches = fuseResults
+        .slice(0, 2)
         .filter(r => r.score < 0.6)
         .map(r => r.item.answer)
         .join('\n\n');
-        
+
       if (topMatches) {
         result.found = true;
         result.prompt = `Context: ${topMatches}\n\nThe customer asked: "${userQuestion}". Use the context to provide a helpful response, focusing on the most relevant information.`;
@@ -124,7 +123,10 @@ class ChatService {
 
   // Improved method for keyword matching search
   findKeywordMatch(userQuestion) {
-    const userWords = userQuestion.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+    const userWords = userQuestion
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(w => w.length > 2);
     if (userWords.length === 0) return null;
 
     // First try with Fuse.js
@@ -140,11 +142,11 @@ class ChatService {
     for (const item of this.knowledge) {
       const itemText = (item.question + ' ' + item.answer).toLowerCase();
       const questionWords = item.question.toLowerCase().split(/\s+/);
-      
+
       let score = 0;
       let lastMatchIndex = -1;
       let consecutiveMatches = 0;
-      
+
       // Evaluate matches of complete words and proximity
       for (const userWord of userWords) {
         // Find exact matches first
@@ -153,7 +155,7 @@ class ChatService {
           if (qWord === userWord) {
             score += 3;
             found = true;
-            
+
             // Bonus for consecutive words
             if (lastMatchIndex !== -1 && index === lastMatchIndex + 1) {
               consecutiveMatches++;
@@ -169,8 +171,8 @@ class ChatService {
             score += 2;
           } else {
             // Search for partial matches with a minimum threshold
-            const similarWords = questionWords.filter(qWord => 
-              qWord.includes(userWord) || userWord.includes(qWord)
+            const similarWords = questionWords.filter(
+              qWord => qWord.includes(userWord) || userWord.includes(qWord)
             );
             if (similarWords.length > 0) {
               score += 1;
@@ -184,7 +186,7 @@ class ChatService {
       score += phraseBonus;
 
       // Length factor - prefer more specific matches
-      score *= (1 + Math.min(userWords.length / 10, 0.5));
+      score *= 1 + Math.min(userWords.length / 10, 0.5);
 
       if (score > maxScore) {
         maxScore = score;
@@ -202,52 +204,56 @@ class ChatService {
       // Intentar primero con OpenAI
       try {
         const completion = await this.openai.chat.completions.create({
-          model: "gpt-3.5-turbo",
+          model: 'gpt-3.5-turbo',
           messages: [
             {
-              role: "system",
-              content: "You are a helpful assistant for a pet accessories store.",
+              role: 'system',
+              content:
+                'You are a helpful assistant for a pet accessories store.',
             },
-            { role: "user", content: prompt },
+            { role: 'user', content: prompt },
           ],
         });
         return completion.choices[0].message.content.trim();
       } catch (openAiError) {
-        console.log("OpenAI error:", openAiError.message);
-        
+        console.log('OpenAI error:', openAiError.message);
+
         // Fallback a Ollama si está habilitado
         if (this.ollama && process.env.OLLAMA_ENABLED === 'true') {
           try {
-            console.log("Falling back to Ollama");
+            console.log('Falling back to Ollama');
             const response = await this.ollama.chat({
               model: process.env.OLLAMA_MODEL || 'mistral',
               messages: [
                 {
                   role: 'system',
-                  content: 'You are a helpful assistant for a pet accessories store.'
+                  content:
+                    'You are a helpful assistant for a pet accessories store.',
                 },
                 {
                   role: 'user',
-                  content: prompt
-                }
-              ]
+                  content: prompt,
+                },
+              ],
             });
             return response.message.content.trim();
-        } catch (ollamaError) {
-          // eslint-disable-next-line no-console
-          console.error("Ollama error:", ollamaError);
-          // Si ambos fallan, usar el matching local con Fuse
-          const matches = this.fuse.search(prompt);
-          if (matches.length > 0) {
-            return matches[0].item.answer;
+          } catch (ollamaError) {
+            // eslint-disable-next-line no-console
+            console.error('Ollama error:', ollamaError);
           }
-          return 'I\'m sorry, I\'m having trouble processing your request right now. Please try again.';
         }
+
+        // Si Ollama falla o no está habilitado, usar el matching local con Fuse
+        const matches = this.fuse.search(prompt);
+        if (matches.length > 0) {
+          return matches[0].item.answer;
+        }
+        return "I'm sorry, I'm having trouble processing your request right now. Please try again.";
       }
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error("Error al procesar la pregunta:", error);
-      return 'I\'m sorry, I\'m having trouble processing your request right now. Please try asking about our pet products again!';
+      console.error('Error al procesar la pregunta:', error);
+      return "I'm sorry, I'm having trouble processing your request right now. Please try asking about our pet products again!";
     }
   }
 
@@ -343,7 +349,6 @@ class ChatService {
   getRouter() {
     const router = express.Router();
 
-
     // Reload knowledge base on startup
     this.reloadKnowledge();
 
@@ -353,15 +358,12 @@ class ChatService {
         return res.json({ answer: 'Please write a question.' });
       }
 
-
       // eslint-disable-next-line no-console
       console.log(`💬 Question received: "${question}"`);
-
 
       // Use the new improved search logic
       const { prompt, answer, found, matchedQuestion, type } =
         this.buildPrompt(question);
-
 
       if (found) {
         // If a match was found in the knowledge base, respond directly
@@ -377,25 +379,20 @@ class ChatService {
         });
       }
 
-
       // If nothing was found, use LLM only if it is relevant
       if (!this.isRelevantQuestion(question)) {
         // eslint-disable-next-line no-console
-        console.log(
-          `❌ Question not relevant for pet store: ${question}`
-        );
+        console.log(`❌ Question not relevant for pet store: ${question}`);
         return res.json({
           answer:
-            'Hello! I\'m a specialized assistant for pet accessories and products. I\'d love to help you find something amazing for your furry friend! 🐾 Are you looking for collars, toys, beds, food bowls, or something else for your pet?',
+            "Hello! I'm a specialized assistant for pet accessories and products. I'd love to help you find something amazing for your furry friend! 🐾 Are you looking for collars, toys, beds, food bowls, or something else for your pet?",
         });
       }
-
 
       // Use LLM for relevant question
       // eslint-disable-next-line no-console
       console.log(`🤖 Querying LLM for relevant question: ${question}`);
       const aiAnswer = await this.callLLM(prompt);
-
 
       // Add the new question/answer to the knowledge base
       this.addToKnowledge(question, aiAnswer);
