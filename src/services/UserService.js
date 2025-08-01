@@ -80,14 +80,14 @@ class UserService {
 
     const user = await this.databaseService.getUser(username);
     if (user) {
-      return { success: false, message: "El nombre de usuario ya está en uso" };
+      return { success: false, message: "Username is already taken" };
     }
 
     try {
       const hashedPassword = await this._hashPassword(password);
 
       const newUser = await this.databaseService.addUser(username, null, hashedPassword);
-      return { success: true, message: "Usuario registrado exitosamente", user: !!newUser };
+      return { success: true, message: "User registered successfully", user: !!newUser };
     } catch (error) {
       console.error("Unable to register user: ", error);
       return { success: false, message: "Error interno del servidor" };
@@ -98,7 +98,7 @@ class UserService {
     try {
       const tokenExists = await this.databaseService.tokenExists(refreshToken);
       if (!tokenExists) {
-        return { error: "Token inválido", status: 403 };
+        return { error: "Invalid token", status: 403 };
       }
 
       const decoded = jwt.verify(refreshToken, refreshTokenSecret);
@@ -108,14 +108,14 @@ class UserService {
     } catch (err) {
       console.error("Unable to refresh token: ", err.message);
       
-      // Si el token es inválido, eliminarlo de la base de datos
+      // If token is invalid, remove it from database
       try {
         await this.databaseService.removeRefreshToken(refreshToken);
       } catch (removeError) {
         console.error("Error removing invalid token:", removeError);
       }
       
-      return { error: "Token inválido o expirado", status: 403 };
+      return { error: "Invalid or expired token", status: 403 };
     }
   }
 
@@ -126,37 +126,37 @@ class UserService {
   // Validaciones para registro
   validateUsername(username) {
     if (!username) {
-      return { valid: false, message: "El nombre de usuario es requerido" };
+      return { valid: false, message: "Username is required" };
     }
     if (username.length < 3) {
-      return { valid: false, message: "El nombre de usuario debe tener al menos 3 caracteres" };
+      return { valid: false, message: "Username must be at least 3 characters long" };
     }
     if (username.length > 20) {
-      return { valid: false, message: "El nombre de usuario no puede tener más de 20 caracteres" };
+      return { valid: false, message: "Username cannot be longer than 20 characters" };
     }
     if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      return { valid: false, message: "El nombre de usuario solo puede contener letras, números y guiones bajos" };
+      return { valid: false, message: "Username can only contain letters, numbers and underscores" };
     }
     return { valid: true };
   }
 
   validatePassword(password) {
     if (!password) {
-      return { valid: false, message: "La contraseña es requerida" };
+      return { valid: false, message: "Password is required" };
     }
     if (password.length < 6) {
-      return { valid: false, message: "La contraseña debe tener al menos 6 caracteres" };
+      return { valid: false, message: "Password must be at least 6 characters long" };
     }
     if (password.length > 50) {
-      return { valid: false, message: "La contraseña no puede tener más de 50 caracteres" };
+      return { valid: false, message: "Password cannot be longer than 50 characters" };
     }
     if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-      return { valid: false, message: "La contraseña debe contener al menos una mayúscula, una minúscula y un número" };
+      return { valid: false, message: "Password must contain at least one uppercase letter, one lowercase letter, and one number" };
     }
-    // 🔐 MEJORA: Validar contra contraseñas comunes
+    // 🔐 IMPROVEMENT: Validate against common passwords
     const commonPasswords = ['123456', 'password', '123456789', '12345678', '12345', '1234567', 'password123', 'admin'];
     if (commonPasswords.some(common => password.toLowerCase().includes(common.toLowerCase()))) {
-      return { valid: false, message: "La contraseña es demasiado común. Elige una más segura" };
+      return { valid: false, message: "Password is too common. Please choose a more secure one" };
     }
     return { valid: true };
   }
@@ -197,7 +197,7 @@ class UserService {
   async resetPassword(username, newPassword) {
     // Validar entrada
     if (!username || typeof username !== 'string' || username.trim().length < 3) {
-      return { success: false, message: "Nombre de usuario inválido" };
+      return { success: false, message: "Invalid username" };
     }
 
     const passwordValidation = this.validatePassword(newPassword);
@@ -207,17 +207,17 @@ class UserService {
 
     const user = await this.databaseService.getUser(username.trim());
     if (!user) {
-      return { success: false, message: "Usuario no encontrado" };
+      return { success: false, message: "User not found" };
     }
 
     try {
       const hashedPassword = await this._hashPassword(newPassword);
       await this.databaseService.updateUserPasswordById(user.id, hashedPassword);
       
-      // 🔐 MEJORA DE SEGURIDAD: Invalidar todas las sesiones activas del usuario
+      // 🔐 SECURITY IMPROVEMENT: Invalidate all active user sessions
       await this.databaseService.removeAllUserRefreshTokens(user.id);
 
-      return { success: true, message: "Contraseña actualizada exitosamente. Todas las sesiones han sido cerradas por seguridad." };
+      return { success: true, message: "Password successfully updated. All sessions have been closed for security." };
     } catch (error) {
       console.error("Error resetting password:", error);
       return { success: false, message: "Error interno del servidor" };

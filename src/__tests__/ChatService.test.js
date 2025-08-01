@@ -39,7 +39,7 @@ describe('ChatService', () => {
       const result = chatService.buildPrompt('Unknown question');
       expect(result.found).toBe(false);
       expect(result.answer).toBe('');
-      expect(result.prompt).toContain('Context: ');
+      expect(result.prompt).toContain('Context:');
     });
 
     it('handles case insensitive matching', () => {
@@ -87,10 +87,8 @@ describe('ChatService', () => {
 
     it('handles empty or null input', () => {
       expect(chatService.isRelevantQuestion('')).toBe(false);
-      // Note: null and undefined will cause errors in the current implementation
-      // This test documents the current behavior
-      expect(() => chatService.isRelevantQuestion(null)).toThrow();
-      expect(() => chatService.isRelevantQuestion(undefined)).toThrow();
+      expect(() => chatService.isRelevantQuestion(null)).toThrow(TypeError);
+      expect(() => chatService.isRelevantQuestion(undefined)).toThrow(TypeError);
     });
   });
 
@@ -128,7 +126,7 @@ describe('ChatService', () => {
       chatService.isRelevantQuestion = jest.fn().mockReturnValue(true);
       chatService.addToKnowledge('Q', 'A');
       expect(spy).toHaveBeenCalled();
-      expect(consoleErrorSpy).toHaveBeenCalledWith('No se pudo agregar a knowledge.json:', expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Error adding to knowledge.json:', expect.any(Error));
       spy.mockRestore();
     });
 
@@ -168,7 +166,7 @@ describe('ChatService', () => {
         }
       };
       const result = await chatService.callLLM('Prompt');
-      expect(result).toMatch(/Lo siento/);
+      expect(result).toMatch(/I'm sorry/);
       expect(consoleErrorSpy).toHaveBeenCalledWith('Error calling OpenAI:', expect.any(Error));
     });
 
@@ -181,7 +179,7 @@ describe('ChatService', () => {
         }
       };
       const result = await chatService.callLLM('Prompt');
-      expect(result).toMatch(/Lo siento/);
+      expect(result).toMatch(/I'm sorry/);
     });
 
     it('handles malformed response from OpenAI', async () => {
@@ -193,7 +191,7 @@ describe('ChatService', () => {
         }
       };
       const result = await chatService.callLLM('Prompt');
-      expect(result).toMatch(/Lo siento/);
+      expect(result).toMatch(/I'm sorry/);
     });
   });
 

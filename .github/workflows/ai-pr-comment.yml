@@ -573,54 +573,7 @@ jobs:
           echo "- 💻 Code files: ${{ steps.diff.outputs.js_files }}" >> $GITHUB_STEP_SUMMARY
           echo "- 📚 Documentation: ${{ steps.diff.outputs.md_files }}" >> $GITHUB_STEP_SUMMARY
 
-      - name: Post comment to PR
-        uses: actions/github-script@v7
-        if: always()
-        env:
-          OPENAI_COMMENT: ${{ steps.openai.outputs.completions }}
-          COPILOT_COMMENT: ${{ steps.copilot.outputs.completions }}
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            try {
-              // Obtener el comentario de OpenAI o Copilot de forma segura
-              const openaiComment = process.env.OPENAI_COMMENT || '';
-              const copilotComment = process.env.COPILOT_COMMENT || '';
-              let comment = openaiComment || copilotComment || "No AI comment available.";
-              
-              // Convertir \n literales a saltos de línea reales
-              comment = comment.replace(/\\n/g, '\n');
-              
-              // Limitar el tamaño del comentario si es muy largo
-              if (comment.length > 65000) {
-                comment = comment.substring(0, 65000) + '\n\n*Comment truncated due to length limitations.*';
-              }
-              
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.payload.pull_request.number,
-                body: comment,
-              });
-              
-              console.log('Comment posted successfully');
-              console.log('Comment length:', comment.length);
-            } catch (error) {
-              console.error('Failed to post comment:', error);
-              
-              // Try to post a fallback comment
-              try {
-                await github.rest.issues.createComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: context.payload.pull_request.number,
-                  body: '🤖 AI PR review attempted but encountered an issue. Please review manually.\n\nError: ' + error.message,
-                });
-              } catch (fallbackError) {
-                console.error('Failed to post fallback comment:', fallbackError);
-                throw error; // Re-throw original error
-              }
-            }
+      # Comment posting step removed intentionally
 
       - name: Update PR Description with AI Analysis
         uses: actions/github-script@v7
@@ -757,4 +710,3 @@ jobs:
           rm -f pr_diff.txt eslint-results.json test-results.json audit-results.json
           rm -f prettier-results.txt pr_changes_summary.txt pr_purpose_summary.txt copilot_comment.txt
           echo "Cleanup completed"
-
