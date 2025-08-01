@@ -268,6 +268,9 @@ describe('UserService', () => {
     });
 
     it('should handle errors and return false', async () => {
+      // Mock console.error to prevent output during test
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      
       mockDatabaseService = new MockDatabseService();
       mockDatabaseService.getUser = jest.fn();
       mockDatabaseService.getUser.mockResolvedValue(null);
@@ -281,6 +284,10 @@ describe('UserService', () => {
         message: 'Error interno del servidor',
       });
       expect(spy).toHaveBeenCalled();
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Unable to register user: ', expect.any(Error));
+      
+      // Restore console.error
+      consoleErrorSpy.mockRestore();
     });
   });
 
