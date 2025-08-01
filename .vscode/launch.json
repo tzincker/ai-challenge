@@ -1,9 +1,14 @@
 {
   "configurations": [
     {
-      "name": "Attach by Process ID",
-      "processId": "${command:PickProcess}",
-      "request": "attach",
+      "name": "Debug via NPM",
+      "request": "launch",
+      "runtimeArgs": [
+        "run-script",
+        "start",
+        "debug"
+      ],
+      "runtimeExecutable": "npm",
       "skipFiles": [
         "<node_internals>/**"
       ],
