@@ -4,20 +4,15 @@
       "name": "Attach by Process ID",
       "processId": "${command:PickProcess}",
       "request": "attach",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
+      "skipFiles": ["<node_internals>/**"],
       "type": "node"
     },
+
     {
       "name": "Debug Jest Tests",
       "type": "node",
       "request": "launch",
-      "runtimeArgs": [
-        "--inspect-brk",
-        "${workspaceRoot}/node_modules/jest/bin/jest.js",
-        "--runInBand"
-      ],
+      "runtimeArgs": ["--inspect-brk", "${workspaceRoot}/node_modules/jest/bin/jest.js", "--runInBand"],
       "cwd": "${workspaceRoot}",
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
