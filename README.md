@@ -70,8 +70,21 @@ npm test
    Add the generated token to your `.env` file:
 
    ```
-   ACCESS_TOKEN_SECRET=your_generated_token_here
+   ACCESS_TOKEN_SECRET=your_access_token_secret
+   REFRESH_TOKEN_SECRET=your_refresh_token_secret
+   SALT_ROUNDS=10
    ```
+
+5. **Start Backend**
+
+   npm start
+
+   # or
+
+   node src/index.js
+
+   If successful, you will see: Server listening on port 3000 Frontend: http://localhost:3000
+   Register: http://localhost:3000/register
 
 ---
 
@@ -177,12 +190,13 @@ NODE_ENV=development
 
 ### 📡 RESTful API Endpoints
 
-- `POST /users/register` - User registration
-- `POST /users/login` - User authentication
-- `POST /users/logout` - User logout
-- `POST /users/refresh` - Token refresh
-- `POST /chat` - Protected chatbot interaction
-- `GET /` - Home page with registration form
+- `POST /register` - User registration
+- `POST /login` - User authentication
+- `POST /token` - Refresh access token
+- `DELETE /logout` - Invalidate refresh token
+- `POST /request-password-reset` - Request a password reset
+- `POST /reset-password` - Set a new password
+- `POST /chat` - Send a message to the chatbot (requires Bearer token)
 
 ---
 
