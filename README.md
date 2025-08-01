@@ -114,7 +114,7 @@ ai-challenge/
 ├── 📄 package.json         # Project dependencies and scripts
 ├── 📄 package-lock.json    # Locked dependency versions
 ├── 📄 README.md           # Project documentation
-└── 📄 user-stories.md      # User stories and requirements
+└── 📄 user-stories.md      # User stories and team assignments
 ```
 
 ---
