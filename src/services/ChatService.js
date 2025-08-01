@@ -37,12 +37,13 @@ class ChatService {
     // Loading the Knowledge Base
     let knowledge = [];
     try {
-      const raw = JSON.parse(fs.readFileSync(knowledgePath, "utf8"));
+      const raw = JSON.parse(fs.readFileSync(knowledgePath, 'utf8'));
       // If Knowledge.json has an array under 'faqs', use it
       knowledge = Array.isArray(raw.faqs) ? raw.faqs : [];
       return knowledge;
     } catch (err) {
-      console.error("Could not load knowledge.json:", err);
+      // eslint-disable-next-line no-console
+      console.error('Could not load knowledge.json:', err);
     }
   }
 
@@ -305,7 +306,7 @@ class ChatService {
     router.post('/', async (req, res) => {
       const { question } = req.body;
       if (!question) {
-        return res.json({ answer: "Please write a question." });
+        return res.json({ answer: 'Please write a question.' });
       }
 
 
