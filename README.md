@@ -4,21 +4,25 @@
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org/)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
 
-A modern web service with an intelligent chatbot for an online pet accessories store. The chatbot provides product information and assistance, accessible only to registered and authenticated users.
+A modern web service with an intelligent chatbot for an online pet accessories store. The chatbot
+provides product information and assistance, accessible only to registered and authenticated users.
 
 ## 🚀 Quick Start
 
 ### Development Mode
+
 ```bash
 npm start
 ```
 
 ### Using Node directly
+
 ```bash
 node --env-file .env .\src\index.js
 ```
 
 ### Run Tests
+
 ```bash
 npm test
 ```
@@ -36,30 +40,35 @@ npm test
 ## 📦 Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/tzincker/ai-challenge.git
    cd ai-challenge
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Set up environment variables**
+
    ```bash
    cp .env.example .env
    # Edit .env with your configuration
    ```
 
 4. **Generate ACCESS_TOKEN_SECRET**
-   
+
    Use Node.js console to generate a secure token:
+
    ```javascript
-   require("crypto").randomBytes(64).toString("hex");
+   require('crypto').randomBytes(64).toString('hex');
    ```
-   
+
    Add the generated token to your `.env` file:
+
    ```
    ACCESS_TOKEN_SECRET=your_generated_token_here
    ```
@@ -143,19 +152,22 @@ NODE_ENV=development
 ## ✨ Key Features
 
 ### 🔐 Authentication & Security
+
 - **JWT-based authentication** with secure token generation
 - **Password hashing** using bcrypt for security
 - **Protected routes** requiring valid authentication
 - **Token refresh** mechanism for extended sessions
 
 ### 🤖 Intelligent Chatbot
+
 - **RAG-powered responses** using knowledge base
 - **Product information** and recommendations
-- **Context-aware conversations** 
+- **Context-aware conversations**
 - **Fuzzy search** capabilities for flexible queries
 - **OpenAI integration** ready for enhanced AI features
 
 ### 🚀 Modern Development Stack
+
 - **Node.js + Express** backend architecture
 - **SQLite** database for lightweight data storage
 - **Pug templates** for server-side rendering
@@ -164,6 +176,7 @@ NODE_ENV=development
 - **GitHub Actions** for CI/CD automation
 
 ### 📡 RESTful API Endpoints
+
 - `POST /users/register` - User registration
 - `POST /users/login` - User authentication
 - `POST /users/logout` - User logout
@@ -176,16 +189,19 @@ NODE_ENV=development
 ## 🧪 Testing
 
 ### Run All Tests
+
 ```bash
 npm test
 ```
 
 ### Run Tests with Coverage
+
 ```bash
 npm test -- --coverage
 ```
 
 ### Test Structure
+
 - **Unit Tests**: Service layer testing
 - **Integration Tests**: API endpoint testing
 - **Coverage Reports**: Comprehensive code coverage analysis
@@ -197,10 +213,11 @@ npm test -- --coverage
 ### Authentication Flow
 
 1. **Register a new user**
+
    ```http
    POST /users/register
    Content-Type: application/json
-   
+
    {
      "email": "user@example.com",
      "password": "securePassword123"
@@ -208,17 +225,19 @@ npm test -- --coverage
    ```
 
 2. **Login**
+
    ```http
    POST /users/login
    Content-Type: application/json
-   
+
    {
-     "email": "user@example.com", 
+     "email": "user@example.com",
      "password": "securePassword123"
    }
    ```
-   
+
    Response:
+
    ```json
    {
      "accessToken": "jwt_token_here",
@@ -227,11 +246,12 @@ npm test -- --coverage
    ```
 
 3. **Chat with the bot** (requires authentication)
+
    ```http
    POST /chat
    Authorization: Bearer jwt_token_here
    Content-Type: application/json
-   
+
    {
      "message": "What products do you have for dogs?"
    }
@@ -239,7 +259,9 @@ npm test -- --coverage
 
 ### Example Requests
 
-Check the `src/requests/` directory for complete HTTP request examples that you can use with tools like:
+Check the `src/requests/` directory for complete HTTP request examples that you can use with tools
+like:
+
 - **VS Code REST Client** extension
 - **Postman**
 - **curl** commands
@@ -249,6 +271,7 @@ Check the `src/requests/` directory for complete HTTP request examples that you 
 ## 🐳 Docker Support
 
 ### Build and Run with Docker
+
 ```bash
 # Build the image
 docker build -t pet-chatbot .
@@ -262,11 +285,14 @@ docker run -p 3000:3000 --env-file .env pet-chatbot
 ## 🚀 Deployment
 
 ### Automated Azure Deployment
+
 The project includes automated deployment to Azure using GitHub Actions:
+
 - **Workflow**: `.github/workflows/azure-deploy.yml`
 - **Manual Guide**: `Azure-deploy-steps.md`
 
 ### Environment Setup for Production
+
 ```env
 NODE_ENV=production
 PORT=80
@@ -275,25 +301,31 @@ DATABASE_URL=your_production_database_url
 ```
 
 ### CI/CD Pipeline
+
 The project includes two GitHub Actions workflows:
-1. **GitHub Copilot-Style AI Review** (`.github/workflows/ai-pr-comment.yml`) - Intelligent code quality analysis with:
+
+1. **GitHub Copilot-Style AI Review** (`.github/workflows/ai-pr-comment.yml`) - Intelligent code
+   quality analysis with:
    - **Smart script detection** - Only runs available npm scripts
    - **Comprehensive analysis** - ESLint, tests, security audit, formatting
    - **AI-powered reviews** - GitHub Copilot-style feedback
    - **Fallback system** - Ensures reviews even when OpenAI API is unavailable
-2. **Azure Deployment** (`.github/workflows/azure-deploy.yml`) - Automated deployment to Azure cloud services
+2. **Azure Deployment** (`.github/workflows/azure-deploy.yml`) - Automated deployment to Azure cloud
+   services
 
 ---
 
 ## 🛠️ Development
 
 ### Code Quality Tools
+
 - **ESLint**: Code linting and style enforcement
 - **Prettier**: Code formatting
 - **Jest**: Testing framework
 - **GitHub Actions**: Automated CI/CD pipeline
 
 ### Development Commands
+
 ```bash
 # Install dependencies
 npm install
@@ -344,6 +376,7 @@ npm run docker:run
 5. Open a Pull Request
 
 ### Code Standards
+
 - Follow ESLint configuration
 - Write tests for new features
 - Update documentation as needed
@@ -378,4 +411,4 @@ If you have any questions or need help:
 
 ---
 
-*Built with ❤️ for pet lovers everywhere*
+_Built with ❤️ for pet lovers everywhere_

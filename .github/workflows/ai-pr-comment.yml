@@ -17,7 +17,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Necesario para análisis completo
+          fetch-depth: 0 # Necesario para análisis completo
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -41,28 +41,83 @@ jobs:
           echo "🔧 ESLint config: $([ -f ".eslintrc.js" ] || [ -f ".eslintrc.json" ] && echo "✅" || echo "❌")"
           echo "💅 Prettier config: $([ -f ".prettierrc" ] || [ -f ".prettierrc.json" ] && echo "✅" || echo "❌")"
           echo "🧪 Jest config: $([ -f "jest.config.js" ] && echo "✅" || echo "❌")"
-          
+
           if [ -f "package.json" ]; then
             echo "📜 Available npm scripts:"
             jq -r '.scripts | keys[]' package.json 2>/dev/null || echo "No scripts found"
           fi
 
-      - name: Run Code Quality Checks
-        id: quality
+      - name: Run ESLint Analysis
+        id: eslint
         continue-on-error: true
         run: |
-          echo "Running code quality analysis..."
-          
-          # Inicializar variables
-          ESLINT_ERRORS=0
-          ESLINT_WARNINGS=0
-          TESTS_PASSED=0
-          TESTS_FAILED=0
-          COVERAGE_FILES=0
-          AUDIT_HIGH=0
-          AUDIT_MODERATE=0
-          FORMATTING_ISSUES=0
-          
+          echo "🔍 Running ESLint analysis..."
+          if ([ -f ".eslintrc.js" ] || [ -f ".eslintrc.json" ] || [ -f "eslint.config.js" ]) && jq -e '.scripts.lint' package.json > /dev/null 2>&1; then
+            npm run lint -- --format json --output-file eslint-results.json || true
+            ESLINT_ERRORS=$(jq '[.[].messages[] | select(.severity == 2)] | length' eslint-results.json 2>/dev/null || echo "0")
+            ESLINT_WARNINGS=$(jq '[.[].messages[] | select(.severity == 1)] | length' eslint-results.json 2>/dev/null || echo "0")
+            echo "::set-output name=eslint_errors::$ESLINT_ERRORS"
+            echo "::set-output name=eslint_warnings::$ESLINT_WARNINGS"
+            echo "Found $ESLINT_ERRORS errors and $ESLINT_WARNINGS warnings"
+          else
+            echo "No ESLint configuration found"
+            echo "::set-output name=eslint_errors::0"
+            echo "::set-output name=eslint_warnings::0"
+          fi
+
+      - name: Run Tests
+        id: tests
+        continue-on-error: true
+        run: |
+          echo "🧪 Running tests..."
+          if jq -e '.scripts.test' package.json > /dev/null 2>&1; then
+            npm test -- --coverage --json --outputFile=test-results.json || true
+            TESTS_PASSED=$(jq '.numPassedTests // 0' test-results.json 2>/dev/null || echo "0")
+            TESTS_FAILED=$(jq '.numFailedTests // 0' test-results.json 2>/dev/null || echo "0")
+            echo "::set-output name=tests_passed::$TESTS_PASSED"
+            echo "::set-output name=tests_failed::$TESTS_FAILED"
+            echo "$TESTS_PASSED tests passed, $TESTS_FAILED tests failed"
+          else
+            echo "No test script found"
+            echo "::set-output name=tests_passed::0"
+            echo "::set-output name=tests_failed::0"
+          fi
+
+      - name: Run Security Audit
+        id: security
+        continue-on-error: true
+        run: |
+          echo "🔒 Running security audit..."
+          npm audit --json > audit-results.json || true
+          AUDIT_HIGH=$(jq '.vulnerabilities | to_entries[] | select(.value.severity == "high") | .key' audit-results.json 2>/dev/null | wc -l || echo "0")
+          AUDIT_MODERATE=$(jq '.vulnerabilities | to_entries[] | select(.value.severity == "moderate") | .key' audit-results.json 2>/dev/null | wc -l || echo "0")
+          echo "::set-output name=audit_high::$AUDIT_HIGH"
+          echo "::set-output name=audit_moderate::$AUDIT_MODERATE"
+          echo "Found $AUDIT_HIGH high and $AUDIT_MODERATE moderate vulnerabilities"
+
+      - name: Check Code Formatting
+        id: formatting
+        continue-on-error: true
+        run: |
+          echo "💅 Checking code formatting..."
+          if ([ -f ".prettierrc" ] || [ -f ".prettierrc.json" ] || [ -f "prettier.config.js" ]); then
+            npx prettier --check . > prettier-results.txt 2>&1 || PRETTIER_EXIT_CODE=$?
+            if [ "${PRETTIER_EXIT_CODE:-0}" -ne 0 ]; then
+              FORMATTING_ISSUES=$(cat prettier-results.txt | wc -l || echo "1")
+            else
+              FORMATTING_ISSUES=0
+            fi
+            echo "::set-output name=formatting_issues::$FORMATTING_ISSUES"
+            echo "Found $FORMATTING_ISSUES formatting issues"
+          else
+            echo "No Prettier configuration found"
+            echo "::set-output name=formatting_issues::0"
+          fi
+
+      - name: Collect Quality Metrics
+        id: quality
+        run: |
+
           # Verificar si existe package.json antes de continuar
           if [ ! -f "package.json" ]; then
             echo "No package.json found, skipping all npm-based checks..."
@@ -76,7 +131,7 @@ jobs:
             echo "formatting_issues=0" >> $GITHUB_OUTPUT
             exit 0
           fi
-          
+
           # ESLint solo si existe configuración Y script
           if ([ -f ".eslintrc.js" ] || [ -f ".eslintrc.json" ] || [ -f "eslint.config.js" ]) && jq -e '.scripts.lint' package.json > /dev/null 2>&1; then
             echo "Running ESLint analysis..."
@@ -97,7 +152,7 @@ jobs:
           else
             echo "ESLint configuration not found, skipping..."
           fi
-          
+
           # Tests solo si existe script de test
           if jq -e '.scripts.test' package.json > /dev/null 2>&1; then
             echo "Running tests..."
@@ -111,16 +166,16 @@ jobs:
           else
             echo "No test script found in package.json, skipping tests..."
           fi
-          
+
           # Security audit
           echo "Running security audit..."
           npm audit --json > audit-results.json 2>/dev/null || true
-          
+
           if [ -f "audit-results.json" ]; then
             AUDIT_HIGH=$(jq '.vulnerabilities | to_entries[] | select(.value.severity == "high") | .key' audit-results.json 2>/dev/null | wc -l || echo "0")
             AUDIT_MODERATE=$(jq '.vulnerabilities | to_entries[] | select(.value.severity == "moderate") | .key' audit-results.json 2>/dev/null | wc -l || echo "0")
           fi
-          
+
           # Prettier solo si existe configuración Y script
           if ([ -f ".prettierrc" ] || [ -f ".prettierrc.json" ] || [ -f "prettier.config.js" ]) && jq -e '.scripts.format' package.json > /dev/null 2>&1; then
             echo "Checking code formatting with npm script..."
@@ -139,7 +194,7 @@ jobs:
           else
             echo "Prettier configuration not found, skipping formatting check..."
           fi
-          
+
           # Guardar outputs
           echo "eslint_errors=$ESLINT_ERRORS" >> $GITHUB_OUTPUT
           echo "eslint_warnings=$ESLINT_WARNINGS" >> $GITHUB_OUTPUT
@@ -149,7 +204,7 @@ jobs:
           echo "audit_high=$AUDIT_HIGH" >> $GITHUB_OUTPUT
           echo "audit_moderate=$AUDIT_MODERATE" >> $GITHUB_OUTPUT
           echo "formatting_issues=$FORMATTING_ISSUES" >> $GITHUB_OUTPUT
-          
+
           echo "Quality checks completed: $ESLINT_ERRORS errors, $TESTS_FAILED failed tests, $AUDIT_HIGH high vulnerabilities"
 
       - name: Get PR diff
@@ -158,18 +213,18 @@ jobs:
           git fetch origin ${{ github.event.pull_request.base.ref }}
           git fetch origin ${{ github.event.pull_request.head.ref }}
           git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} > pr_diff.txt
-          
+
           # Analizar estadísticas del diff
           echo "Analyzing PR changes..."
-          
+
           # Contar archivos modificados
           FILES_CHANGED=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | wc -l)
-          
+
           # Contar líneas agregadas y eliminadas
           DIFF_STATS=$(git diff --numstat ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
           LINES_ADDED=$(echo "$DIFF_STATS" | awk '{sum += $1} END {print sum+0}')
           LINES_DELETED=$(echo "$DIFF_STATS" | awk '{sum += $2} END {print sum+0}')
-          
+
           # Obtener lista de archivos por tipo
           MODIFIED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
           JS_FILES=$(echo "$MODIFIED_FILES" | grep -E '\.(js|jsx|ts|tsx)$' | wc -l || echo "0")
@@ -178,7 +233,7 @@ jobs:
           MD_FILES=$(echo "$MODIFIED_FILES" | grep -E '\.md$' | wc -l || echo "0")
           CONFIG_FILES=$(echo "$MODIFIED_FILES" | grep -E '\.(yml|yaml|xml|config|env)$' | wc -l || echo "0")
           OTHER_FILES=$((FILES_CHANGED - JS_FILES - CSS_FILES - JSON_FILES - MD_FILES - CONFIG_FILES))
-          
+
           # Generar resumen de cambios por archivo
           echo "## 📁 Files Changed:" > pr_changes_summary.txt
           echo "" >> pr_changes_summary.txt
@@ -203,70 +258,109 @@ jobs:
               echo "- **$file** $STATUS (+$ADDED/-$DELETED)" >> pr_changes_summary.txt
             fi
           done
-          
+
           if [ $FILES_CHANGED -gt 20 ]; then
             echo "- ... and $((FILES_CHANGED - 20)) more files" >> pr_changes_summary.txt
           fi
-          
-          # Generar resumen inteligente del propósito del PR
+
+          # Generar resumen inteligente del propósito del PR usando OpenAI
           echo "" > pr_purpose_summary.txt
           echo "## 📝 PR Summary" >> pr_purpose_summary.txt
           echo "" >> pr_purpose_summary.txt
-          
-          # Analizar patrones en los archivos para determinar el propósito
-          PURPOSE=""
-          DETAILS=""
-          
-          # Detectar cambios en CI/CD
-          if echo "$MODIFIED_FILES" | grep -q "\.github/workflows"; then
-            PURPOSE="CI/CD Pipeline Configuration"
-            DETAILS="This PR modifies GitHub Actions workflows for continuous integration and deployment."
-          elif echo "$MODIFIED_FILES" | grep -q "Dockerfile\|docker-compose"; then
-            PURPOSE="Docker Configuration"
-            DETAILS="This PR updates Docker containerization setup."
-          elif echo "$MODIFIED_FILES" | grep -q "package\.json\|yarn\.lock\|package-lock\.json"; then
-            if [ $JS_FILES -gt 0 ]; then
-              PURPOSE="Feature Development & Dependencies"
-              DETAILS="This PR includes new features or updates along with dependency changes."
+
+          # Preparar el contexto para el análisis de IA
+          PR_CONTEXT=$(cat << EOF
+          Changed files:
+          $MODIFIED_FILES
+
+          Statistics:
+          - Total files changed: $FILES_CHANGED
+          - JavaScript/TypeScript files: $JS_FILES
+          - CSS files: $CSS_FILES
+          - JSON files: $JSON_FILES
+          - Markdown files: $MD_FILES
+          - Configuration files: $CONFIG_FILES
+          - Lines added: $LINES_ADDED
+          - Lines deleted: $LINES_DELETED
+
+          PR Title: $PR_TITLE
+          PR Description: $PR_DESCRIPTION
+          EOF
+          )
+
+          # Llamar a OpenAI API para análisis
+          OPENAI_RESPONSE=$(curl -s https://api.openai.com/v1/chat/completions \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $OPENAI_API_KEY" \
+            -d "{
+              \"model\": \"gpt-3.5-turbo\",
+              \"messages\": [
+                {
+                  \"role\": \"system\",
+                  \"content\": \"You are an expert code reviewer analyzing Pull Request changes. Analyze the provided context and determine the primary purpose and key details of the PR. Be concise but informative. Return only a JSON object with 'purpose' (a short title) and 'details' (a one-sentence description) keys.\"
+                },
+                {
+                  \"role\": \"user\",
+                  \"content\": \"$PR_CONTEXT\"
+                }
+              ],
+              \"temperature\": 0.3
+            }"
+          )
+
+          # Extraer PURPOSE y DETAILS del resultado de la IA
+          PURPOSE=$(echo $OPENAI_RESPONSE | jq -r '.choices[0].message.content' | jq -r '.purpose')
+          DETAILS=$(echo $OPENAI_RESPONSE | jq -r '.choices[0].message.content' | jq -r '.details')
+          # Si la llamada a la API falla, usar análisis de respaldo basado en patrones
+          if [ -z "$PURPOSE" ] || [ -z "$DETAILS" ]; then
+            echo "AI analysis failed, using fallback pattern analysis..."
+
+            # Solicitar otro análisis a la IA con un prompt más específico
+            OPENAI_RESPONSE=$(curl -s https://api.openai.com/v1/chat/completions \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer $OPENAI_API_KEY" \
+              -d "{
+                \"model\": \"gpt-3.5-turbo\",
+                \"messages\": [
+                  {
+                    \"role\": \"system\",
+                    \"content\": \"You are an expert code reviewer. Analyze the file changes and determine if this PR is primarily: 1) Documentation, 2) Testing, 3) Feature Development, 4) Bug Fix, 5) Configuration, or 6) Dependency Update. Return only a JSON with 'purpose' (category) and 'details' (one sentence description).\"
+                  },
+                  {
+                    \"role\": \"user\",
+                    \"content\": \"Files changed: $MODIFIED_FILES\"
+                  }
+                ],
+                \"temperature\": 0.2
+              }"
+            )
+
+            # Intentar extraer PURPOSE y DETAILS del segundo intento
+            FALLBACK_PURPOSE=$(echo $OPENAI_RESPONSE | jq -r '.choices[0].message.content' | jq -r '.purpose')
+            FALLBACK_DETAILS=$(echo $OPENAI_RESPONSE | jq -r '.choices[0].message.content' | jq -r '.details')
+
+            # Usar resultados del fallback si están disponibles
+            if [ ! -z "$FALLBACK_PURPOSE" ] && [ ! -z "$FALLBACK_DETAILS" ]; then
+              PURPOSE=$FALLBACK_PURPOSE
+              DETAILS=$FALLBACK_DETAILS
             else
-              PURPOSE="Dependency Updates"
-              DETAILS="This PR focuses on updating project dependencies."
+              # Último recurso: Análisis básico basado en tipos de archivo
+              if [ $MD_FILES -gt 0 ]; then
+                PURPOSE="Documentation Update"
+                DETAILS="This PR includes documentation changes and improvements."
+              elif [ $JS_FILES -gt 0 ]; then
+                PURPOSE="Code Changes"
+                DETAILS="This PR modifies application logic and functionality."
+              elif [ $CONFIG_FILES -gt 0 ]; then
+                PURPOSE="Configuration Update"
+                DETAILS="This PR updates project configuration and settings."
+              else
+                PURPOSE="General Updates"
+                DETAILS="This PR contains various improvements and updates."
+              fi
             fi
-          elif echo "$MODIFIED_FILES" | grep -q "\.test\.\|\.spec\.\|__tests__"; then
-            PURPOSE="Testing & Quality Assurance"
-            DETAILS="This PR adds or improves test coverage and quality assurance."
-          elif echo "$MODIFIED_FILES" | grep -q "README\|\.md$"; then
-            if [ $FILES_CHANGED -eq $MD_FILES ]; then
-              PURPOSE="Documentation Update"
-              DETAILS="This PR focuses on improving project documentation."
-            else
-              PURPOSE="Feature Development with Documentation"
-              DETAILS="This PR includes feature changes along with documentation updates."
-            fi
-          elif echo "$MODIFIED_FILES" | grep -q "\.css\|\.scss\|\.sass\|\.less"; then
-            if [ $CSS_FILES -eq $FILES_CHANGED ]; then
-              PURPOSE="UI/UX Styling Updates"
-              DETAILS="This PR focuses on user interface and styling improvements."
-            else
-              PURPOSE="Feature Development with UI Changes"
-              DETAILS="This PR includes functionality changes with user interface updates."
-            fi
-          elif echo "$MODIFIED_FILES" | grep -q "config\|\.env\|\.yml\|\.yaml\|\.xml"; then
-            PURPOSE="Configuration Updates"
-            DETAILS="This PR modifies application or environment configuration."
-          elif [ $JS_FILES -gt 0 ]; then
-            if [ $FILES_CHANGED -le 3 ]; then
-              PURPOSE="Bug Fix or Minor Enhancement"
-              DETAILS="This PR addresses specific issues or makes targeted improvements."
-            else
-              PURPOSE="Feature Development"
-              DETAILS="This PR introduces new functionality or significant enhancements."
-            fi
-          else
-            PURPOSE="General Updates"
-            DETAILS="This PR contains miscellaneous updates and improvements."
           fi
-          
+
           # Agregar información específica basada en archivos
           SPECIFIC_CHANGES=""
           if echo "$MODIFIED_FILES" | grep -q "\.github/workflows.*\.yml"; then
@@ -290,17 +384,32 @@ jobs:
           if echo "$MODIFIED_FILES" | grep -q "Dockerfile\|docker"; then
             SPECIFIC_CHANGES="$SPECIFIC_CHANGES\n- 🐳 Docker containerization"
           fi
-          
+
+          echo "**Purpose:** $PURPOSE" >> pr_purpose_summary.txt
+          echo "" >> pr_purpose_summary.txt
+          echo "$DETAILS" >> pr_purpose_summary.txt
+
+          # Escribir el análisis de la IA
+          echo "**🤖 AI Analysis**" >> pr_purpose_summary.txt
+          echo "" >> pr_purpose_summary.txt
           echo "**Purpose:** $PURPOSE" >> pr_purpose_summary.txt
           echo "" >> pr_purpose_summary.txt
           echo "$DETAILS" >> pr_purpose_summary.txt
           
+          # Agregar detalles específicos si están disponibles
           if [ ! -z "$SPECIFIC_CHANGES" ]; then
             echo "" >> pr_purpose_summary.txt
-            echo "**Key Changes:**" >> pr_purpose_summary.txt
+            echo "**🔍 Detected Changes:**" >> pr_purpose_summary.txt
             echo -e "$SPECIFIC_CHANGES" >> pr_purpose_summary.txt
           fi
           
+          # Agregar estadísticas del PR
+          echo "" >> pr_purpose_summary.txt
+          echo "**📊 PR Statistics:**" >> pr_purpose_summary.txt
+          echo "- Files modified: $FILES_CHANGED" >> pr_purpose_summary.txt
+          echo "- Lines added: +$LINES_ADDED" >> pr_purpose_summary.txt
+          echo "- Lines removed: -$LINES_DELETED" >> pr_purpose_summary.txt
+
           # Guardar estadísticas en outputs
           echo "files_changed=$FILES_CHANGED" >> $GITHUB_OUTPUT
           echo "lines_added=$LINES_ADDED" >> $GITHUB_OUTPUT
@@ -315,208 +424,247 @@ jobs:
       - name: Call OpenAI API to generate comment
         id: openai
         env:
-            OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-            # Crear contexto detallado del PR
-            PR_TITLE="${{ github.event.pull_request.title }}"
-            PR_DESCRIPTION="${{ github.event.pull_request.body }}"
-            
-            # Obtener archivos modificados con más detalle
-            MODIFIED_FILES_DETAIL=$(git diff --name-status ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
-            
-            # Leer resúmenes
-            PURPOSE_SUMMARY=$(cat pr_purpose_summary.txt 2>/dev/null || echo "Unable to read purpose summary")
-            CHANGES_SUMMARY=$(cat pr_changes_summary.txt 2>/dev/null || echo "Unable to read changes summary")
-            
-            # Crear análisis de calidad
-            QUALITY_ANALYSIS="Code Quality Analysis:
-            - ESLint: ${{ steps.quality.outputs.eslint_errors }} errors, ${{ steps.quality.outputs.eslint_warnings }} warnings
-            - Tests: ${{ steps.quality.outputs.tests_passed }} passed, ${{ steps.quality.outputs.tests_failed }} failed
-            - Security: ${{ steps.quality.outputs.audit_high }} high vulnerabilities, ${{ steps.quality.outputs.audit_moderate }} moderate
-            - Formatting: ${{ steps.quality.outputs.formatting_issues }} issues detected"
+          # Crear contexto detallado del PR
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_DESCRIPTION="${{ github.event.pull_request.body }}"
 
-            # Obtener diff de los archivos más importantes (primeros 50 líneas)
-            IMPORTANT_DIFF=$(git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | head -50)
+          # Obtener archivos modificados con más detalle
+          MODIFIED_FILES_DETAIL=$(git diff --name-status ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
 
-            RESPONSE=$(curl -s -X POST https://api.openai.com/v1/chat/completions \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer $OPENAI_API_KEY" \
-            -d @- <<EOF
-            {
-            "model": "gpt-4o-mini",
-            "messages": [
-                {
-                "role": "system",
-                "content": "You are GitHub Copilot, an AI assistant that provides comprehensive and insightful code reviews. Analyze the PR like GitHub Copilot would: focus on code quality, architecture, potential issues, best practices, and provide constructive feedback. Format your response in markdown with clear sections. Be thorough but concise. Include specific suggestions and highlight both positive aspects and areas for improvement."
-                },
-                {
-                "role": "user",
-                "content": "## Pull Request Review\n\n**Title:** $PR_TITLE\n\n**Description:** $PR_DESCRIPTION\n\n## Files Changed\n$MODIFIED_FILES_DETAIL\n\n## Purpose Analysis\n$PURPOSE_SUMMARY\n\n## Changes Overview\n$CHANGES_SUMMARY\n\n## Code Quality Metrics\n$QUALITY_ANALYSIS\n\n## Key Code Changes (Sample)\n\`\`\`diff\n$IMPORTANT_DIFF\n\`\`\`\n\nPlease provide a comprehensive GitHub Copilot-style review of this PR, including:\n1. **Overall Assessment** - High-level summary of the PR\n2. **Code Quality Review** - Analysis of the changes\n3. **Architecture & Design** - Comments on structure and patterns\n4. **Security & Best Practices** - Security considerations\n5. **Recommendations** - Specific actionable suggestions\n6. **Positive Highlights** - What's done well\n\nFormat the response as a professional code review comment."
-                }
-            ],
-            "max_tokens": 1000,
-            "temperature": 0.2
-            }
-            EOF
-            )
+          # Leer resúmenes
+          PURPOSE_SUMMARY=$(cat pr_purpose_summary.txt 2>/dev/null || echo "Unable to read purpose summary")
+          CHANGES_SUMMARY=$(cat pr_changes_summary.txt 2>/dev/null || echo "Unable to read changes summary")
 
-            # Extraer error si existe
-            ERROR=$(echo "$RESPONSE" | jq -r '.error.message // empty')
+          # Crear análisis de calidad
+          QUALITY_ANALYSIS="Code Quality Analysis:
+          - ESLint: ${{ steps.quality.outputs.eslint_errors }} errors, ${{ steps.quality.outputs.eslint_warnings }} warnings
+          - Tests: ${{ steps.quality.outputs.tests_passed }} passed, ${{ steps.quality.outputs.tests_failed }} failed
+          - Security: ${{ steps.quality.outputs.audit_high }} high vulnerabilities, ${{ steps.quality.outputs.audit_moderate }} moderate
+          - Formatting: ${{ steps.quality.outputs.formatting_issues }} issues detected"
 
-            if [ -n "$ERROR" ]; then
-            echo "OpenAI API error detected: $ERROR" >&2
-            echo "openai_failed=true" >> $GITHUB_OUTPUT
-            echo "completions=OpenAI API failed: $ERROR" >> $GITHUB_OUTPUT
-            else
-            COMMENT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content')
-            if [ -z "$COMMENT" ] || [ "$COMMENT" = "null" ]; then
-                COMMENT="No comment generated by AI."
-            fi
-            echo "openai_failed=false" >> $GITHUB_OUTPUT
-            echo "completions=$COMMENT" >> $GITHUB_OUTPUT
-            fi
+          # Obtener diff de los archivos más importantes (primeros 50 líneas)
+          IMPORTANT_DIFF=$(git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | head -50)
+
+          RESPONSE=$(curl -s -X POST https://api.openai.com/v1/chat/completions \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer $OPENAI_API_KEY" \
+          -d @- <<EOF
+          {
+          "model": "gpt-4o-mini",
+          "messages": [
+              {
+              "role": "system",
+              "content": "You are GitHub Copilot, an AI assistant that provides comprehensive and insightful code reviews. Analyze the PR like GitHub Copilot would: focus on code quality, architecture, potential issues, best practices, and provide constructive feedback. Format your response in markdown with clear sections. Be thorough but concise. Include specific suggestions and highlight both positive aspects and areas for improvement."
+              },
+              {
+              "role": "user",
+              "content": "## Pull Request Review\n\n**Title:** $PR_TITLE\n\n**Description:** $PR_DESCRIPTION\n\n## Files Changed\n$MODIFIED_FILES_DETAIL\n\n## Purpose Analysis\n$PURPOSE_SUMMARY\n\n## Changes Overview\n$CHANGES_SUMMARY\n\n## Code Quality Metrics\n$QUALITY_ANALYSIS\n\n## Key Code Changes (Sample)\n\`\`\`diff\n$IMPORTANT_DIFF\n\`\`\`\n\nPlease provide a comprehensive GitHub Copilot-style review of this PR, including:\n1. **Overall Assessment** - High-level summary of the PR\n2. **Code Quality Review** - Analysis of the changes\n3. **Architecture & Design** - Comments on structure and patterns\n4. **Security & Best Practices** - Security considerations\n5. **Recommendations** - Specific actionable suggestions\n6. **Positive Highlights** - What's done well\n\nFormat the response as a professional code review comment."
+              }
+          ],
+          "max_tokens": 1000,
+          "temperature": 0.2
+          }
+          EOF
+          )
+
+          # Extraer error si existe
+          ERROR=$(echo "$RESPONSE" | jq -r '.error.message // empty')
+
+          if [ -n "$ERROR" ]; then
+          echo "OpenAI API error detected: $ERROR" >&2
+          echo "openai_failed=true" >> $GITHUB_OUTPUT
+          echo "completions=OpenAI API failed: $ERROR" >> $GITHUB_OUTPUT
+          else
+          COMMENT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content')
+          if [ -z "$COMMENT" ] || [ "$COMMENT" = "null" ]; then
+              COMMENT="No comment generated by AI."
+          fi
+          echo "openai_failed=false" >> $GITHUB_OUTPUT
+          echo "completions=$COMMENT" >> $GITHUB_OUTPUT
+          fi
 
       - name: Fallback to GitHub Copilot Style Review
         id: copilot
         if: steps.openai.outputs.openai_failed == 'true'
         run: |
-            echo "Generating GitHub Copilot-style fallback review..."
+          echo "Generating GitHub Copilot-style fallback review..."
+
+          # Obtener información del PR
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          FILES_CHANGED="${{ steps.diff.outputs.files_changed }}"
+
+          # Determinar el tipo de PR basado en archivos modificados y contenido
+          MODIFIED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+          
+          # Analizar el contenido de los cambios para una mejor clasificación
+          DIFF_CONTENT=$(git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+          
+          # Determinar el propósito principal del PR
+          if echo "$PR_TITLE" | grep -iE "fix|bug|issue|error|crash|problem|resolve" > /dev/null; then
+            PR_TYPE="🐛 Bug Fix"
+            PR_DESCRIPTION="This PR addresses and resolves issues in the codebase."
+          elif echo "$PR_TITLE" | grep -iE "feat|feature|add|new|implement" > /dev/null; then
+            PR_TYPE="✨ New Feature"
+            PR_DESCRIPTION="This PR introduces new functionality to the application."
+          elif echo "$PR_TITLE" | grep -iE "doc|docs|document|readme" > /dev/null; then
+            PR_TYPE="📚 Documentation"
+            PR_DESCRIPTION="This PR improves project documentation and guides."
+          elif echo "$PR_TITLE" | grep -iE "test|spec|coverage" > /dev/null; then
+            PR_TYPE="🧪 Testing"
+            PR_DESCRIPTION="This PR enhances test coverage and quality assurance."
+          elif echo "$PR_TITLE" | grep -iE "refactor|clean|improve|enhance" > /dev/null; then
+            PR_TYPE="♻️ Refactoring"
+            PR_DESCRIPTION="This PR improves code quality through refactoring."
+          elif echo "$PR_TITLE" | grep -iE "ci|cd|pipeline|workflow|deploy" > /dev/null; then
+            PR_TYPE="🔄 CI/CD"
+            PR_DESCRIPTION="This PR updates deployment and automation processes."
+          else
+            PR_TYPE="🔧 General Update"
+            PR_DESCRIPTION="This PR contains various improvements and updates."
+          fi
+
+          # Generar review estilo GitHub Copilot con análisis mejorado
+          {
+            echo "## 🚀 PR Changes Summary"
+            echo ""
+            echo "### 📝 PR Summary"
+            echo ""
+            echo "**Purpose:** ${PR_TYPE}"
+            echo ""
+            echo "${PR_DESCRIPTION}"
+            echo ""
+            echo "### 🤖 AI Analysis"
+            echo ""
+            echo "**Purpose:** ${PR_TYPE}"
+            echo ""
+            echo "${PR_DESCRIPTION}"
+            echo ""
+            echo "### 📊 Detailed Analysis"
+            echo ""
             
-            # Obtener información del PR
-            PR_TITLE="${{ github.event.pull_request.title }}"
-            FILES_CHANGED="${{ steps.diff.outputs.files_changed }}"
+            # Analizar el tipo de PR
+            if echo "$MODIFIED_FILES" | grep -q "README\|\.md"; then
+              if echo "$MODIFIED_FILES" | grep -q "package\.json\|user-stories"; then
+                echo "This PR appears to be adding **comprehensive project documentation and metadata** for the pet accessories chatbot API. The changes transform a basic repository into a well-documented, production-ready project with detailed user stories, contribution guidelines, and improved project metadata."
+              else
+                echo "This PR focuses on **documentation improvements** to enhance project clarity and developer experience."
+              fi
+            elif echo "$MODIFIED_FILES" | grep -q "\.yml\|\.yaml"; then
+              echo "This PR contains **CI/CD pipeline modifications** that will affect the automated workflows and deployment processes."
+            elif echo "$MODIFIED_FILES" | grep -q "\.js\|\.ts"; then
+              echo "This PR includes **code changes** to the application logic and functionality."
+            else
+              echo "This PR contains **configuration and setup changes** for the project."
+            fi
             
-            # Determinar el tipo de PR basado en archivos modificados
-            MODIFIED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+            echo ""
+            echo "### Key Changes Summary"
+            echo ""
+            echo "- 📁 **$FILES_CHANGED files modified** across multiple project areas"
+            echo "- ➕ **${{ steps.diff.outputs.lines_added }} lines added**"
+            echo "- ➖ **${{ steps.diff.outputs.lines_deleted }} lines removed**"
             
-            # Generar review estilo GitHub Copilot
-            {
-              echo "## 🤖 GitHub Copilot Review"
-              echo ""
-              echo "### Pull Request Overview"
-              echo ""
-              
-              # Analizar el tipo de PR
-              if echo "$MODIFIED_FILES" | grep -q "README\|\.md"; then
-                if echo "$MODIFIED_FILES" | grep -q "package\.json\|user-stories"; then
-                  echo "This PR appears to be adding **comprehensive project documentation and metadata** for the pet accessories chatbot API. The changes transform a basic repository into a well-documented, production-ready project with detailed user stories, contribution guidelines, and improved project metadata."
-                else
-                  echo "This PR focuses on **documentation improvements** to enhance project clarity and developer experience."
-                fi
-              elif echo "$MODIFIED_FILES" | grep -q "\.yml\|\.yaml"; then
-                echo "This PR contains **CI/CD pipeline modifications** that will affect the automated workflows and deployment processes."
-              elif echo "$MODIFIED_FILES" | grep -q "\.js\|\.ts"; then
-                echo "This PR includes **code changes** to the application logic and functionality."
-              else
-                echo "This PR contains **configuration and setup changes** for the project."
-              fi
-              
-              echo ""
-              echo "### Key Changes Summary"
-              echo ""
-              echo "- 📁 **$FILES_CHANGED files modified** across multiple project areas"
-              echo "- ➕ **${{ steps.diff.outputs.lines_added }} lines added**"
-              echo "- ➖ **${{ steps.diff.outputs.lines_deleted }} lines removed**"
-              
-              if [ '${{ steps.diff.outputs.js_files }}' -gt 0 ]; then
-                echo "- 💻 **JavaScript/TypeScript changes** detected"
-              fi
-              if [ '${{ steps.diff.outputs.md_files }}' -gt 0 ]; then
-                echo "- 📚 **Documentation updates** included"
-              fi
-              if [ '${{ steps.diff.outputs.json_files }}' -gt 0 ]; then
-                echo "- ⚙️ **Configuration modifications** present"
-              fi
-              
-              echo ""
-              echo "### Code Quality Assessment"
-              echo ""
-              
-              # Estado general
-              if [ '${{ steps.quality.outputs.eslint_errors }}' -eq 0 ] && [ '${{ steps.quality.outputs.tests_failed }}' -eq 0 ] && [ '${{ steps.quality.outputs.audit_high }}' -eq 0 ]; then
-                echo "✅ **Excellent code quality** - No critical issues detected"
-              elif [ '${{ steps.quality.outputs.eslint_errors }}' -gt 0 ] || [ '${{ steps.quality.outputs.tests_failed }}' -gt 0 ]; then
-                echo "⚠️ **Action required** - Some issues need attention before merge"
-              else
-                echo "📊 **Generally good** - Minor improvements recommended"
-              fi
-              
-              echo ""
-              echo "| Metric | Status | Count |"
-              echo "|--------|--------|-------|"
-              
-              if [ '${{ steps.quality.outputs.eslint_errors }}' -eq 0 ]; then
-                echo "| ESLint Errors | ✅ Clean | ${{ steps.quality.outputs.eslint_errors }} |"
-              else
-                echo "| ESLint Errors | ❌ Issues | ${{ steps.quality.outputs.eslint_errors }} |"
-              fi
-              
-              if [ '${{ steps.quality.outputs.eslint_warnings }}' -eq 0 ]; then
-                echo "| ESLint Warnings | ✅ Clean | ${{ steps.quality.outputs.eslint_warnings }} |"
-              else
-                echo "| ESLint Warnings | ⚠️ Minor | ${{ steps.quality.outputs.eslint_warnings }} |"
-              fi
-              
-              if [ '${{ steps.quality.outputs.tests_failed }}' -eq 0 ]; then
-                echo "| Test Results | ✅ Passing | ${{ steps.quality.outputs.tests_passed }} passed |"
-              else
-                echo "| Test Results | ❌ Failing | ${{ steps.quality.outputs.tests_failed }} failed |"
-              fi
-              
-              if [ '${{ steps.quality.outputs.audit_high }}' -eq 0 ]; then
-                echo "| Security | ✅ Secure | No high vulnerabilities |"
-              else
-                echo "| Security | 🚨 Alert | ${{ steps.quality.outputs.audit_high }} high vulnerabilities |"
-              fi
-              
-              echo ""
-              echo "### Recommendations"
-              echo ""
-              
-              # Recomendaciones específicas
-              if [ '${{ steps.quality.outputs.eslint_errors }}' -gt 0 ]; then
-                echo "🔧 **Fix ESLint errors** - Address the ${{ steps.quality.outputs.eslint_errors }} linting errors to maintain code standards"
-              fi
-              
-              if [ '${{ steps.quality.outputs.tests_failed }}' -gt 0 ]; then
-                echo "🧪 **Resolve test failures** - ${{ steps.quality.outputs.tests_failed }} tests are currently failing and need attention"
-              fi
-              
-              if [ '${{ steps.quality.outputs.audit_high }}' -gt 0 ]; then
-                echo "🚨 **Address security vulnerabilities** - ${{ steps.quality.outputs.audit_high }} high-severity security issues detected"
-              fi
-              
-              if [ '${{ steps.quality.outputs.formatting_issues }}' -gt 0 ]; then
-                echo "💅 **Format code** - Run Prettier to fix ${{ steps.quality.outputs.formatting_issues }} formatting inconsistencies"
-              fi
-              
-              # Recomendaciones positivas
-              if [ '${{ steps.quality.outputs.eslint_errors }}' -eq 0 ] && [ '${{ steps.quality.outputs.tests_failed }}' -eq 0 ]; then
-                echo "✨ **Well done!** - Code quality metrics look excellent"
-                echo "� **Ready for review** - Consider adding more comprehensive tests if applicable"
-                echo "📖 **Documentation** - Ensure all new features are properly documented"
-              fi
-              
-              echo ""
-              echo "### Files Modified"
-              echo ""
-              echo "\`\`\`"
-              git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | head -15
-              echo "\`\`\`"
-              
-              if [ '$FILES_CHANGED' -gt 15 ]; then
-                echo "*... and $(($FILES_CHANGED - 15)) more files*"
-              fi
-              
-              echo ""
-              echo "---"
-              echo "*Generated by GitHub Copilot-style automated review system*"
-              
-            } > copilot_comment.txt
+            if [ '${{ steps.diff.outputs.js_files }}' -gt 0 ]; then
+              echo "- 💻 **JavaScript/TypeScript changes** detected"
+            fi
+            if [ '${{ steps.diff.outputs.md_files }}' -gt 0 ]; then
+              echo "- 📚 **Documentation updates** included"
+            fi
+            if [ '${{ steps.diff.outputs.json_files }}' -gt 0 ]; then
+              echo "- ⚙️ **Configuration modifications** present"
+            fi
             
-            # Convertir a formato para GitHub
-            COPILOT_COMMENT=$(cat copilot_comment.txt | sed ':a;N;$!ba;s/\n/\\n/g')
-            echo "completions=$COPILOT_COMMENT" >> $GITHUB_OUTPUT
+            echo ""
+            echo "### Code Quality Assessment"
+            echo ""
+            
+            # Estado general
+            if [ '${{ steps.quality.outputs.eslint_errors }}' -eq 0 ] && [ '${{ steps.quality.outputs.tests_failed }}' -eq 0 ] && [ '${{ steps.quality.outputs.audit_high }}' -eq 0 ]; then
+              echo "✅ **Excellent code quality** - No critical issues detected"
+            elif [ '${{ steps.quality.outputs.eslint_errors }}' -gt 0 ] || [ '${{ steps.quality.outputs.tests_failed }}' -gt 0 ]; then
+              echo "⚠️ **Action required** - Some issues need attention before merge"
+            else
+              echo "📊 **Generally good** - Minor improvements recommended"
+            fi
+            
+            echo ""
+            echo "| Metric | Status | Count |"
+            echo "|--------|--------|-------|"
+            
+            if [ '${{ steps.quality.outputs.eslint_errors }}' -eq 0 ]; then
+              echo "| ESLint Errors | ✅ Clean | ${{ steps.quality.outputs.eslint_errors }} |"
+            else
+              echo "| ESLint Errors | ❌ Issues | ${{ steps.quality.outputs.eslint_errors }} |"
+            fi
+            
+            if [ '${{ steps.quality.outputs.eslint_warnings }}' -eq 0 ]; then
+              echo "| ESLint Warnings | ✅ Clean | ${{ steps.quality.outputs.eslint_warnings }} |"
+            else
+              echo "| ESLint Warnings | ⚠️ Minor | ${{ steps.quality.outputs.eslint_warnings }} |"
+            fi
+            
+            if [ '${{ steps.quality.outputs.tests_failed }}' -eq 0 ]; then
+              echo "| Test Results | ✅ Passing | ${{ steps.quality.outputs.tests_passed }} passed |"
+            else
+              echo "| Test Results | ❌ Failing | ${{ steps.quality.outputs.tests_failed }} failed |"
+            fi
+            
+            if [ '${{ steps.quality.outputs.audit_high }}' -eq 0 ]; then
+              echo "| Security | ✅ Secure | No high vulnerabilities |"
+            else
+              echo "| Security | 🚨 Alert | ${{ steps.quality.outputs.audit_high }} high vulnerabilities |"
+            fi
+            
+            echo ""
+            echo "### Recommendations"
+            echo ""
+            
+            # Recomendaciones específicas
+            if [ '${{ steps.quality.outputs.eslint_errors }}' -gt 0 ]; then
+              echo "🔧 **Fix ESLint errors** - Address the ${{ steps.quality.outputs.eslint_errors }} linting errors to maintain code standards"
+            fi
+            
+            if [ '${{ steps.quality.outputs.tests_failed }}' -gt 0 ]; then
+              echo "🧪 **Resolve test failures** - ${{ steps.quality.outputs.tests_failed }} tests are currently failing and need attention"
+            fi
+            
+            if [ '${{ steps.quality.outputs.audit_high }}' -gt 0 ]; then
+              echo "🚨 **Address security vulnerabilities** - ${{ steps.quality.outputs.audit_high }} high-severity security issues detected"
+            fi
+            
+            if [ '${{ steps.quality.outputs.formatting_issues }}' -gt 0 ]; then
+              echo "💅 **Format code** - Run Prettier to fix ${{ steps.quality.outputs.formatting_issues }} formatting inconsistencies"
+            fi
+            
+            # Recomendaciones positivas
+            if [ '${{ steps.quality.outputs.eslint_errors }}' -eq 0 ] && [ '${{ steps.quality.outputs.tests_failed }}' -eq 0 ]; then
+              echo "✨ **Well done!** - Code quality metrics look excellent"
+              echo "� **Ready for review** - Consider adding more comprehensive tests if applicable"
+              echo "📖 **Documentation** - Ensure all new features are properly documented"
+            fi
+            
+            echo ""
+            echo "### Files Modified"
+            echo ""
+            echo "\`\`\`"
+            git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | head -15
+            echo "\`\`\`"
+            
+            if [ '$FILES_CHANGED' -gt 15 ]; then
+              echo "*... and $(($FILES_CHANGED - 15)) more files*"
+            fi
+            
+            echo ""
+            echo "---"
+            echo "*Generated by GitHub Copilot-style automated review system*"
+            
+          } > copilot_comment.txt
+
+          # Convertir a formato para GitHub
+          COPILOT_COMMENT=$(cat copilot_comment.txt | sed ':a;N;$!ba;s/\n/\\n/g')
+          echo "completions=$COPILOT_COMMENT" >> $GITHUB_OUTPUT
 
       - name: Generate Workflow Summary
         if: always()
@@ -524,37 +672,56 @@ jobs:
           echo "## 🚀 GitHub Copilot-Style AI Review Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📊 Code Quality Analysis" >> $GITHUB_STEP_SUMMARY
+          
+          # ESLint Results
+          echo "#### 🔍 ESLint Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "- Errors: ${{ steps.eslint.outputs.eslint_errors }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Warnings: ${{ steps.eslint.outputs.eslint_warnings }}" >> $GITHUB_STEP_SUMMARY
+          
+          # Test Results
+          echo "#### 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "- Tests Passed: ${{ steps.tests.outputs.tests_passed }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Tests Failed: ${{ steps.tests.outputs.tests_failed }}" >> $GITHUB_STEP_SUMMARY
+          
+          # Security Results
+          echo "#### 🔒 Security Audit" >> $GITHUB_STEP_SUMMARY
+          echo "- High Severity Issues: ${{ steps.security.outputs.audit_high }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Moderate Severity Issues: ${{ steps.security.outputs.audit_moderate }}" >> $GITHUB_STEP_SUMMARY
+          
+          # Formatting Results
+          echo "#### 💅 Code Formatting" >> $GITHUB_STEP_SUMMARY
+          echo "- Formatting Issues: ${{ steps.formatting.outputs.formatting_issues }}" >> $GITHUB_STEP_SUMMARY
           echo "| Tool | Status | Results |" >> $GITHUB_STEP_SUMMARY
           echo "|------|--------|---------|" >> $GITHUB_STEP_SUMMARY
-          
+
           # ESLint Status
           if [ "${{ steps.quality.outputs.eslint_errors }}" = "0" ]; then
             echo "| ESLint | ✅ Clean | ${{ steps.quality.outputs.eslint_errors }} errors, ${{ steps.quality.outputs.eslint_warnings }} warnings |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| ESLint | ❌ Issues | ${{ steps.quality.outputs.eslint_errors }} errors, ${{ steps.quality.outputs.eslint_warnings }} warnings |" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           # Tests Status
           if [ "${{ steps.quality.outputs.tests_failed }}" = "0" ]; then
             echo "| Tests | ✅ Passing | ${{ steps.quality.outputs.tests_passed }} passed, ${{ steps.quality.outputs.tests_failed }} failed |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| Tests | ❌ Failing | ${{ steps.quality.outputs.tests_passed }} passed, ${{ steps.quality.outputs.tests_failed }} failed |" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           # Security Status
           if [ "${{ steps.quality.outputs.audit_high }}" = "0" ]; then
             echo "| Security | ✅ Secure | ${{ steps.quality.outputs.audit_high }} high, ${{ steps.quality.outputs.audit_moderate }} moderate vulnerabilities |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| Security | 🚨 Alert | ${{ steps.quality.outputs.audit_high }} high, ${{ steps.quality.outputs.audit_moderate }} moderate vulnerabilities |" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           # Formatting Status
           if [ "${{ steps.quality.outputs.formatting_issues }}" = "0" ]; then
             echo "| Formatting | ✅ Clean | ${{ steps.quality.outputs.formatting_issues }} issues |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| Formatting | ⚠️ Issues | ${{ steps.quality.outputs.formatting_issues }} issues |" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🤖 AI Review System Status" >> $GITHUB_STEP_SUMMARY
           if [ "${{ steps.openai.outputs.openai_failed }}" = "true" ]; then
@@ -564,7 +731,7 @@ jobs:
             echo "- ✅ **OpenAI API**: Success with GitHub Copilot-style prompting" >> $GITHUB_STEP_SUMMARY
             echo "- 🎯 **Review Quality**: Enhanced with comprehensive analysis" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📈 PR Statistics" >> $GITHUB_STEP_SUMMARY
           echo "- 📁 Files changed: ${{ steps.diff.outputs.files_changed }}" >> $GITHUB_STEP_SUMMARY
@@ -572,8 +739,6 @@ jobs:
           echo "- ➖ Lines deleted: ${{ steps.diff.outputs.lines_deleted }}" >> $GITHUB_STEP_SUMMARY
           echo "- 💻 Code files: ${{ steps.diff.outputs.js_files }}" >> $GITHUB_STEP_SUMMARY
           echo "- 📚 Documentation: ${{ steps.diff.outputs.md_files }}" >> $GITHUB_STEP_SUMMARY
-
-      # Comment posting step removed intentionally
 
       - name: Update PR Description with AI Analysis
         uses: actions/github-script@v7
@@ -699,6 +864,7 @@ jobs:
               
               console.log('PR description replaced successfully');
             } catch (error) {
+              // eslint-disable-next-line no-console
               console.error('Failed to update PR description:', error);
               // No fallar el workflow si esto falla
             }
