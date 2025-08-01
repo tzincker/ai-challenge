@@ -10,24 +10,24 @@ const registerMessage = document.getElementById('register-message');
 // Función para validar nombre de usuario
 function validateUsername(username) {
   if (!username) {
-    return { valid: false, message: 'El nombre de usuario es requerido' };
+    return { valid: false, message: 'Username is required' };
   }
   if (username.length < 3) {
     return {
       valid: false,
-      message: 'El nombre de usuario debe tener al menos 3 caracteres',
+      message: 'Username must be at least 3 characters long',
     };
   }
   if (username.length > 20) {
     return {
       valid: false,
-      message: 'El nombre de usuario no puede tener más de 20 caracteres',
+      message: 'Username cannot be longer than 20 characters',
     };
   }
   if (!/^[a-zA-Z0-9_]+$/.test(username)) {
     return {
       valid: false,
-      message: 'Solo letras, números y guiones bajos permitidos',
+      message: 'Only letters, numbers and underscores allowed',
     };
   }
   return { valid: true };
@@ -36,24 +36,24 @@ function validateUsername(username) {
 // Función para validar contraseña
 function validatePassword(password) {
   if (!password) {
-    return { valid: false, message: 'La contraseña es requerida' };
+    return { valid: false, message: 'Password is required' };
   }
   if (password.length < 6) {
     return {
       valid: false,
-      message: 'La contraseña debe tener al menos 6 caracteres',
+      message: 'Password must be at least 6 characters long',
     };
   }
   if (password.length > 50) {
     return {
       valid: false,
-      message: 'La contraseña no puede tener más de 50 caracteres',
+      message: 'Password cannot be longer than 50 characters',
     };
   }
   if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
     return {
       valid: false,
-      message: 'Debe contener mayúscula, minúscula y número',
+      message: 'Must contain uppercase, lowercase and number',
     };
   }
   return { valid: true };
@@ -105,7 +105,7 @@ function validatePasswordConfirmation() {
   if (!confirmPassword) {
     showValidationMessage(confirmPasswordInput, {
       valid: false,
-      message: 'Confirma tu contraseña',
+      message: 'Confirm your password',
     });
     return false;
   }
@@ -113,7 +113,7 @@ function validatePasswordConfirmation() {
   if (password !== confirmPassword) {
     showValidationMessage(confirmPasswordInput, {
       valid: false,
-      message: 'Las contraseñas no coinciden',
+      message: 'Passwords do not match',
     });
     return false;
   }
@@ -167,7 +167,7 @@ registerBtn.addEventListener('click', async () => {
   }
 
   registerBtn.disabled = true;
-  registerBtn.textContent = 'Creando cuenta...';
+  registerBtn.textContent = 'Creating account...';
 
   try {
     const response = await fetch(`${CONFIG.API_BASE_URL}/register`, {
@@ -182,7 +182,7 @@ registerBtn.addEventListener('click', async () => {
 
     if (response.ok && data.success) {
       registerMessage.textContent =
-        '¡Cuenta creada exitosamente! Iniciando sesión...';
+        'Account created successfully! Logging in...';
       registerMessage.className = 'success';
 
       // Automaticamente hacer login después del registro exitoso
@@ -204,21 +204,21 @@ registerBtn.addEventListener('click', async () => {
             localStorage.setItem('autoLoginUsername', username);
 
             registerMessage.textContent =
-              '¡Bienvenido! Redirigiendo al chat...';
+              'Welcome! Redirecting to chat...';
 
             setTimeout(() => {
               window.location.href = '/';
             }, 1000);
           } else {
             registerMessage.textContent =
-              '¡Cuenta creada! Ve al login para ingresar.';
+              'Account created! Go to login to enter.';
             setTimeout(() => {
               window.location.href = '/';
             }, 2000);
           }
         } catch (error) {
           registerMessage.textContent =
-            '¡Cuenta creada! Ve al login para ingresar.';
+            'Account created! Go to login to enter.';
           setTimeout(() => {
             window.location.href = '/';
           }, 2000);
@@ -229,11 +229,11 @@ registerBtn.addEventListener('click', async () => {
       registerMessage.className = 'error';
     }
   } catch (error) {
-    registerMessage.textContent = 'Error de conexión. Intenta nuevamente.';
+    registerMessage.textContent = 'Connection error. Please try again.';
     registerMessage.className = 'error';
   } finally {
     registerBtn.disabled = false;
-    registerBtn.textContent = 'Crear Cuenta';
+    registerBtn.textContent = 'Create Account';
   }
 });
 

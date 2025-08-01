@@ -5,8 +5,6 @@ html(lang="en")
     meta(name="viewport", content="width=device-width, initial-scale=1.0")
     title="Pet Accessories Chatbot"
     link(rel='stylesheet', type='text/css', href='/styles.css')
-    script.
-      window.CONFIG = { API_BASE_URL: "!{apiBaseUrl || window.location.origin}" };
   body
     div(class="container")
       div(class="pet-image")
@@ -20,12 +18,10 @@ html(lang="en")
         p(id="login-message")
         div(class="auth-links")
           a(href="/register")="Not a member, register now!"
-    div(class="auth-links")
-        a(href="#", id="forgot-password-link")="Forgot your password?"
+          br
+          a(href="#", id="forgot-password-link")="Forgot your password?"
 
-    div(id="chat-section" class="hidden")
-
-    script(src='/script.js')
+      div(id="chat-section" class="hidden")
         h2="Chat"
         div(id="chat-box")
         div(class="chat-input")

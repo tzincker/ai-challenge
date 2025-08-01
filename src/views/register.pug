@@ -5,8 +5,6 @@ html(lang="en")
     meta(name="viewport", content="width=device-width, initial-scale=1.0")
     title="Pet Accessories Chatbot - Register"
     link(rel='stylesheet', type='text/css', href='/styles.css')
-    script.
-      window.CONFIG = { API_BASE_URL: "!{apiBaseUrl || window.location.origin}" };
   body
     div(class="container")
       h1="Pet Accessories Chatbot"
@@ -30,4 +28,6 @@ html(lang="en")
         p(id="register-message")
         div(class="auth-links")
           a(href="/")="Already have an account? Login"
+    script.
+      const CONFIG = { API_BASE_URL: "!{apiBaseUrl}", };
     script(src='/register-script.js')
