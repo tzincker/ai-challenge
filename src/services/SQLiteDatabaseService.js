@@ -151,7 +151,7 @@ class SQLiteDatabaseService {
         });
       } else {
         // Para INSERT, UPDATE, DELETE
-        const stmt = this.db.run(sql, params, (err) => {
+        const stmt = this.db.run(sql, params, err => {
           if (err) {
             // eslint-disable-next-line no-console
             console.error('❌ Error en query:', err);

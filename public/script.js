@@ -187,7 +187,7 @@ async function logout() {
 function addMessage(text, className) {
   const chatBox = document.getElementById('chat-box');
   const msgDiv = document.createElement('div');
-  
+
   // Convert Markdown-style formatting and handle newlines
   const formattedText = text
     .replace(/\n\n/g, '<br><br>') // Double newlines to double breaks

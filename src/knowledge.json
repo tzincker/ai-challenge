@@ -22,8 +22,8 @@
     },
     {
       "id": "FAQ006",
-      "question": "necesito collar para perro que variedad de collares tienes?",
-      "answer": "Tenemos una amplia variedad de collares para perros en nuestra tienda. ¿Qué tipo de collar estás buscando específicamente para tu perro? ¿Buscas un collar de cuero, de tela, con adornos, reflectante, ajustable, antitirones o algún otro tipo en particular? ¡Estoy aquí para ayudarte a encontrar el collar perfecto para tu mascota!"
+      "question": "I need a dog collar, what variety of collars do you have?",
+      "answer": "We have a wide variety of dog collars in our store. What type of collar are you specifically looking for your dog? Are you looking for a leather, fabric, decorated, reflective, adjustable, anti-pull, or any other particular type? I'm here to help you find the perfect collar for your pet!"
     },
     {
       "id": "FAQ007",
@@ -32,33 +32,33 @@
     },
     {
       "id": "FAQ008",
-      "question": "quiero un hueso de perro",
-      "answer": "¡Claro! Tenemos una variedad de huesos para perros en nuestra tienda. ¿Estás buscando un hueso de juguete o uno comestible para tu perro?"
+      "question": "I want a dog bone",
+      "answer": "Of course! We have a variety of dog bones in our store. Are you looking for a toy bone or an edible one for your dog?"
     },
     {
       "id": "FAQ009",
-      "question": "buscando un hueso de juguete",
-      "answer": "¡Hola! ¡Bienvenido a nuestra tienda de accesorios para mascotas! ¿En qué puedo ayudarte hoy? Si estás buscando un hueso de juguete para tu mascota, tenemos una variedad de opciones disponibles. ¿Qué tamaño y material prefieres para el hueso de juguete? ¡Estoy aquí para ayudarte a encontrar el perfecto para tu peludo amigo!"
+      "question": "looking for a toy bone",
+      "answer": "Hello! Welcome to our pet accessories store! How can I help you today? If you are looking for a toy bone for your pet, we have a variety of options available. What size and material do you prefer for the toy bone? I'm here to help you find the perfect one for your furry friend!"
     },
     {
       "id": "FAQ010",
-      "question": "quiero un collar de perro",
-      "answer": "Claro, ¡estoy aquí para ayudarte a encontrar el collar perfecto para tu perro! ¿Qué tipo de collar estás buscando? ¿Tienes alguna preferencia de color, material o tamaño en mente? ¡Cualquier información adicional que puedas proporcionar será útil para encontrar el collar ideal!"
+      "question": "I want a dog collar",
+      "answer": "Of course, I'm here to help you find the perfect collar for your dog! What type of collar are you looking for? Do you have any preference for color, material, or size? Any additional information you can provide will be helpful to find the ideal collar!"
     },
     {
       "id": "FAQ011",
-      "question": "quiero que sea de cuero",
-      "answer": "Claro, puedo recomendarte un collar de cuero de excelente calidad para tu mascota. ¿Qué tipo de mascota tienes?"
+      "question": "I want it to be leather",
+      "answer": "Of course, I can recommend you a high-quality leather collar for your pet. What kind of pet do you have?"
     },
     {
       "id": "FAQ012",
-      "question": "collar de perro",
-      "answer": "¡Hola! ¿En qué puedo ayudarte hoy con los collares para perros? ¿Estás buscando un collar en particular o necesitas ayuda para elegir el mejor collar para tu mascota? ¡Estoy aquí para responder tus preguntas y brindarte toda la información que necesites!"
+      "question": "dog collar",
+      "answer": "Hello! How can I help you today with dog collars? Are you looking for a particular collar or do you need help choosing the best collar for your pet? I'm here to answer your questions and provide all the information you need!"
     },
     {
       "id": "FAQ013",
-      "question": "quiero información sobre sus juguetes para mi perro",
-      "answer": "¡Hola! ¡Claro que sí! Tenemos una amplia variedad de juguetes para perros en nuestra tienda. ¿Qué tipo de juguete estás buscando para tu perro? ¿Tienes alguna preferencia en cuanto al material o tamaño del juguete? Estoy aquí para ayudarte a encontrar el juguete perfecto para tu peludo amigo."
+      "question": "I want information about your toys for my dog",
+      "answer": "Hello! Of course! We have a wide variety of toys for dogs in our store. What type of toy are you looking for your dog? Do you have any preference regarding the material or size of the toy? I'm here to help you find the perfect toy for your furry friend."
     },
     {
       "id": "FAQ014",
@@ -68,47 +68,22 @@
     {
       "id": "FAQ015",
       "question": "collar",
-      "answer": "¡Tenemos una gran variedad de collares para mascotas! Ofrecemos collares de cuero, nylon, con diseños reflectantes, ajustables y más. ¿Para qué tipo de mascota necesitas el collar y qué características prefieres?"
+      "answer": "We have a great variety of collars for pets! We offer leather, nylon, reflective design, adjustable collars and more. What type of pet do you need the collar for and what features do you prefer?"
     },
     {
-      "id": "FAQ016",
-      "question": "juguete",
-      "answer": "¡Excelente! Tenemos muchos juguetes para mascotas. Disponemos de pelotas, huesos de juguete, cuerdas, juguetes interactivos, peluches y más. ¿Para qué tipo de mascota es el juguete?"
+      "id": "FAQ019",
+      "question": "dog",
+      "answer": "Hello! I see you're looking for dog products! 🐕 We have an amazing range of accessories for dogs:\n\n**Available Categories:**\n👕 **Dog Clothing** - Coats, sweaters, vests\n👟 **Dog Shoes** - Boots, paw protectors\n🎾 **Toys** - Balls, bones, ropes, interactive toys\n🏷️ **Collars & Leashes** - Leather, nylon, reflective\n🛏️ **Beds & Blankets** - Comfortable and durable\n🍽️ **Food & Water Bowls** - Stainless steel, ceramic\n\nWhich category interests you most? Just let me know and I'll help you find the perfect product for your furry friend!"
     },
     {
-      "id": "FAQ017",
-      "question": "tamaños",
-      "answer": "Ofrecemos productos en diferentes tamaños: XS (extra pequeño), S (pequeño), M (mediano), L (grande) y XL (extra grande). El tamaño específico depende del producto. ¿Qué producto necesitas y para qué tamaño de mascota?"
-    },
-    {
-      "id": "FAQ018",
+      "id": "FAQ019",
       "question": "dog",
       "answer": "Hello! I see you're looking for dog products! 🐕 We have an amazing range of accessories for dogs:\\n\\n**Available Categories:**\\n👕 **Dog Clothing** - Coats, sweaters, vests\\n👟 **Dog Shoes** - Boots, paw protectors\\n🎾 **Toys** - Balls, bones, ropes, interactive toys\\n🏷️ **Collars & Leashes** - Leather, nylon, reflective\\n🛏️ **Beds & Blankets** - Comfortable and durable\\n🍽️ **Food & Water Bowls** - Stainless steel, ceramic\\n\\nWhich category interests you most? Just let me know and I'll help you find the perfect product for your furry friend!"
     },
     {
-      "id": "FAQ019",
-      "question": "perro",
-      "answer": "¡Perfecto! Tenemos todo lo que tu perro necesita! 🐕\\n\\n**Categorías disponibles:**\\n🦴 **Vestimenta para perros** - Abrigos, suéteres, chalecos\\n👟 **Zapatos para perros** - Botitas, protectores de patas\\n🎾 **Juguetes** - Pelotas, huesos, cuerdas\\n🏷️ **Collares y correas** - Cuero, nylon, reflectantes\\n🛏️ **Camas y mantas** - Cómodas y resistentes\\n🍽️ **Comederos y bebederos** - Acero inoxidable, cerámica\\n\\n¿Qué categoría te interesa más? ¡Solo dímelo y te ayudo a encontrar el producto perfecto!"
-    },
-    {
-      "id": "FAQ020",
-      "question": "productos para perros",
-      "answer": "¡Excelente! Somos especialistas en productos para perros. Ofrecemos: collares (cuero, nylon, reflectantes), juguetes (pelotas, huesos, cuerdas), camas y mantas, platos y bebederos, champús y productos de higiene, correas y arneses. ¿Qué necesita tu perro?"
-    },
-    {
       "id": "FAQ021",
-      "question": "vestimenta para perros",
-      "answer": "¡Genial! Tenemos una hermosa colección de vestimenta para perros! 👕🐕\\n\\n**Nuestra línea de ropa incluye:**\\n🧥 **Abrigos de invierno** - Impermeables y térmicos\\n🧶 **Suéteres** - Lana y algodón, varios colores\\n🦺 **Chalecos** - Reflectantes para paseos nocturnos\\n👗 **Disfraces** - Para ocasiones especiales\\n🏖️ **Ropa de verano** - Camisetas ligeras\\n\\n**Tallas disponibles:** XS, S, M, L, XL\\n\\n¿Qué tipo de vestimenta buscas para tu perro? ¿Necesitas ayuda con las tallas?"
-    },
-    {
-      "id": "FAQ022",
-      "question": "zapatos para perros",
-      "answer": "¡Excelente elección! Los zapatos protegen las patitas de tu perro! 👟🐾\\n\\n**Nuestra colección de calzado:**\\n🥾 **Botitas impermeables** - Para días lluviosos\\n👟 **Zapatos deportivos** - Para caminatas largas\\n🧦 **Calcetines antideslizantes** - Para interiores\\n❄️ **Botas de invierno** - Protección contra frío y sal\\n🏖️ **Protectores de verano** - Contra asfalto caliente\\n\\n**Tallas:** 1, 2, 3, 4, 5 (según el tamaño de la pata)\\n\\n¿Para qué ocasión necesitas los zapatos? ¿Conoces la talla de las patas de tu perro?"
-    },
-    {
-      "id": "FAQ023",
       "question": "dog clothing",
-      "answer": "Wonderful! We have an amazing dog clothing collection! 👕🐕\\n\\n**Our clothing line includes:**\\n🧥 **Winter coats** - Waterproof and thermal\\n🧶 **Sweaters** - Wool and cotton, various colors\\n🦺 **Vests** - Reflective for nighttime walks\\n👗 **Costumes** - For special occasions\\n🏖️ **Summer wear** - Light t-shirts\\n\\n**Available sizes:** XS, S, M, L, XL\\n\\nWhat type of clothing are you looking for your dog? Need help with sizing?"
+      "answer": "Great! We have a beautiful collection of dog clothing! 👕🐕\n\n**Our clothing line includes:**\n🧥 **Winter coats** - Waterproof and thermal\n🧶 **Sweaters** - Wool and cotton, various colors\n🦺 **Vests** - Reflective for nighttime walks\n👗 **Costumes** - For special occasions\n🏖️ **Summer clothing** - Light t-shirts\n\n**Available sizes:** XS, S, M, L, XL\n\nWhat type of clothing are you looking for your dog? Do you need help with sizes?"
     },
     {
       "id": "FAQ024",
@@ -117,23 +92,18 @@
     },
     {
       "id": "FAQ025",
-      "question": "ropa para perros",
-      "answer": "¡Perfecto! La ropa para perros no solo es adorable, sino también funcional! 🐕👕\\n\\n**¿Por qué usar ropa para perros?**\\n• Protección contra el frío\\n• Mantiene el pelaje limpio\\n• Protección solar\\n• Comodidad en interiores\\n\\n**Tipos disponibles:**\\n🧥 Abrigos térmicos\\n🧶 Suéteres de lana\\n👕 Camisetas de algodón\\n🦺 Chalecos reflectantes\\n\\n¿Tu perro es de raza pequeña, mediana o grande? ¡Te ayudo a elegir la talla perfecta!"
+      "question": "dog clothing",
+      "answer": "Perfect! Dog clothing is not only adorable, but also functional! 🐕👕\n\n**Why use dog clothing?**\n• Protection against the cold\n• Keeps fur clean\n• Sun protection\n• Comfort indoors\n\n**Available types:**\n🧥 Thermal coats\n🧶 Wool sweaters\n👕 Cotton t-shirts\n🦺 Reflective vests\n\nIs your dog small, medium, or large breed? I'll help you choose the perfect size!"
     },
     {
-      "id": "FAQ026",
-      "question": "how to measure dog for clothes",
-      "answer": "Great question! Proper sizing ensures comfort! 📏🐕\\n\\n**How to measure your dog:**\\n\\n📐 **Neck circumference** - Around the base of the neck\\n📐 **Chest circumference** - Around the widest part of the chest\\n📐 **Back length** - From neck to base of tail\\n📐 **Belly circumference** - Around the belly (for full coverage)\\n\\n**Pro tips:**\\n• Measure when your dog is standing\\n• Add 1-2 inches for comfort\\n• Check our size chart for each item\\n\\nNeed help choosing the right size? Just tell me your dog's measurements!"
+      "id": "FAQ027",
+      "question": "frequent questions",
+      "answer": "Here are our most frequently asked questions! 🤔💡\n\n**🐕 Dog Products**\n• What sizes are available?\n• How to measure my dog?\n• Best materials for sensitive skin?\n\n**👕 Clothing & Accessories**\n• Do you have winter coats?\n• How to choose the right shoe size?\n• Waterproof options available?\n\n**🛒 Store Information**\n• Shipping and returns policy\n• Product care instructions\n• Size exchange options\n\nWhat specific question can I help you with?"
     },
     {
       "id": "FAQ027",
       "question": "frequent questions",
       "answer": "Here are our most frequently asked questions! 🤔💡\\n\\n**🐕 Dog Products**\\n• What sizes are available?\\n• How to measure my dog?\\n• Best materials for sensitive skin?\\n\\n**👕 Clothing & Accessories**\\n• Do you have winter coats?\\n• How to choose the right shoe size?\\n• Waterproof options available?\\n\\n**🛒 Store Information**\\n• Shipping and returns policy\\n• Product care instructions\\n• Size exchange options\\n\\nWhat specific question can I help you with?"
-    },
-    {
-      "id": "FAQ028",
-      "question": "preguntas frecuentes",
-      "answer": "¡Aquí tienes nuestras preguntas más frecuentes! 🤔💡\\n\\n**🐕 Productos para Perros**\\n• ¿Qué tallas están disponibles?\\n• ¿Cómo medir a mi perro?\\n• ¿Mejores materiales para piel sensible?\\n\\n**👕 Ropa y Accesorios**\\n• ¿Tienen abrigos de invierno?\\n• ¿Cómo elegir la talla de zapatos?\\n• ¿Opciones impermeables disponibles?\\n\\n**🛒 Información de la Tienda**\\n• Política de envíos y devoluciones\\n• Instrucciones de cuidado\\n• Opciones de cambio de talla\\n\\n¿Con qué pregunta específica puedo ayudarte?"
     },
     {
       "id": "FAQ029",

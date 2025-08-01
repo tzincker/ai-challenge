@@ -48,16 +48,44 @@ jobs:
       - name: Login to Azure Container Registry
         run: az acr login --name iapocchallenge
 
+      - name: Build and Push Ollama Docker image
+        run: |
+          docker build -t iapocchallenge.azurecr.io/ollama:latest ./ollama
+          docker push iapocchallenge.azurecr.io/ollama:latest
+
       - name: Push Docker image to ACR
         run: |
           docker push iapocchallenge.azurecr.io/myapp:${{ github.sha }}
 
+      - name: Create or update Ollama Container Instance
+        run: |
+          az container create \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --name ollama-service \
+            --image iapocchallenge.azurecr.io/ollama:latest \
+            --dns-name-label ollama-service-${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --ports 11434 \
+            --cpu 2 \
+            --memory 4
+
       - name: Configure Azure Web App to use Docker image and set environment variables
         run: |
+          # Get Ollama service FQDN
+          OLLAMA_HOST="http://$(az container show -g ${{ secrets.AZURE_RESOURCE_GROUP }} -n ollama-service --query ipAddress.fqdn -o tsv):11434"
+
           az webapp config container set \
             --name IACHALLENGE70 \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
             --container-image-name iapocchallenge.azurecr.io/myapp:${{ github.sha }}
+
+          # Configure environment variables
+          az webapp config appsettings set \
+            --name IACHALLENGE70 \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --settings \
+              OLLAMA_ENABLED=true \
+              OLLAMA_HOST=$OLLAMA_HOST \
+              OLLAMA_MODEL=mistral
 
           az webapp config appsettings set \
             --name IACHALLENGE70 \
