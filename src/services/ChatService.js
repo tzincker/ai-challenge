@@ -222,7 +222,7 @@ class ChatService {
         return answer;
       } catch (openAiError) {
         // eslint-disable-next-line no-console
-        console.log('❌ OpenAI failed:', openAiError.message);
+        console.error('Error calling OpenAI:', openAiError);
       }
 
       // Try with Ollama if enabled
@@ -256,7 +256,7 @@ class ChatService {
                 ],
                 stream: false,
               }),
-          });
+            });
 
             if (!response.ok) {
               throw new Error(`Ollama responded with status: ${response.status}`);
