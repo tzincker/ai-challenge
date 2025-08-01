@@ -220,7 +220,7 @@ class ChatService {
         return res.json({ answer: "Por favor, escribe una pregunta." });
       }
       // Search for exact match in the knowledge base
-      const match = knowledge.find(
+      const match = this.knowledge.find(
         (item) =>
           item.question.trim().toLowerCase() === question.trim().toLowerCase()
       );
