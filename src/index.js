@@ -6,12 +6,9 @@ const bodyParser = require('body-parser')
 const app = express();
 const port = process.env.PORT || 3000;
 
-// 📄 Configuración original con SQLite en memoria que funcionaba bien
-const sqlite = require("sqlite3");
-const db = new sqlite.Database(':memory:');
-
-const DatabaseService = require("./services/DatabaseService");
-const databaseService = new DatabaseService(db);
+// 📄 Configuración con SQLite persistente
+const SQLiteDatabaseService = require("./services/SQLiteDatabaseService");
+const databaseService = new SQLiteDatabaseService();
 const UserService = require("./services/UserService");
 const userService = new UserService(databaseService);
 const ChatService = require("./services/ChatService");
@@ -58,14 +55,13 @@ app.get("/register", (req, res) => {
 // Ruta de login
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
-  const { accessToken, refreshToken } = await userService.login(
-    username,
-    password
-  );
-  if (!accessToken) {
+  const result = await userService.login(username, password);
+  
+  if (!result || !result.accessToken) {
     return res.status(401).json({ message: "Invalid credentials" });
   }
-  res.json({ accessToken, refreshToken });
+  
+  res.json({ accessToken: result.accessToken, refreshToken: result.refreshToken });
 });
 // Ruta de register
 app.post("/register", async (req, res) => {
@@ -139,9 +135,22 @@ app.delete("/logout", async (req, res) => {
 // Ruta protegida de chat
 app.use("/chat", authenticateToken, chatService.getRouter());
 
-// 🚀 Iniciar servidor
-app.listen(port, () => {
-  console.log(`🚀 Server listening on port ${port}`);
-  console.log(`📱 Frontend: http://localhost:${port}`);
-  console.log(`📝 Register: http://localhost:${port}/register`);
-});
+// 🚀 Iniciar servidor con inicialización de base de datos
+async function startServer() {
+  try {
+    // Inicializar base de datos
+    await databaseService.connect();
+    await databaseService.initializeTables();
+    
+    app.listen(port, () => {
+      console.log(`🚀 Server listening on port ${port}`);
+      console.log(`📱 Frontend: http://localhost:${port}`);
+      console.log(`📝 Register: http://localhost:${port}/register`);
+    });
+  } catch (error) {
+    console.error('❌ Error starting server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();

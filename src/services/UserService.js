@@ -86,7 +86,7 @@ class UserService {
     try {
       const hashedPassword = await this._hashPassword(password);
 
-      const newUser = await this.databaseService.addUser(username, null, hashedPassword)
+      const newUser = await this.databaseService.addUser(username, null, hashedPassword);
       return { success: true, message: "Usuario registrado exitosamente", user: !!newUser };
     } catch (error) {
       console.error("Unable to register user: ", error);
