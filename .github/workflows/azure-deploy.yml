@@ -12,10 +12,10 @@ jobs:
     environment: prod
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: 'npm'
@@ -24,10 +24,18 @@ jobs:
         run: npm install
 
       - name: Lint code
-        run: npm run lint
+        id: lint
+        run: |
+          npm run lint
+          echo "eslint_status=$?" >> $GITHUB_OUTPUT
 
       - name: Run backend tests
-        run: npm test
+        id: tests
+        run: |
+          npm test
+          echo "tests_passed=$(jq '.numPassedTests' test-results.json)" >> $GITHUB_OUTPUT
+          echo "tests_failed=$(jq '.numFailedTests' test-results.json)" >> $GITHUB_OUTPUT
+          echo "tests_total=$(jq '.numTotalTests' test-results.json)" >> $GITHUB_OUTPUT
 
       - name: Upload coverage reports
         uses: actions/upload-artifact@v4
@@ -53,20 +61,31 @@ jobs:
           docker push iapocchallenge.azurecr.io/myapp:${{ github.sha }}
 
       - name: Configure Azure Web App to use Docker image and set environment variables
+        id: azure_config
         run: |
-          az webapp config container set \
+          # Configure container
+          echo "Configuring container settings..."
+          container_result=$(az webapp config container set \
             --name IACHALLENGE70 \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --container-image-name iapocchallenge.azurecr.io/myapp:${{ github.sha }}
+            --container-image-name iapocchallenge.azurecr.io/myapp:${{ github.sha }})
+          echo "container_config_status=${container_result}" >> $GITHUB_OUTPUT
 
-          az webapp config appsettings set \
+          # Configure environment variables
+          echo "Configuring environment variables..."
+          env_result=$(az webapp config appsettings set \
             --name IACHALLENGE70 \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
             --settings ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }} \
-                        REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }} \
-                        SALT_ROUNDS=${{ secrets.SALT_ROUNDS }}
-                        API_BASE_URL=${{ secrets.API_BASE_URL }}
-                        OPENAI_API_KEY=${{secrets.OPENAI_API_KEY}}
+                      REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }} \
+                      SALT_ROUNDS=${{ secrets.SALT_ROUNDS }} \
+                      API_BASE_URL=${{ secrets.API_BASE_URL }} \
+                      OPENAI_API_KEY=${{secrets.OPENAI_API_KEY}})
+          echo "env_config_status=${env_result}" >> $GITHUB_OUTPUT
 
       - name: Restart Azure Web App
-        run: az webapp restart --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name IACHALLENGE70
+        id: restart
+        run: |
+          echo "Restarting web app..."
+          restart_result=$(az webapp restart --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name IACHALLENGE70)
+          echo "restart_status=${restart_result}" >> $GITHUB_OUTPUT
