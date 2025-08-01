@@ -26,50 +26,52 @@ class DatabaseService {
     );
   }
 
+  async _getUserFromDb(db, username) {
+    return new Promise((resolve, reject) => {
+      db.get(
+        'SELECT * FROM users WHERE username = ?',
+        [username],
+        (err, row) => {
+          if (err) {
+            reject(err);
+          }
+          resolve(row);
+        }
+      );
+    });
+  }
+
   async getUser(username) {
     try {
-      async function getUser(db, username) {
-        return new Promise((resolve, reject) => {
-          db.get(
-            'SELECT * FROM users WHERE username = ?',
-            [username],
-            (err, row) => {
-              if (err) {
-                reject(err);
-              }
-              resolve(row);
-            }
-          );
-        });
-      }
-
-      const user = await getUser(this._db, username);
+      const user = await this._getUserFromDb(this._db, username);
       return user;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Unable to fetch user.');
     }
   }
 
+  async _findTokenFromDb(db, token) {
+    return new Promise((resolve, reject) => {
+      db.get(
+        'SELECT * FROM refresh_tokens WHERE token = ?',
+        [token],
+        (err, row) => {
+          if (err) {
+            reject(err);
+          }
+          resolve(row);
+        }
+      );
+    });
+  }
+
   async getToken(token) {
     try {
-      async function findToken(db, token) {
-        return new Promise((resolve, reject) => {
-          db.get(
-            'SELECT * FROM refresh_tokens WHERE token = ?',
-            [token],
-            (err, row) => {
-              if (err) {
-                reject(err);
-              }
-              resolve(row);
-            }
-          );
-        });
-      }
-
-      const refreshToken = await findToken(this._db, token);
-      return refreshToken;
+      const foundToken = await this._findTokenFromDb(this._db, token);
+      return foundToken;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Unable to fetch token.');
     }
   }
@@ -80,87 +82,96 @@ class DatabaseService {
       const tokenExists = !!refreshToken;
       return tokenExists;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Unable to check token existance.');
     }
   }
 
+  async _insertUserToDb(db, username, password) {
+    return new Promise((resolve, reject) => {
+      db.run(
+        'INSERT INTO users (username, password) VALUES (?, ?)',
+        [username, password],
+        (err) => {
+          if (err) {
+            // eslint-disable-next-line no-console
+            console.error(err.message);
+            reject(err);
+          }
+          // In SQLite3, lastID is a property of the statement object
+          const lastID = db.run.lastID;
+          resolve({ id: lastID, username, password });
+        }
+      );
+    });
+  }
+
+  async _deleteTokenFromDb(db, token) {
+    return new Promise((resolve, reject) => {
+      db.run(
+        'DELETE FROM refresh_tokens WHERE token = ?',
+        [token],
+        (err) => {
+          if (err) {
+            // eslint-disable-next-line no-console
+            console.error(err.message);
+            reject(err);
+          }
+          // In SQLite3, changes is a property of the statement object
+          const rowsAffected = db.run.changes;
+          // eslint-disable-next-line no-console
+          console.log(`Removed ${rowsAffected} refresh token(s)`);
+          resolve();
+        }
+      );
+    });
+  }
+
   async addRefreshToken(token) {
     try {
-      async function insertToken(db, token) {
-        db.run(
-          'INSERT INTO refresh_tokens (token) VALUES (?)',
-          [token],
-          err => {
-            if (err) {
-              return console.error(err.message);
-            }
-          }
-        );
-      }
       const foundToken = await this.getToken(token);
       if (foundToken) {
+        // eslint-disable-next-line no-console
         console.error('Refresh token already exits.');
         throw new Error('Refresh token already exits.');
       }
 
-      await insertToken(this._db, token);
+      await this._insertTokenToDb(this._db, token);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Unable to add refresh token: ', error);
     }
   }
 
   async addUser(username, password) {
     try {
-      async function insertUser(db, username, password) {
-        return new Promise((resolve, reject) => {
-          db.run(
-            'INSERT INTO users (username, password) VALUES (?, ?)',
-            [username, password],
-            function (err) {
-              if (err) {
-                console.error(err.message);
-                reject(err);
-              }
-              resolve({ id: this.lastID, username, password });
-            }
-          );
-        });
-      }
       const foundUser = await this.getUser(username);
       if (foundUser) {
+        // eslint-disable-next-line no-console
         console.error('User already exits.');
         throw new Error('User already exits.');
       }
 
-      const newUser = await insertUser(this._db, username, password);
+      const newUser = await this._insertUserToDb(this._db, username, password);
       return newUser;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Unable to add new user: ', error);
     }
   }
 
   async removeToken(token) {
     try {
-      async function deleteToken(db, token) {
-        db.run(
-          'DELETE FROM refresh_tokens WHERE token = ?',
-          [token],
-          function (err) {
-            if (err) {
-              return console.error(err.message);
-            }
-            console.log(`Removed refresh_token id : ${this.lastID}.`);
-          }
-        );
-      }
       const foundToken = await this.getToken(token);
       if (!foundToken) {
+        // eslint-disable-next-line no-console
         console.warn('Token no longer exists, aborting.');
         return;
       }
 
-      await deleteToken(this._db, token);
+      await this._deleteTokenFromDb(this._db, token);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Unable to delete refresh token: ', error);
     }
   }

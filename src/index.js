@@ -29,12 +29,14 @@ function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   if (!token) {
+    // eslint-disable-next-line no-console
     console.error('No token provided!');
     return res.status(401).json({ error: 'Token requerido' });
   }
 
   const result = userService.verify(token);
   if (!result) {
+    // eslint-disable-next-line no-console
     console.error('Invalid or expired token!');
     return res.status(403).json({ error: 'Token inválido o expirado' });
   }
@@ -150,11 +152,15 @@ async function startServer() {
     await createTestUsers();
 
     app.listen(port, () => {
+      // eslint-disable-next-line no-console
       console.log(`🚀 Server listening on port ${port}`);
+      // eslint-disable-next-line no-console
       console.log(`📱 Frontend: http://localhost:${port}`);
+      // eslint-disable-next-line no-console
       console.log(`📝 Register: http://localhost:${port}/register`);
     });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('❌ Error starting server:', error);
     process.exit(1);
   }
@@ -176,9 +182,11 @@ async function createTestUsers() {
       if (!existingUser) {
         const hashedPassword = await bcrypt.hash(user.password, 10);
         await databaseService.addUser(user.username, null, hashedPassword);
+        // eslint-disable-next-line no-console
         console.log(`✅ Usuario de prueba creado: ${user.username}`);
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.log(
         `ℹ️ Usuario ${user.username} ya existe o error: ${error.message}`
       );

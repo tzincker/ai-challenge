@@ -101,7 +101,7 @@ describe('UserService', () => {
       spy.mockRestore();
     });
 
-    it('should return tokens if login is successful', async () => {
+    it('should return tokens if login is successful with default setup', async () => {
       const spy = jest
         .spyOn(userService, '_comparePassword')
         .mockReturnValue(true);
@@ -114,9 +114,10 @@ describe('UserService', () => {
         refreshToken: 'refreshToken',
       });
       expect(spy).toHaveBeenCalled();
+      spy.mockRestore();
     });
 
-    it('should return tokens if login is successful', async () => {
+    it('should return tokens if login is successful with new service instance', async () => {
       userService = new UserService(mockDatabaseService);
       const spy = jest
         .spyOn(userService, '_comparePassword')
@@ -130,24 +131,25 @@ describe('UserService', () => {
         refreshToken: 'refreshToken',
       });
       expect(spy).toHaveBeenCalled();
+      spy.mockRestore();
     });
 
     it('should return undefined if login fails', async () => {
-      consoleErrorSpy = jest
+      const consoleErrorSpy = jest
         .spyOn(console, 'error')
         .mockImplementation(() => {});
       userService = new UserService(mockDatabaseService);
       const spy = jest
         .spyOn(userService, '_comparePassword')
-        .mockImplementation((plainPassword, hashedPassword, cb) =>
-          cb(new Error('fail'))
-        );
+        .mockRejectedValue(new Error('fail'));
       jwt.sign
         .mockReturnValueOnce('accessToken')
         .mockReturnValueOnce('refreshToken');
       const result = await userService.login('user1', 'plain');
       expect(result).toBeUndefined();
       expect(spy).toHaveBeenCalled();
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Unable to login user: ', expect.any(Error));
+      consoleErrorSpy.mockRestore();
     });
   });
 
@@ -240,7 +242,7 @@ describe('UserService', () => {
     });
 
     it('should return false if addUser fails', async () => {
-      consoleErrorSpy = jest
+      const consoleErrorSpy = jest
         .spyOn(console, 'error')
         .mockImplementation(() => {});
       mockDatabaseService = new MockDatabseService();
@@ -260,6 +262,8 @@ describe('UserService', () => {
         message: 'Error interno del servidor',
       });
       expect(spy).toHaveBeenCalled();
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Unable to register user: ', expect.any(Error));
+      consoleErrorSpy.mockRestore();
       await expect(mockDatabaseService.addUser()).rejects.toThrow('fail');
     });
 
@@ -306,31 +310,25 @@ describe('UserService', () => {
 
   describe('_comparePassword', () => {
     it('should return true for matching passwords', async () => {
-      const spy = jest
-        .spyOn(userService, '_comparePassword')
-        .mockResolvedValue(true);
+      bcrypt.compare.mockResolvedValue(true);
 
       const result = await userService._comparePassword(
         'password',
         'hashedpassword'
       );
       expect(result).toBe(true);
-
-      spy.mockRestore();
+      expect(bcrypt.compare).toHaveBeenCalledWith('password', 'hashedpassword');
     });
 
     it('should return false for non-matching passwords', async () => {
-      const spy = jest
-        .spyOn(userService, '_comparePassword')
-        .mockResolvedValue(false);
+      bcrypt.compare.mockResolvedValue(false);
 
       const result = await userService._comparePassword(
         'password',
         'hashedpassword'
       );
       expect(result).toBe(false);
-
-      spy.mockRestore();
+      expect(bcrypt.compare).toHaveBeenCalledWith('password', 'hashedpassword');
     });
   });
 

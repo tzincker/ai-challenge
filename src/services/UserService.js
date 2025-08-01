@@ -20,6 +20,7 @@ class UserService {
       const hashedPassword = await bcrypt.hash(plainPassword, this.saltRounds);
       return hashedPassword;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('There was an error hashing the password.');
     }
   }
@@ -32,6 +33,7 @@ class UserService {
       );
       return comparedPassword;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error(
         'There was an error trying to compare the password: ',
         error
@@ -44,6 +46,7 @@ class UserService {
     try {
       return jwt.verify(token, accessTokenSecret);
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Unable to verify token: ', err.message);
       return null;
     }
@@ -71,6 +74,7 @@ class UserService {
       await this.databaseService.addRefreshToken(refreshToken, user.id);
       return { accessToken, refreshToken };
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Unable to login user: ', error);
       return undefined;
     }
@@ -107,6 +111,7 @@ class UserService {
         user: !!newUser,
       };
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Unable to register user: ', error);
       return { success: false, message: 'Error interno del servidor' };
     }
@@ -124,12 +129,14 @@ class UserService {
 
       return { accessToken };
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Unable to refresh token: ', err.message);
 
       // If token is invalid, remove it from database
       try {
         await this.databaseService.removeRefreshToken(refreshToken);
       } catch (removeError) {
+        // eslint-disable-next-line no-console
         console.error('Error removing invalid token:', removeError);
       }
 
@@ -240,6 +247,7 @@ class UserService {
       );
 
       // En un proyecto real, aquí enviarías el código por email/SMS
+      // eslint-disable-next-line no-console
       console.log(
         `🔑 Código de recuperación generado para ${username} (válido por 15 minutos)`
       );
@@ -250,6 +258,7 @@ class UserService {
         // 🔐 MEJORA DE SEGURIDAD: Removido resetCode de la respuesta
       };
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error storing password reset code:', error);
       return { success: false, message: 'Error interno del servidor' };
     }
@@ -292,12 +301,11 @@ class UserService {
           'Password successfully updated. All sessions have been closed for security.',
       };
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error resetting password:', error);
       return { success: false, message: 'Error interno del servidor' };
     }
   }
 }
-
-module.exports = UserService;
 
 module.exports = UserService;

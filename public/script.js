@@ -1,3 +1,5 @@
+/* global CONFIG */
+
 let accessToken = null;
 let refreshToken = null;
 const API_BASE_URL = CONFIG.API_BASE_URL;
@@ -83,7 +85,7 @@ document.getElementById('login-btn').addEventListener('click', async () => {
     // Mensaje de bienvenida automático en inglés
     setTimeout(() => {
       addMessage(
-        "Hello! Welcome to our Pet Accessories Store! 🐾 I'm here to help you find the perfect products for your furry friend. How can I assist you today?",
+        'Hello! Welcome to our Pet Accessories Store! 🐾 I\'m here to help you find the perfect products for your furry friend. How can I assist you today?',
         'bot-message'
       );
     }, 500);
@@ -172,6 +174,7 @@ async function logout() {
       body: JSON.stringify({ token: refreshToken }),
     });
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.error('Error during logout', err);
   }
 
@@ -317,7 +320,9 @@ document
     resetBtn.textContent = 'Changing...';
 
     try {
+      // eslint-disable-next-line no-console
       console.log('Enviando request a:', `${API_BASE_URL}/reset-password`);
+      // eslint-disable-next-line no-console
       console.log('Con datos:', { username, newPassword: '***' });
 
       const response = await fetch(`${API_BASE_URL}/reset-password`, {
@@ -328,8 +333,10 @@ document
         body: JSON.stringify({ username, newPassword }),
       });
 
+      // eslint-disable-next-line no-console
       console.log('Response status:', response.status);
       const data = await response.json();
+      // eslint-disable-next-line no-console
       console.log('Response data:', data);
 
       if (data.success) {
@@ -344,6 +351,7 @@ document
         resetMessage.className = 'error';
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error in reset password:', error);
       resetMessage.textContent = 'Connection error. Please try again.';
       resetMessage.className = 'error';

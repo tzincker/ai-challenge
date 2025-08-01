@@ -1,3 +1,5 @@
+/* global CONFIG */
+
 // Validaciones en tiempo real
 const usernameInput = document.getElementById('username');
 const passwordInput = document.getElementById('password');

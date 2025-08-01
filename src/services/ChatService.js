@@ -39,6 +39,7 @@ class ChatService {
       knowledge = Array.isArray(raw.faqs) ? raw.faqs : [];
       return knowledge;
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('No se pudo cargar knowledge.json:', err);
     }
   }
@@ -47,6 +48,7 @@ class ChatService {
   reloadKnowledge() {
     this.knowledge = this._loadKnowledgeData();
     this.fuse.setCollection(this.knowledge);
+    // eslint-disable-next-line no-console
     console.log(
       '📚 Knowledge base reloaded:',
       this.knowledge.length,
@@ -72,6 +74,7 @@ class ChatService {
       result.found = true;
       result.answer = exactMatch.answer;
       result.prompt = `Context: ${exactMatch.answer}\n\nAnswer the customer's question about: "${userQuestion}"`;
+      // eslint-disable-next-line no-console
       console.log('✓ Exact match found:', userQuestion);
       return result;
     }
@@ -128,13 +131,14 @@ class ChatService {
       });
 
       if (!completion?.choices?.[0]?.message?.content) {
-        return "I'm sorry, I'm having trouble processing your request right now. Please try again.";
+        return 'I\'m sorry, I\'m having trouble processing your request right now. Please try again.';
       }
 
       return completion.choices[0].message.content;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error calling OpenAI:', error);
-      return "I'm sorry, I'm having trouble processing your request right now. Please try asking about our pet products again!";
+      return 'I\'m sorry, I\'m having trouble processing your request right now. Please try asking about our pet products again!';
     }
   }
 
@@ -176,6 +180,7 @@ class ChatService {
   async addToKnowledge(question, answer) {
     try {
       if (!this.isRelevantQuestion(question)) {
+        // eslint-disable-next-line no-console
         console.log('Question is not relevant:', question);
         return false;
       }
@@ -214,9 +219,11 @@ class ChatService {
       // Update Fuse with the new question
       this.fuse.setCollection(knowledgeData.faqs);
 
+      // eslint-disable-next-line no-console
       console.log('✅ New FAQ added to knowledge base:', question);
       return true;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error adding to knowledge.json:', error);
       return false;
     }
@@ -236,6 +243,7 @@ class ChatService {
         return res.json({ answer: 'Por favor, escribe una pregunta.' });
       }
 
+      // eslint-disable-next-line no-console
       console.log(`💬 Pregunta recibida: "${question}"`);
 
       // Usar la nueva lógica de búsqueda mejorada
@@ -244,6 +252,7 @@ class ChatService {
 
       if (found) {
         // Si encontró coincidencia en knowledge base, responder directamente
+        // eslint-disable-next-line no-console
         console.log(
           `✅ Respondiendo desde knowledge base (${type}): ${matchedQuestion}`
         );
@@ -257,16 +266,18 @@ class ChatService {
 
       // Si no encontró nada, usar LLM solo si es relevante
       if (!this.isRelevantQuestion(question)) {
+        // eslint-disable-next-line no-console
         console.log(
           `❌ Pregunta no relevante para tienda de mascotas: ${question}`
         );
         return res.json({
           answer:
-            "Hello! I'm a specialized assistant for pet accessories and products. I'd love to help you find something amazing for your furry friend! 🐾 Are you looking for collars, toys, beds, food bowls, or something else for your pet?",
+            'Hello! I\'m a specialized assistant for pet accessories and products. I\'d love to help you find something amazing for your furry friend! 🐾 Are you looking for collars, toys, beds, food bowls, or something else for your pet?',
         });
       }
 
       // Usar LLM para pregunta relevante
+      // eslint-disable-next-line no-console
       console.log(`🤖 Consultando LLM para pregunta relevante: ${question}`);
       const aiAnswer = await this.callLLM(prompt);
 
