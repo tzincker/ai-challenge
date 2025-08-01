@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("chat-section").classList.remove("hidden");
       
       // Mensaje de bienvenida en el chat
-      addMessage(`¡Hola ${autoLoginUsername}! Tu cuenta ha sido creada exitosamente. ¡Bienvenido al chatbot de accesorios para mascotas! 🐾`, "bot-message");
+      addMessage(`Hello ${autoLoginUsername}! Your account has been created successfully. Welcome to our Pet Accessories Store! 🐾 I'm excited to help you find amazing products for your pet. What can I help you with today?`, "bot-message");
     }, 2000);
   }
 });
@@ -62,6 +62,11 @@ document.getElementById("login-btn").addEventListener("click", async () => {
 
     document.getElementById("login-section").classList.add("hidden");
     document.getElementById("chat-section").classList.remove("hidden");
+    
+    // Mensaje de bienvenida automático en inglés
+    setTimeout(() => {
+      addMessage("Hello! Welcome to our Pet Accessories Store! 🐾 I'm here to help you find the perfect products for your furry friend. How can I assist you today?", "bot-message");
+    }, 500);
   } catch (err) {
     loginMessage.textContent = "Error connecting to server";
   }

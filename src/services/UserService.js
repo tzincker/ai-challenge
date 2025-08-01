@@ -12,7 +12,7 @@ class UserService {
 
   /* v8 ignore start */
   _generateAccessToken = (user) => {
-    const accessToken = jwt.sign(user, accessTokenSecret, { expiresIn: "15s" });
+    const accessToken = jwt.sign(user, accessTokenSecret, { expiresIn: "2h" });
     return accessToken;
   };
 
@@ -57,7 +57,7 @@ class UserService {
         return null;
       }
       const accessToken = this._generateAccessToken(user);
-      const refreshToken = jwt.sign(user, refreshTokenSecret);
+      const refreshToken = jwt.sign(user, refreshTokenSecret, { expiresIn: "7d" }); // 7 días para refresh token
       await this.databaseService.addRefreshToken(refreshToken, user.id);
       return { accessToken, refreshToken };
     } catch (error) {

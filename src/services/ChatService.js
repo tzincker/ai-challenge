@@ -44,6 +44,13 @@ class ChatService {
       console.error("No se pudo cargar knowledge.json:", err);
     }
   }
+
+  // Recargar knowledge base y actualizar Fuse
+  reloadKnowledge() {
+    this.knowledge = this._loadKnowledgeData();
+    this.fuse.setCollection(this.knowledge);
+    console.log(`📚 Knowledge base recargado: ${this.knowledge.length} entradas`);
+  }
   /* v8 ignore stop */
 
   //Retrieve relevant context and build prompts for LLM
@@ -89,7 +96,7 @@ class ChatService {
     }
 
     // 4. Si no encuentra nada, construir prompt para LLM
-    const prompt = `Context: Eres un asistente de una tienda de accesorios para mascotas. Responde de manera útil y amigable.\nUser: ${userQuestion}\nAI:`;
+    const prompt = `You are a friendly assistant at a Pet Accessories Store. The customer asked: "${userQuestion}". Please provide a helpful response about pet products, accessories, or store services. Be enthusiastic and suggest relevant products when appropriate.`;
     console.log(`❓ No se encontró coincidencia, usando LLM para: ${userQuestion}`);
     return { prompt, answer: "", found: false, matchedQuestion: "", type: "llm" };
   }
@@ -130,7 +137,7 @@ class ChatService {
         messages: [
           {
             role: "system",
-            content: "You are a helpful assistant for a pet accessories store.",
+            content: "You are a helpful and friendly assistant for a Pet Accessories Store. Always respond in English. Be enthusiastic about pets and helpful in finding the right products. Use emojis occasionally to make responses more engaging. Keep responses concise but informative."
           },
           { role: "user", content: prompt },
         ],
@@ -138,108 +145,49 @@ class ChatService {
       return completion.choices[0].message.content.trim();
     } catch (err) {
       console.error("Error calling OpenAI:", err);
-      return "Lo siento, no tengo una respuesta para esa pregunta."; /////////////////////////////
+      return "I'm sorry, I'm having trouble processing your request right now. Please try asking about our pet products again, or feel free to browse our selection of collars, toys, and accessories! 🐾";
     }
   }
 
   // Determine if the question is relevant to the pet store
   isRelevantQuestion(question) {
     const q = question.toLowerCase();
+    
+    // Greeting words - these are always relevant and handled by knowledge base
+    const greetings = [
+      "hello", "hi", "hey", "good morning", "good afternoon", "good evening",
+      "hola", "buenos días", "buenas tardes", "buenas noches", "saludos"
+    ];
+    
+    // Courtesy words - these are always relevant
+    const courtesy = [
+      "help", "thank you", "thanks", "goodbye", "bye", "what can you help",
+      "about your store", "contact", "ayuda", "gracias", "adiós", "tienda"
+    ];
+    
     // Keywords for products, pets, shopping, shipping, etc.
     const keywords = [
-      "mascota",
-      "perro",
-      "gato",
-      "collar",
-      "juguete",
-      "accesorio",
-      "envío",
-      "producto",
-      "tienda",
-      "comprar",
-      "venta",
-      "alimento",
-      "comida",
-      "cama",
-      "transportadora",
-      "arnés",
-      "correa",
-      "pelota",
-      "rascador",
-      "plato",
-      "bebedero",
-      "ropa",
-      "hueso",
-      "premio",
-      "snack",
-      "limpieza",
-      "baño",
-      "cepillo",
-      "antipulgas",
-      "veterinario",
-      "seguridad",
-      "entrega",
-      "pedido",
-      "stock",
-      "oferta",
-      "descuento",
-      "marca",
-      "tamaño",
-      "material",
-      "animal",
-      "pet",
-      "dog",
-      "cat",
-      "order",
-      "shipping",
-      "delivery",
-      "store",
-      "accessory",
-      "toy",
-      "food",
-      "bed",
-      "leash",
-      "harness",
-      "bowl",
-      "treat",
-      "vet",
-      "brand",
-      "size",
-      "material",
-      "safe",
-      "wash",
-      "clean",
-      "machine washable",
-      "durable",
-      "reflective",
-      "nylon",
-      "cuero",
-      "personalizado",
-      "personalizada",
+      "mascota", "perro", "gato", "collar", "juguete", "accesorio", "envío",
+      "producto", "tienda", "comprar", "venta", "alimento", "comida", "cama",
+      "transportadora", "arnés", "correa", "pelota", "rascador", "plato",
+      "bebedero", "ropa", "hueso", "premio", "snack", "limpieza", "baño",
+      "cepillo", "antipulgas", "veterinario", "seguridad", "entrega", "pedido",
+      "stock", "oferta", "descuento", "marca", "tamaño", "material", "animal",
+      "pet", "dog", "cat", "order", "shipping", "delivery", "store",
+      "accessory", "toy", "food", "bed", "leash", "harness", "bowl", "treat",
+      "vet", "brand", "size", "material", "safe", "wash", "clean",
+      "machine washable", "durable", "reflective", "nylon", "cuero",
+      "personalizado", "personalizada"
     ];
-    // Words of courtesy or greetings
-    const greetings = [
-      "hola",
-      "buenos días",
-      "buenas tardes",
-      "buenas noches",
-      "saludos",
-      "hello",
-      "hi",
-      "hey",
-      "buenas",
-      "gracias",
-      "thank you",
-      "thanks",
-      "adiós",
-      "bye",
-    ];
-    // If it contains any product/pet keywords, it is relevant
+    
+    // Check if it contains greetings, courtesy, or product keywords
+    if (greetings.some((g) => q.includes(g))) return true;
+    if (courtesy.some((c) => q.includes(c))) return true;
     if (keywords.some((k) => q.includes(k))) return true;
-    // If it's just a greeting/courtesy, it's not relevant.
-    if (greetings.some((g) => q.includes(g))) return false;
-    // If it is too short or generic, neither
-    if (q.length < 10) return false;
+    
+    // If it is too short or generic, not relevant
+    if (q.length < 3) return false;
+    
     // By default, not relevant
     return false;
   }
@@ -277,6 +225,10 @@ class ChatService {
   /* v8 ignore start */
   getRouter() {
     const router = express.Router();
+    
+    // Recargar knowledge base al iniciar
+    this.reloadKnowledge();
+    
     router.post("/", async (req, res) => {
       const { question } = req.body;
       if (!question) {
@@ -303,7 +255,7 @@ class ChatService {
       if (!this.isRelevantQuestion(question)) {
         console.log(`❌ Pregunta no relevante para tienda de mascotas: ${question}`);
         return res.json({ 
-          answer: "Lo siento, soy un asistente especializado en accesorios para mascotas. ¿Puedo ayudarte con alguna pregunta sobre productos para tu mascota?" 
+          answer: "Hello! I'm a specialized assistant for pet accessories and products. I'd love to help you find something amazing for your furry friend! 🐾 Are you looking for collars, toys, beds, food bowls, or something else for your pet?" 
         });
       }
 
