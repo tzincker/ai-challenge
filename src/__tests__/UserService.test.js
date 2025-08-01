@@ -156,19 +156,19 @@ describe('UserService', () => {
 
   describe('register', () => {
 
-    it('should return 303 if user already exists', async () => {
+    it('should return error if user already exists', async () => {
       userService = new UserService(mockDatabaseService);
-      mockDatabaseService.addUser('existing', 'password');
-      const result = await userService.register('existing', 'password');
-      expect(result).toBe(303);
+      mockDatabaseService.addUser('existing', 'Password123');
+      const result = await userService.register('existing', 'Password123');
+      expect(result).toEqual({ success: false, message: 'El nombre de usuario ya está en uso' });
     });
 
     it('should hash password and add user if user does not exist', async () => {
       userService = new UserService(mockDatabaseService);
       bcrypt.hash.mockResolvedValue('hashedPassword');
-      const result = await userService.register('newuser', 'password');
-      expect(bcrypt.hash).toHaveBeenCalledWith('password', 10);
-      expect(result).toBe(true);
+      const result = await userService.register('newuser', 'Password123');
+      expect(bcrypt.hash).toHaveBeenCalledWith('Password123', 10);
+      expect(result).toEqual({ success: true, message: 'Usuario registrado exitosamente', user: true });
     });
 
     it('should return false if addUser fails', async () => {
@@ -179,9 +179,9 @@ describe('UserService', () => {
       userService = new UserService(mockDatabaseService);
 
       const spy = jest.spyOn(userService, '_hashPassword').mockReturnValue('hashed_password');
-      const result = await userService.register('failuser', 'password');
+      const result = await userService.register('failuser', 'Password123');
       
-      expect(result).toBe(false);
+      expect(result).toEqual({ success: false, message: 'Error interno del servidor' });
       expect(spy).toHaveBeenCalled();
       await expect(mockDatabaseService.addUser()).rejects.toThrow('fail');
     });
@@ -192,8 +192,8 @@ describe('UserService', () => {
       mockDatabaseService.getUser.mockResolvedValue(null);
       userService = new UserService(mockDatabaseService);
       const spy = jest.spyOn(userService, '_hashPassword').mockRejectedValue(new Error('fail'));
-      const result = await userService.register('erroruser', 'password');
-      expect(result).toBe(false);
+      const result = await userService.register('erroruser', 'Password123');
+      expect(result).toEqual({ success: false, message: 'Error interno del servidor' });
       expect(spy).toHaveBeenCalled();
     });
 

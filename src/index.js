@@ -65,19 +65,44 @@ app.post("/login", async (req, res) => {
 // Ruta de register
 app.post("/register", async (req, res) => {
   const { username, password } = req.body;
-  const success = await userService.register(
-    username,
-    password
-  );
+  const result = await userService.register(username, password);
 
-  if (success === 303) {
-    return res.sendStatus(303);
+  if (!result.success) {
+    return res.status(400).json({ message: result.message });
   }
 
-  if (!success) {
-    return res.status(400).json({ message: "Failed at registering user." });
+  res.json({ success: true, message: result.message });
+});
+
+// Ruta para solicitar reset de password
+app.post("/request-password-reset", async (req, res) => {
+  const { username } = req.body;
+  
+  if (!username) {
+    return res.status(400).json({ message: "El nombre de usuario es requerido" });
   }
-  res.redirect("/");
+
+  const result = await userService.requestPasswordReset(username);
+  res.json(result);
+});
+
+// Ruta para resetear password
+app.post("/reset-password", async (req, res) => {
+  const { username, resetCode, newPassword } = req.body;
+  
+  if (!username || !resetCode || !newPassword) {
+    return res.status(400).json({ 
+      message: "Se requieren nombre de usuario, código de reset y nueva contraseña" 
+    });
+  }
+
+  const result = await userService.resetPassword(username, resetCode, newPassword);
+  
+  if (!result.success) {
+    return res.status(400).json({ message: result.message });
+  }
+
+  res.json(result);
 });
 
 // Ruta para refrescar token

@@ -14,7 +14,10 @@ html(lang="en")
         input(type="password", id="password", placeholder="Password")
         button(type="button", id="login-btn")="Login"
         p(id="login-message")
-        a(href="/register")="Not a member, register now!"
+        div(class="auth-links")
+          a(href="/register")="Not a member, register now!"
+          br
+          a(href="#", id="forgot-password-link")="¿Olvidaste tu contraseña?"
 
       div(id="chat-section" class="hidden")
         h2="Chat"
@@ -23,6 +26,21 @@ html(lang="en")
           input(type="text", id="chat-message", placeholder="Type your message...")
           button(id="send-btn")="Send"
         button(id="logout-btn", class="logout-btn")="Logout"
+
+      div(id="reset-password-section" class="hidden")
+        h2="Recuperar Contraseña"
+        div(id="reset-step-1")
+          p="Ingresa tu nombre de usuario para recibir un código de recuperación:"
+          input(type="text", id="reset-username", placeholder="Nombre de usuario")
+          button(type="button", id="request-reset-btn")="Solicitar Código"
+        div(id="reset-step-2" class="hidden")
+          p="Ingresa el código de recuperación y tu nueva contraseña:"
+          input(type="text", id="reset-code", placeholder="Código de recuperación")
+          input(type="password", id="new-password", placeholder="Nueva contraseña")
+          input(type="password", id="confirm-password", placeholder="Confirmar contraseña")
+          button(type="button", id="reset-password-btn")="Cambiar Contraseña"
+        p(id="reset-message")
+        a(href="#", id="back-to-login-link")="Volver al login"
     script.
       const CONFIG = { API_BASE_URL: "!{apiBaseUrl}", };
     script(src='/script.js')
