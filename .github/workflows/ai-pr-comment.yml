@@ -440,14 +440,53 @@ jobs:
           PR_TITLE="${{ github.event.pull_request.title }}"
           FILES_CHANGED="${{ steps.diff.outputs.files_changed }}"
 
-          # Determinar el tipo de PR basado en archivos modificados
+          # Determinar el tipo de PR basado en archivos modificados y contenido
           MODIFIED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+          
+          # Analizar el contenido de los cambios para una mejor clasificación
+          DIFF_CONTENT=$(git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+          
+          # Determinar el propósito principal del PR
+          if echo "$PR_TITLE" | grep -iE "fix|bug|issue|error|crash|problem|resolve" > /dev/null; then
+            PR_TYPE="🐛 Bug Fix"
+            PR_DESCRIPTION="This PR addresses and resolves issues in the codebase."
+          elif echo "$PR_TITLE" | grep -iE "feat|feature|add|new|implement" > /dev/null; then
+            PR_TYPE="✨ New Feature"
+            PR_DESCRIPTION="This PR introduces new functionality to the application."
+          elif echo "$PR_TITLE" | grep -iE "doc|docs|document|readme" > /dev/null; then
+            PR_TYPE="📚 Documentation"
+            PR_DESCRIPTION="This PR improves project documentation and guides."
+          elif echo "$PR_TITLE" | grep -iE "test|spec|coverage" > /dev/null; then
+            PR_TYPE="🧪 Testing"
+            PR_DESCRIPTION="This PR enhances test coverage and quality assurance."
+          elif echo "$PR_TITLE" | grep -iE "refactor|clean|improve|enhance" > /dev/null; then
+            PR_TYPE="♻️ Refactoring"
+            PR_DESCRIPTION="This PR improves code quality through refactoring."
+          elif echo "$PR_TITLE" | grep -iE "ci|cd|pipeline|workflow|deploy" > /dev/null; then
+            PR_TYPE="🔄 CI/CD"
+            PR_DESCRIPTION="This PR updates deployment and automation processes."
+          else
+            PR_TYPE="🔧 General Update"
+            PR_DESCRIPTION="This PR contains various improvements and updates."
+          fi
 
-          # Generar review estilo GitHub Copilot
+          # Generar review estilo GitHub Copilot con análisis mejorado
           {
-            echo "## 🤖 GitHub Copilot Review"
+            echo "## 🚀 PR Changes Summary"
             echo ""
-            echo "### Pull Request Overview"
+            echo "### 📝 PR Summary"
+            echo ""
+            echo "**Purpose:** ${PR_TYPE}"
+            echo ""
+            echo "${PR_DESCRIPTION}"
+            echo ""
+            echo "### 🤖 AI Analysis"
+            echo ""
+            echo "**Purpose:** ${PR_TYPE}"
+            echo ""
+            echo "${PR_DESCRIPTION}"
+            echo ""
+            echo "### 📊 Detailed Analysis"
             echo ""
             
             # Analizar el tipo de PR
