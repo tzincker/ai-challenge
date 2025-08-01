@@ -74,8 +74,8 @@ jobs:
             npm test -- --coverage --json --outputFile=test-results.json || true
             TESTS_PASSED=$(jq '.numPassedTests // 0' test-results.json 2>/dev/null || echo "0")
             TESTS_FAILED=$(jq '.numFailedTests // 0' test-results.json 2>/dev/null || echo "0")
-            echo "::set-output name=tests_passed::$TESTS_PASSED"
-            echo "::set-output name=tests_failed::$TESTS_FAILED"
+            echo "tests_passed=$TESTS_PASSED" >> $GITHUB_OUTPUT
+            echo "tests_failed=$TESTS_FAILED" >> $GITHUB_OUTPUT
             echo "$TESTS_PASSED tests passed, $TESTS_FAILED tests failed"
           else
             echo "No test script found"
@@ -91,8 +91,8 @@ jobs:
           npm audit --json > audit-results.json || true
           AUDIT_HIGH=$(jq '.vulnerabilities | to_entries[] | select(.value.severity == "high") | .key' audit-results.json 2>/dev/null | wc -l || echo "0")
           AUDIT_MODERATE=$(jq '.vulnerabilities | to_entries[] | select(.value.severity == "moderate") | .key' audit-results.json 2>/dev/null | wc -l || echo "0")
-          echo "::set-output name=audit_high::$AUDIT_HIGH"
-          echo "::set-output name=audit_moderate::$AUDIT_MODERATE"
+          echo "audit_high=$AUDIT_HIGH" >> $GITHUB_OUTPUT
+          echo "audit_moderate=$AUDIT_MODERATE" >> $GITHUB_OUTPUT
           echo "Found $AUDIT_HIGH high and $AUDIT_MODERATE moderate vulnerabilities"
 
       - name: Check Code Formatting
@@ -107,7 +107,7 @@ jobs:
             else
               FORMATTING_ISSUES=0
             fi
-            echo "::set-output name=formatting_issues::$FORMATTING_ISSUES"
+            echo "formatting_issues=$FORMATTING_ISSUES" >> $GITHUB_OUTPUT
             echo "Found $FORMATTING_ISSUES formatting issues"
           else
             echo "No Prettier configuration found"
@@ -263,8 +263,78 @@ jobs:
             echo "- ... and $((FILES_CHANGED - 20)) more files" >> pr_changes_summary.txt
           fi
 
-          # Generar resumen inteligente del propósito del PR usando OpenAI
-          echo "" > pr_purpose_summary.txt
+          # Generar encabezado con métricas clave
+          {
+            echo "# 🚀 GitHub Copilot-Style AI Review Summary"
+            echo "## 📊 Code Quality Analysis"
+            echo "### 🔍 ESLint Analysis"
+            echo "Errors: ${{ steps.quality.outputs.eslint_errors }}"
+            echo "Warnings: ${{ steps.quality.outputs.eslint_warnings }}"
+            echo ""
+            echo "### 🧪 Test Results"
+            echo "Tests Passed: ${{ steps.quality.outputs.tests_passed }}"
+            echo "Tests Failed: ${{ steps.quality.outputs.tests_failed }}"
+            echo ""
+            echo "### 🔒 Security Audit"
+            echo "High Severity Issues: ${{ steps.quality.outputs.audit_high }}"
+            echo "Moderate Severity Issues: ${{ steps.quality.outputs.audit_moderate }}"
+            echo ""
+            echo "### 💅 Code Formatting"
+            echo "Formatting Issues: ${{ steps.quality.outputs.formatting_issues }}"
+            echo ""
+            echo "### 🎯 Quick Status"
+            echo "| Tool | Status | Results |"
+            echo "|------|--------|---------|"
+          } > pr_purpose_summary.txt
+          
+          {
+            # Status Table
+            if [ "${{ steps.quality.outputs.eslint_errors }}" = "0" ]; then
+              echo "| ESLint | ✅ Clean | ${{ steps.quality.outputs.eslint_errors }} errors, ${{ steps.quality.outputs.eslint_warnings }} warnings |" >> pr_purpose_summary.txt
+            else
+              echo "| ESLint | ❌ Issues | ${{ steps.quality.outputs.eslint_errors }} errors, ${{ steps.quality.outputs.eslint_warnings }} warnings |" >> pr_purpose_summary.txt
+            fi
+            
+            if [ "${{ steps.quality.outputs.tests_failed }}" = "0" ]; then
+              echo "| Tests | ✅ Passing | ${{ steps.quality.outputs.tests_passed }} passed, ${{ steps.quality.outputs.tests_failed }} failed |" >> pr_purpose_summary.txt
+            else
+              echo "| Tests | ❌ Failing | ${{ steps.quality.outputs.tests_passed }} passed, ${{ steps.quality.outputs.tests_failed }} failed |" >> pr_purpose_summary.txt
+            fi
+            
+            if [ "${{ steps.quality.outputs.audit_high }}" = "0" ]; then
+              echo "| Security | ✅ Secure | ${{ steps.quality.outputs.audit_high }} high, ${{ steps.quality.outputs.audit_moderate }} moderate vulnerabilities |" >> pr_purpose_summary.txt
+            else
+              echo "| Security | 🚨 Alert | ${{ steps.quality.outputs.audit_high }} high, ${{ steps.quality.outputs.audit_moderate }} moderate vulnerabilities |" >> pr_purpose_summary.txt
+            fi
+            
+            if [ "${{ steps.quality.outputs.formatting_issues }}" = "0" ]; then
+              echo "| Formatting | ✅ Clean | 0 issues |" >> pr_purpose_summary.txt
+            else
+              echo "| Formatting | ⚠️ Issues | ${{ steps.quality.outputs.formatting_issues }} issues |" >> pr_purpose_summary.txt
+            fi
+
+            # AI Review System Status
+            echo "" >> pr_purpose_summary.txt
+            echo "### 🤖 AI Review System Status" >> pr_purpose_summary.txt
+            if [ "${{ steps.openai.outputs.openai_failed }}" = "true" ]; then
+              echo "⚠️ OpenAI API: Failed (using enhanced fallback)" >> pr_purpose_summary.txt
+              echo "✅ GitHub Copilot Style Fallback: Active and comprehensive" >> pr_purpose_summary.txt
+            else
+              echo "✅ OpenAI API: Active and responding" >> pr_purpose_summary.txt
+            fi
+          }
+          
+          # PR Statistics
+          echo "" >> pr_purpose_summary.txt
+          echo "### 📈 PR Statistics" >> pr_purpose_summary.txt
+          echo "📁 Files changed: $FILES_CHANGED" >> pr_purpose_summary.txt
+          echo "➕ Lines added: $LINES_ADDED" >> pr_purpose_summary.txt
+          echo "➖ Lines deleted: $LINES_DELETED" >> pr_purpose_summary.txt
+          echo "💻 Code files: $JS_FILES" >> pr_purpose_summary.txt
+          echo "📚 Documentation: $MD_FILES" >> pr_purpose_summary.txt
+          echo "" >> pr_purpose_summary.txt
+          
+          # Original PR Summary
           echo "## 📝 PR Summary" >> pr_purpose_summary.txt
           echo "" >> pr_purpose_summary.txt
 
@@ -311,29 +381,53 @@ jobs:
           # Extraer PURPOSE y DETAILS del resultado de la IA
           PURPOSE=$(echo $OPENAI_RESPONSE | jq -r '.choices[0].message.content' | jq -r '.purpose')
           DETAILS=$(echo $OPENAI_RESPONSE | jq -r '.choices[0].message.content' | jq -r '.details')
-          # Si la llamada a la API falla, usar análisis de respaldo basado en patrones
+          # Si la llamada a la API falla, usar análisis avanzado basado en patrones (estilo Copilot)
           if [ -z "$PURPOSE" ] || [ -z "$DETAILS" ]; then
-            echo "AI analysis failed, using fallback pattern analysis..."
+            echo "OpenAI API analysis failed, using GitHub Copilot-style pattern analysis..."
 
-            # Solicitar otro análisis a la IA con un prompt más específico
-            OPENAI_RESPONSE=$(curl -s https://api.openai.com/v1/chat/completions \
-              -H "Content-Type: application/json" \
-              -H "Authorization: Bearer $OPENAI_API_KEY" \
-              -d "{
-                \"model\": \"gpt-3.5-turbo\",
-                \"messages\": [
-                  {
-                    \"role\": \"system\",
-                    \"content\": \"You are an expert code reviewer. Analyze the file changes and determine if this PR is primarily: 1) Documentation, 2) Testing, 3) Feature Development, 4) Bug Fix, 5) Configuration, or 6) Dependency Update. Return only a JSON with 'purpose' (category) and 'details' (one sentence description).\"
-                  },
-                  {
-                    \"role\": \"user\",
-                    \"content\": \"Files changed: $MODIFIED_FILES\"
-                  }
-                ],
-                \"temperature\": 0.2
-              }"
-            )
+            # Análisis avanzado basado en el contenido del PR
+            PR_CONTENT=$(git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+            
+            # Detectar patrones de cambio específicos
+            CONTAINS_TESTS=$(echo "$PR_CONTENT" | grep -iE 'test|spec|assert|describe|it\(' && echo "true" || echo "false")
+            CONTAINS_DOCS=$(echo "$PR_CONTENT" | grep -iE 'readme|documentation|docs|comment|/**' && echo "true" || echo "false")
+            CONTAINS_SECURITY=$(echo "$PR_CONTENT" | grep -iE 'security|auth|password|encrypt|token' && echo "true" || echo "false")
+            CONTAINS_PERF=$(echo "$PR_CONTENT" | grep -iE 'performance|optimize|cache|speed|timeout' && echo "true" || echo "false")
+            CONTAINS_API=$(echo "$PR_CONTENT" | grep -iE 'api|endpoint|route|controller|service' && echo "true" || echo "false")
+            CONTAINS_UI=$(echo "$PR_CONTENT" | grep -iE 'component|style|css|layout|template' && echo "true" || echo "false")
+            
+            # Análisis inteligente del propósito del PR
+            if [[ "$CONTAINS_TESTS" == "true" ]]; then
+              PURPOSE="Test Enhancement"
+              DETAILS="This PR improves test coverage and quality assurance measures."
+            elif [[ "$CONTAINS_SECURITY" == "true" ]]; then
+              PURPOSE="Security Improvement"
+              DETAILS="This PR enhances security measures and authentication processes."
+            elif [[ "$CONTAINS_DOCS" == "true" ]]; then
+              PURPOSE="Documentation Update"
+              DETAILS="This PR improves code documentation and project guides."
+            elif [[ "$CONTAINS_PERF" == "true" ]]; then
+              PURPOSE="Performance Optimization"
+              DETAILS="This PR includes performance improvements and optimizations."
+            elif [[ "$CONTAINS_API" == "true" ]]; then
+              PURPOSE="API Enhancement"
+              DETAILS="This PR modifies API functionality and endpoints."
+            elif [[ "$CONTAINS_UI" == "true" ]]; then
+              PURPOSE="UI/UX Update"
+              DETAILS="This PR includes user interface and experience improvements."
+            else
+              # Análisis basado en estadísticas de cambio
+              if [ $JS_FILES -gt 0 ]; then
+                PURPOSE="Code Enhancement"
+                DETAILS="This PR updates application logic and functionality."
+              elif [ $CONFIG_FILES -gt 0 ]; then
+                PURPOSE="Configuration Update"
+                DETAILS="This PR modifies project configuration and settings."
+              else
+                PURPOSE="General Update"
+                DETAILS="This PR includes various improvements across the project."
+              fi
+            fi
 
             # Intentar extraer PURPOSE y DETAILS del segundo intento
             FALLBACK_PURPOSE=$(echo $OPENAI_RESPONSE | jq -r '.choices[0].message.content' | jq -r '.purpose')
@@ -432,10 +526,40 @@ jobs:
 
           # Obtener archivos modificados con más detalle
           MODIFIED_FILES_DETAIL=$(git diff --name-status ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+          
+          # Leer el resumen del propósito generado anteriormente
+          if [ -f "pr_purpose_summary.txt" ]; then
+            PURPOSE_SUMMARY=$(cat pr_purpose_summary.txt)
+          else
+            PURPOSE_SUMMARY="Purpose analysis not available"
+          fi
+          
+          # Leer el resumen de cambios generado anteriormente
+          if [ -f "pr_changes_summary.txt" ]; then
+            CHANGES_SUMMARY=$(cat pr_changes_summary.txt)
+          else
+            CHANGES_SUMMARY="Changes summary not available"
+          fi
 
-          # Leer resúmenes
-          PURPOSE_SUMMARY=$(cat pr_purpose_summary.txt 2>/dev/null || echo "Unable to read purpose summary")
-          CHANGES_SUMMARY=$(cat pr_changes_summary.txt 2>/dev/null || echo "Unable to read changes summary")
+            RESPONSE=$(curl -s -X POST https://api.openai.com/v1/chat/completions \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $OPENAI_API_KEY" \
+            -d '{
+              "model": "gpt-4",
+              "messages": [
+                {
+                  "role": "system",
+                  "content": "You are GitHub Copilot, an AI assistant that provides comprehensive and insightful code reviews. Analyze the PR like GitHub Copilot would: focus on code quality, architecture, potential issues, best practices, and provide constructive feedback. Format your response in markdown with clear sections. Be thorough but concise. Include specific suggestions and highlight both positive aspects and areas for improvement."
+                },
+                {
+                  "role": "user",
+                  "content": "## Pull Request Review\n\n**Title:** '"$PR_TITLE"'\n\n**Description:** '"$PR_DESCRIPTION"'\n\n## Files Changed\n'"$MODIFIED_FILES_DETAIL"'\n\n## Purpose Analysis\n'"$PURPOSE_SUMMARY"'\n\n## Changes Overview\n'"$CHANGES_SUMMARY"'\n\n## Code Quality Metrics\n'"$QUALITY_ANALYSIS"'\n\n## Key Code Changes (Sample)\n```diff\n'"$IMPORTANT_DIFF"'\n```\n\nPlease provide a comprehensive GitHub Copilot-style review of this PR, including:\n1. **Overall Assessment** - High-level summary of the PR\n2. **Code Quality Review** - Analysis of the changes\n3. **Architecture & Design** - Comments on structure and patterns\n4. **Security & Best Practices** - Security considerations\n5. **Recommendations** - Specific actionable suggestions\n6. **Positive Highlights** - What'\''s done well\n\nFormat the response as a professional code review comment."
+                }
+              ],
+              "max_tokens": 1000,
+              "temperature": 0.2
+            }')
+
 
           # Crear análisis de calidad
           QUALITY_ANALYSIS="Code Quality Analysis:
@@ -450,24 +574,21 @@ jobs:
           RESPONSE=$(curl -s -X POST https://api.openai.com/v1/chat/completions \
           -H "Content-Type: application/json" \
           -H "Authorization: Bearer $OPENAI_API_KEY" \
-          -d @- <<EOF
-          {
-          "model": "gpt-4o-mini",
-          "messages": [
+          -d '{
+            "model": "gpt-4",
+            "messages": [
               {
-              "role": "system",
-              "content": "You are GitHub Copilot, an AI assistant that provides comprehensive and insightful code reviews. Analyze the PR like GitHub Copilot would: focus on code quality, architecture, potential issues, best practices, and provide constructive feedback. Format your response in markdown with clear sections. Be thorough but concise. Include specific suggestions and highlight both positive aspects and areas for improvement."
+                "role": "system",
+                "content": "You are GitHub Copilot, an AI assistant that provides comprehensive and insightful code reviews. Analyze the PR like GitHub Copilot would: focus on code quality, architecture, potential issues, best practices, and provide constructive feedback. Format your response in markdown with clear sections. Be thorough but concise. Include specific suggestions and highlight both positive aspects and areas for improvement."
               },
               {
-              "role": "user",
-              "content": "## Pull Request Review\n\n**Title:** $PR_TITLE\n\n**Description:** $PR_DESCRIPTION\n\n## Files Changed\n$MODIFIED_FILES_DETAIL\n\n## Purpose Analysis\n$PURPOSE_SUMMARY\n\n## Changes Overview\n$CHANGES_SUMMARY\n\n## Code Quality Metrics\n$QUALITY_ANALYSIS\n\n## Key Code Changes (Sample)\n\`\`\`diff\n$IMPORTANT_DIFF\n\`\`\`\n\nPlease provide a comprehensive GitHub Copilot-style review of this PR, including:\n1. **Overall Assessment** - High-level summary of the PR\n2. **Code Quality Review** - Analysis of the changes\n3. **Architecture & Design** - Comments on structure and patterns\n4. **Security & Best Practices** - Security considerations\n5. **Recommendations** - Specific actionable suggestions\n6. **Positive Highlights** - What's done well\n\nFormat the response as a professional code review comment."
+                "role": "user",
+                "content": "## Pull Request Review\n\n**Title:** '"$PR_TITLE"'\n\n**Description:** '"$PR_DESCRIPTION"'\n\n## Files Changed\n'"$MODIFIED_FILES_DETAIL"'\n\n## Purpose Analysis\n'"$PURPOSE_SUMMARY"'\n\n## Changes Overview\n'"$CHANGES_SUMMARY"'\n\n## Code Quality Metrics\n'"$QUALITY_ANALYSIS"'\n\n## Key Code Changes (Sample)\n```diff\n'"$IMPORTANT_DIFF"'\n```\n\nPlease provide a comprehensive GitHub Copilot-style review of this PR, including:\n1. **Overall Assessment** - High-level summary of the PR\n2. **Code Quality Review** - Analysis of the changes\n3. **Architecture & Design** - Comments on structure and patterns\n4. **Security & Best Practices** - Security considerations\n5. **Recommendations** - Specific actionable suggestions\n6. **Positive Highlights** - What'\''s done well\n\nFormat the response as a professional code review comment."
               }
-          ],
-          "max_tokens": 1000,
-          "temperature": 0.2
-          }
-          EOF
-          )
+            ],
+            "max_tokens": 1000,
+            "temperature": 0.2
+          }')
 
           # Extraer error si existe
           ERROR=$(echo "$RESPONSE" | jq -r '.error.message // empty')
@@ -485,15 +606,24 @@ jobs:
           echo "completions=$COMMENT" >> $GITHUB_OUTPUT
           fi
 
-      - name: Fallback to GitHub Copilot Style Review
+      - name: Enhanced Copilot-Style Fallback Review
         id: copilot
         if: steps.openai.outputs.openai_failed == 'true'
         run: |
-          echo "Generating GitHub Copilot-style fallback review..."
+          echo "Generating enhanced GitHub Copilot-style review..."
 
-          # Obtener información del PR
+          # Obtener información detallada del PR
           PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_BODY="${{ github.event.pull_request.body }}"
           FILES_CHANGED="${{ steps.diff.outputs.files_changed }}"
+          
+          # Análisis avanzado del contenido
+          DIFF_CONTENT=$(git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+          
+          # Detectar patrones específicos para un análisis más preciso
+          CONTAINS_BREAKING_CHANGES=$(echo "$DIFF_CONTENT" | grep -iE 'BREAKING|DEPRECATED|REMOVAL' && echo "true" || echo "false")
+          CONTAINS_DEPENDENCIES=$(echo "$PR_BODY$DIFF_CONTENT" | grep -iE 'dependency|upgrade|update|bump|version' && echo "true" || echo "false")
+          CONTAINS_MIGRATIONS=$(echo "$DIFF_CONTENT" | grep -iE 'migration|schema|database|model' && echo "true" || echo "false")
 
           # Determinar el tipo de PR basado en archivos modificados y contenido
           MODIFIED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
@@ -780,8 +910,32 @@ jobs:
               
               try {
                 purposeSummary = fs.readFileSync('pr_purpose_summary.txt', 'utf8');
+                if (!purposeSummary || purposeSummary.trim() === '') {
+                  throw new Error('Empty purpose summary');
+                }
               } catch (error) {
-                purposeSummary = '**Purpose:** General Updates\n\nThis PR contains updates and improvements to the codebase.';
+                // Generar un propósito basado en los tipos de archivos modificados
+                const purpose = [];
+                if (jsFiles > 0) purpose.push('JavaScript/TypeScript changes');
+                if (cssFiles > 0) purpose.push('UI/styling updates');
+                if (mdFiles > 0) purpose.push('documentation improvements');
+                if (configFiles > 0) purpose.push('configuration changes');
+                
+                purposeSummary = [
+                  '## 📝 PR Purpose',
+                  '',
+                  `**Purpose:** ${purpose.length > 0 ? purpose.join(', ') : 'General updates'}`,
+                  '',
+                  '**Details:** This PR contains ' + (purpose.length > 0 ? 
+                    `changes related to ${purpose.join(' and ')}` : 
+                    'updates and improvements to the codebase'),
+                  '',
+                  '### 🔍 Key Changes',
+                  jsFiles > 0 ? '- 💻 Code modifications' : '',
+                  cssFiles > 0 ? '- 🎨 Style updates' : '',
+                  mdFiles > 0 ? '- 📚 Documentation changes' : '',
+                  configFiles > 0 ? '- ⚙️ Configuration updates' : ''
+                ].filter(line => line !== '').join('\n');
               }
               
               // Construir tabla de estadísticas de cambios
@@ -819,16 +973,22 @@ jobs:
                 `| Formatting Issues | ${formattingIssues} |`
               ].join('\n');
               
-              // Crear sección de estado rápido
+              // Crear sección de estado rápido con formato mejorado
               const quickStatus = [
-                `${eslintErrors === '0' ? '✅' : '❌'} **ESLint**: ${eslintErrors === '0' ? 'No errors' : eslintErrors + ' errors found'}`,
-                `${testsFailed === '0' ? '✅' : '❌'} **Tests**: ${testsFailed === '0' ? 'All passing' : testsFailed + ' tests failing'}`,
-                `${auditHigh === '0' ? '✅' : '🚨'} **Security**: ${auditHigh === '0' ? 'No high vulnerabilities' : auditHigh + ' high vulnerabilities'}`,
-                `${formattingIssues === '0' ? '✅' : '💅'} **Formatting**: ${formattingIssues === '0' ? 'Well formatted' : 'Needs formatting'}`
+                '| Status | Check | Result |',
+                '|--------|--------|---------|',
+                `| ${eslintErrors === '0' ? '✅' : '❌'} | **ESLint** | ${eslintErrors === '0' ? 'No errors' : eslintErrors + ' errors found'} |`,
+                `| ${testsFailed === '0' ? '✅' : '❌'} | **Tests** | ${testsFailed === '0' ? 'All passing' : testsFailed + ' tests failing'} |`,
+                `| ${auditHigh === '0' ? '✅' : '🚨'} | **Security** | ${auditHigh === '0' ? 'No high vulnerabilities' : auditHigh + ' high vulnerabilities'} |`,
+                `| ${formattingIssues === '0' ? '✅' : '💅'} | **Formatting** | ${formattingIssues === '0' ? 'Well formatted' : 'Needs formatting'} |`,
+                ''
               ].join('\n');
               
               // Construir la descripción completa del PR (reemplaza todo el contenido)
               const newBody = [
+                '### 🎯 Quick Status',
+                quickStatus,
+                '',
                 '## 🚀 PR Changes Summary',
                 '',
                 purposeSummary,
@@ -840,16 +1000,6 @@ jobs:
                 fileTypesTable,
                 '',
                 fileChangesSummary,
-                '',
-                '---',
-                '',
-                '## 🤖 AI Analysis Summary',
-                '',
-                '### 📊 Code Quality Metrics',
-                metricsTable,
-                '',
-                '### 🎯 Quick Status',
-                quickStatus,
                 '',
                 `*Last updated: ${new Date().toISOString()}*`
               ].join('\n');
