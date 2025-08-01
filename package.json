@@ -46,6 +46,7 @@
     "express": "^5.1.0",
     "fuse.js": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
+    "node-fetch": "^2.7.0",
     "ollama": "^0.5.16",
     "openai": "^5.11.0",
     "passport": "^0.7.0",
@@ -54,9 +55,9 @@
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
-    "jest": "^30.0.5",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
+    "jest": "^30.0.5",
     "prettier": "^3.2.0"
   }
 }
