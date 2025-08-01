@@ -1,22 +1,29 @@
 const fs = require("fs");
 const path = require("path");
-
 const express = require("express");
-
 const Fuse = require("fuse.js");
 const { OpenAI } = require("openai");
+const Ollama = require("ollama");
 
 const knowledgePath = path.join(__dirname, "../knowledge.json");
 
 class ChatService {
 
   constructor(overrideKnowledge) {
-
     // Initialize OpenAI
     this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    
+    // Initialize Ollama if configured
+    if (process.env.OLLAMA_ENABLED === 'true') {
+      this.ollama = new Ollama({
+        host: process.env.OLLAMA_HOST || 'http://localhost:11434'
+      });
+    }
+
     /* v8 ignore start */
     this.knowledge = overrideKnowledge || this._loadKnowledgeData();
     /* v8 ignore stop */
+    
     // Initialize Fuse.js for fuzzy similarity
     this.fuse = new Fuse(this.knowledge, {
       keys: ["question"],
@@ -59,23 +66,56 @@ class ChatService {
     return { prompt, answer, found: !!context, matchedQuestion };
   }
 
-  // Call the OpenAI LLM
+  // Call the LLM with fallback options
   async callLLM(prompt) {
     try {
-      const completion = await this.openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [
-          {
-            role: "system",
-            content: "You are a helpful assistant for a pet accessories store.",
-          },
-          { role: "user", content: prompt },
-        ],
-      });
-      return completion.choices[0].message.content.trim();
-    } catch (err) {
-      console.error("Error calling OpenAI:", err);
-      return "Lo siento, no tengo una respuesta para esa pregunta."; /////////////////////////////
+      // Intentar primero con OpenAI
+      try {
+        const completion = await this.openai.chat.completions.create({
+          model: "gpt-3.5-turbo",
+          messages: [
+            {
+              role: "system",
+              content: "You are a helpful assistant for a pet accessories store.",
+            },
+            { role: "user", content: prompt },
+          ],
+        });
+        return completion.choices[0].message.content.trim();
+      } catch (openAiError) {
+        console.log("OpenAI error:", openAiError.message);
+        
+        // Fallback a Ollama si está habilitado
+        if (this.ollama && process.env.OLLAMA_ENABLED === 'true') {
+          try {
+            console.log("Falling back to Ollama");
+            const response = await this.ollama.chat({
+              model: process.env.OLLAMA_MODEL || 'mistral',
+              messages: [
+                {
+                  role: 'system',
+                  content: 'You are a helpful assistant for a pet accessories store.'
+                },
+                {
+                  role: 'user',
+                  content: prompt
+                }
+              ]
+            });
+            return response.message.content.trim();
+        } catch (ollamaError) {
+          console.error("Ollama error:", ollamaError);
+          // Si ambos fallan, usar el matching local con Fuse
+          const matches = this.fuse.search(prompt);
+          if (matches.length > 0) {
+            return matches[0].item.answer;
+          }
+          return "Lo siento, no tengo una respuesta para esa pregunta.";
+        }
+      }
+    } catch (error) {
+      console.error("Error al procesar la pregunta:", error);
+      return "Lo siento, no tengo una respuesta para esa pregunta.";
     }
   }
 
