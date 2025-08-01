@@ -207,6 +207,7 @@ class ChatService {
         return res.json({ answer: "Por favor, escribe una pregunta." });
       }
 
+
       console.log(`💬 Pregunta recibida: "${question}"`);
 
       // Usar la nueva lógica de búsqueda mejorada
