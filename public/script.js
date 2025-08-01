@@ -190,8 +190,8 @@ function addMessage(text, className) {
   
   // Convert Markdown-style formatting and handle newlines
   const formattedText = text
-    .replace(/\n\n/g, '<br><br>')  // Double newlines to double breaks
-    .replace(/\n/g, '<br>')        // Single newlines to single breaks
+    .replace(/\n\n/g, '<br><br>') // Double newlines to double breaks
+    .replace(/\n/g, '<br>') // Single newlines to single breaks
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Bold text
 
   msgDiv.innerHTML = formattedText;
