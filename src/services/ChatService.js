@@ -217,7 +217,7 @@ class ChatService {
         return completion.choices[0].message.content.trim();
       } catch (openAiError) {
         // eslint-disable-next-line no-console
-        console.log('OpenAI error:', openAiError.message);
+        console.error('Error calling OpenAI:', openAiError);
 
         // Fallback a Ollama si está habilitado
         if (this.ollama && process.env.OLLAMA_ENABLED === 'true') {
