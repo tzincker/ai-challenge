@@ -30,11 +30,11 @@ class ChatService {
     let knowledge = [];
     try {
       const raw = JSON.parse(fs.readFileSync(knowledgePath, "utf8"));
-      // Si knowledge.json tiene un array bajo 'faqs', úsalo
+      // If Knowledge.json has an array under 'faqs', use it
       knowledge = Array.isArray(raw.faqs) ? raw.faqs : [];
       return knowledge;
     } catch (err) {
-      console.error("No se pudo cargar knowledge.json:", err);
+      console.error("Could not load knowledge.json:", err);
     }
   }
   /* v8 ignore stop */
@@ -75,7 +75,7 @@ class ChatService {
       return completion.choices[0].message.content.trim();
     } catch (err) {
       console.error("Error calling OpenAI:", err);
-      return "Lo siento, no tengo una respuesta para esa pregunta."; /////////////////////////////
+      return "Sorry, I don't have an answer for that question."; 
     }
   }
 
@@ -84,46 +84,6 @@ class ChatService {
     const q = question.toLowerCase();
     // Keywords for products, pets, shopping, shipping, etc.
     const keywords = [
-      "mascota",
-      "perro",
-      "gato",
-      "collar",
-      "juguete",
-      "accesorio",
-      "envío",
-      "producto",
-      "tienda",
-      "comprar",
-      "venta",
-      "alimento",
-      "comida",
-      "cama",
-      "transportadora",
-      "arnés",
-      "correa",
-      "pelota",
-      "rascador",
-      "plato",
-      "bebedero",
-      "ropa",
-      "hueso",
-      "premio",
-      "snack",
-      "limpieza",
-      "baño",
-      "cepillo",
-      "antipulgas",
-      "veterinario",
-      "seguridad",
-      "entrega",
-      "pedido",
-      "stock",
-      "oferta",
-      "descuento",
-      "marca",
-      "tamaño",
-      "material",
-      "animal",
       "pet",
       "dog",
       "cat",
@@ -151,24 +111,14 @@ class ChatService {
       "reflective",
       "nylon",
       "cuero",
-      "personalizado",
-      "personalizada",
+      "personalized"
     ];
     // Words of courtesy or greetings
     const greetings = [
-      "hola",
-      "buenos días",
-      "buenas tardes",
-      "buenas noches",
-      "saludos",
-      "hello",
       "hi",
       "hey",
-      "buenas",
-      "gracias",
       "thank you",
       "thanks",
-      "adiós",
       "bye",
     ];
     // If it contains any product/pet keywords, it is relevant
@@ -206,7 +156,7 @@ class ChatService {
       // Update Fuse with the new question
       this.fuse.setCollection(faqs);
     } catch (err) {
-      console.error("No se pudo agregar a knowledge.json:", err);
+      console.error("Could not add to knowledge.json:", err);
     }
   }
 
@@ -217,7 +167,7 @@ class ChatService {
     router.post("/", async (req, res) => {
       const { question } = req.body;
       if (!question) {
-        return res.json({ answer: "Por favor, escribe una pregunta." });
+        return res.json({ answer: "Please write a question." });
       }
       // Search for exact match in the knowledge base
       const match = knowledge.find(
