@@ -208,63 +208,102 @@ jobs:
             echo "- ... and $((FILES_CHANGED - 20)) more files" >> pr_changes_summary.txt
           fi
 
-          # Generar resumen inteligente del propósito del PR
+          # Generar resumen inteligente del propósito del PR usando OpenAI
           echo "" > pr_purpose_summary.txt
           echo "## 📝 PR Summary" >> pr_purpose_summary.txt
           echo "" >> pr_purpose_summary.txt
 
-          # Analizar patrones en los archivos para determinar el propósito
-          PURPOSE=""
-          DETAILS=""
+          # Preparar el contexto para el análisis de IA
+          PR_CONTEXT=$(cat << EOF
+          Changed files:
+          $MODIFIED_FILES
 
-          # Detectar cambios en CI/CD
-          if echo "$MODIFIED_FILES" | grep -q "\.github/workflows"; then
-            PURPOSE="CI/CD Pipeline Configuration"
-            DETAILS="This PR modifies GitHub Actions workflows for continuous integration and deployment."
-          elif echo "$MODIFIED_FILES" | grep -q "Dockerfile\|docker-compose"; then
-            PURPOSE="Docker Configuration"
-            DETAILS="This PR updates Docker containerization setup."
-          elif echo "$MODIFIED_FILES" | grep -q "package\.json\|yarn\.lock\|package-lock\.json"; then
-            if [ $JS_FILES -gt 0 ]; then
-              PURPOSE="Feature Development & Dependencies"
-              DETAILS="This PR includes new features or updates along with dependency changes."
+          Statistics:
+          - Total files changed: $FILES_CHANGED
+          - JavaScript/TypeScript files: $JS_FILES
+          - CSS files: $CSS_FILES
+          - JSON files: $JSON_FILES
+          - Markdown files: $MD_FILES
+          - Configuration files: $CONFIG_FILES
+          - Lines added: $LINES_ADDED
+          - Lines deleted: $LINES_DELETED
+
+          PR Title: $PR_TITLE
+          PR Description: $PR_DESCRIPTION
+          EOF
+          )
+
+          # Llamar a OpenAI API para análisis
+          OPENAI_RESPONSE=$(curl -s https://api.openai.com/v1/chat/completions \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $OPENAI_API_KEY" \
+            -d "{
+              \"model\": \"gpt-3.5-turbo\",
+              \"messages\": [
+                {
+                  \"role\": \"system\",
+                  \"content\": \"You are an expert code reviewer analyzing Pull Request changes. Analyze the provided context and determine the primary purpose and key details of the PR. Be concise but informative. Return only a JSON object with 'purpose' (a short title) and 'details' (a one-sentence description) keys.\"
+                },
+                {
+                  \"role\": \"user\",
+                  \"content\": \"$PR_CONTEXT\"
+                }
+              ],
+              \"temperature\": 0.3
+            }"
+          )
+
+          # Extraer PURPOSE y DETAILS del resultado de la IA
+          PURPOSE=$(echo $OPENAI_RESPONSE | jq -r '.choices[0].message.content' | jq -r '.purpose')
+          DETAILS=$(echo $OPENAI_RESPONSE | jq -r '.choices[0].message.content' | jq -r '.details')
+          # Si la llamada a la API falla, usar análisis de respaldo basado en patrones
+          if [ -z "$PURPOSE" ] || [ -z "$DETAILS" ]; then
+            echo "AI analysis failed, using fallback pattern analysis..."
+
+            # Solicitar otro análisis a la IA con un prompt más específico
+            OPENAI_RESPONSE=$(curl -s https://api.openai.com/v1/chat/completions \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer $OPENAI_API_KEY" \
+              -d "{
+                \"model\": \"gpt-3.5-turbo\",
+                \"messages\": [
+                  {
+                    \"role\": \"system\",
+                    \"content\": \"You are an expert code reviewer. Analyze the file changes and determine if this PR is primarily: 1) Documentation, 2) Testing, 3) Feature Development, 4) Bug Fix, 5) Configuration, or 6) Dependency Update. Return only a JSON with 'purpose' (category) and 'details' (one sentence description).\"
+                  },
+                  {
+                    \"role\": \"user\",
+                    \"content\": \"Files changed: $MODIFIED_FILES\"
+                  }
+                ],
+                \"temperature\": 0.2
+              }"
+            )
+
+            # Intentar extraer PURPOSE y DETAILS del segundo intento
+            FALLBACK_PURPOSE=$(echo $OPENAI_RESPONSE | jq -r '.choices[0].message.content' | jq -r '.purpose')
+            FALLBACK_DETAILS=$(echo $OPENAI_RESPONSE | jq -r '.choices[0].message.content' | jq -r '.details')
+
+            # Usar resultados del fallback si están disponibles
+            if [ ! -z "$FALLBACK_PURPOSE" ] && [ ! -z "$FALLBACK_DETAILS" ]; then
+              PURPOSE=$FALLBACK_PURPOSE
+              DETAILS=$FALLBACK_DETAILS
             else
-              PURPOSE="Dependency Updates"
-              DETAILS="This PR focuses on updating project dependencies."
+              # Último recurso: Análisis básico basado en tipos de archivo
+              if [ $MD_FILES -gt 0 ]; then
+                PURPOSE="Documentation Update"
+                DETAILS="This PR includes documentation changes and improvements."
+              elif [ $JS_FILES -gt 0 ]; then
+                PURPOSE="Code Changes"
+                DETAILS="This PR modifies application logic and functionality."
+              elif [ $CONFIG_FILES -gt 0 ]; then
+                PURPOSE="Configuration Update"
+                DETAILS="This PR updates project configuration and settings."
+              else
+                PURPOSE="General Updates"
+                DETAILS="This PR contains various improvements and updates."
+              fi
             fi
-          elif echo "$MODIFIED_FILES" | grep -q "\.test\.\|\.spec\.\|__tests__"; then
-            PURPOSE="Testing & Quality Assurance"
-            DETAILS="This PR adds or improves test coverage and quality assurance."
-          elif echo "$MODIFIED_FILES" | grep -q "README\|\.md$"; then
-            if [ $FILES_CHANGED -eq $MD_FILES ]; then
-              PURPOSE="Documentation Update"
-              DETAILS="This PR focuses on improving project documentation."
-            else
-              PURPOSE="Feature Development with Documentation"
-              DETAILS="This PR includes feature changes along with documentation updates."
-            fi
-          elif echo "$MODIFIED_FILES" | grep -q "\.css\|\.scss\|\.sass\|\.less"; then
-            if [ $CSS_FILES -eq $FILES_CHANGED ]; then
-              PURPOSE="UI/UX Styling Updates"
-              DETAILS="This PR focuses on user interface and styling improvements."
-            else
-              PURPOSE="Feature Development with UI Changes"
-              DETAILS="This PR includes functionality changes with user interface updates."
-            fi
-          elif echo "$MODIFIED_FILES" | grep -q "config\|\.env\|\.yml\|\.yaml\|\.xml"; then
-            PURPOSE="Configuration Updates"
-            DETAILS="This PR modifies application or environment configuration."
-          elif [ $JS_FILES -gt 0 ]; then
-            if [ $FILES_CHANGED -le 3 ]; then
-              PURPOSE="Bug Fix or Minor Enhancement"
-              DETAILS="This PR addresses specific issues or makes targeted improvements."
-            else
-              PURPOSE="Feature Development"
-              DETAILS="This PR introduces new functionality or significant enhancements."
-            fi
-          else
-            PURPOSE="General Updates"
-            DETAILS="This PR contains miscellaneous updates and improvements."
           fi
 
           # Agregar información específica basada en archivos
@@ -295,11 +334,26 @@ jobs:
           echo "" >> pr_purpose_summary.txt
           echo "$DETAILS" >> pr_purpose_summary.txt
 
+          # Escribir el análisis de la IA
+          echo "**🤖 AI Analysis**" >> pr_purpose_summary.txt
+          echo "" >> pr_purpose_summary.txt
+          echo "**Purpose:** $PURPOSE" >> pr_purpose_summary.txt
+          echo "" >> pr_purpose_summary.txt
+          echo "$DETAILS" >> pr_purpose_summary.txt
+          
+          # Agregar detalles específicos si están disponibles
           if [ ! -z "$SPECIFIC_CHANGES" ]; then
             echo "" >> pr_purpose_summary.txt
-            echo "**Key Changes:**" >> pr_purpose_summary.txt
+            echo "**🔍 Detected Changes:**" >> pr_purpose_summary.txt
             echo -e "$SPECIFIC_CHANGES" >> pr_purpose_summary.txt
           fi
+          
+          # Agregar estadísticas del PR
+          echo "" >> pr_purpose_summary.txt
+          echo "**📊 PR Statistics:**" >> pr_purpose_summary.txt
+          echo "- Files modified: $FILES_CHANGED" >> pr_purpose_summary.txt
+          echo "- Lines added: +$LINES_ADDED" >> pr_purpose_summary.txt
+          echo "- Lines removed: -$LINES_DELETED" >> pr_purpose_summary.txt
 
           # Guardar estadísticas en outputs
           echo "files_changed=$FILES_CHANGED" >> $GITHUB_OUTPUT
