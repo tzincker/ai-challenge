@@ -130,7 +130,7 @@ class UserService {
       return { accessToken };
     } catch (err) {
       // eslint-disable-next-line no-console
-      console.error('Unable to refresh token: ', err.message);
+      console.error('Unable to verify token: ', err.message);
 
       // If token is invalid, remove it from database
       try {

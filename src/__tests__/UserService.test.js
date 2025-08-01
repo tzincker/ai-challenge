@@ -177,6 +177,7 @@ describe('UserService', () => {
 
     it('should return error object if jwt.verify fails', async () => {
       mockDatabaseService = new MockDatabseService();
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
       mockDatabaseService.tokenExists = jest.fn().mockResolvedValue(true);
       mockDatabaseService.removeRefreshToken = jest.fn();
       userService = new UserService(mockDatabaseService);
@@ -184,6 +185,8 @@ describe('UserService', () => {
         throw new Error('fail');
       });
       const result = await userService.refreshToken('validtoken');
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Unable to verify token: ', 'fail');
+      consoleErrorSpy.mockRestore();
       expect(result).toEqual({
         error: 'Invalid or expired token',
         status: 403,
