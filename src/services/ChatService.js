@@ -216,11 +216,13 @@ class ChatService {
         });
         return completion.choices[0].message.content.trim();
       } catch (openAiError) {
+        // eslint-disable-next-line no-console
         console.log('OpenAI error:', openAiError.message);
 
         // Fallback a Ollama si está habilitado
         if (this.ollama && process.env.OLLAMA_ENABLED === 'true') {
           try {
+            // eslint-disable-next-line no-console
             console.log('Falling back to Ollama');
             const response = await this.ollama.chat({
               model: process.env.OLLAMA_MODEL || 'mistral',
@@ -248,12 +250,12 @@ class ChatService {
         if (matches.length > 0) {
           return matches[0].item.answer;
         }
-        return "I'm sorry, I'm having trouble processing your request right now. Please try again.";
+        return 'I\'m sorry, I\'m having trouble processing your request right now. Please try again.';
       }
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Error al procesar la pregunta:', error);
-      return "I'm sorry, I'm having trouble processing your request right now. Please try asking about our pet products again!";
+      return 'I\'m sorry, I\'m having trouble processing your request right now. Please try asking about our pet products again!';
     }
   }
 
@@ -385,7 +387,7 @@ class ChatService {
         console.log(`❌ Question not relevant for pet store: ${question}`);
         return res.json({
           answer:
-            "Hello! I'm a specialized assistant for pet accessories and products. I'd love to help you find something amazing for your furry friend! 🐾 Are you looking for collars, toys, beds, food bowls, or something else for your pet?",
+            'Hello! I\'m a specialized assistant for pet accessories and products. I\'d love to help you find something amazing for your furry friend! 🐾 Are you looking for collars, toys, beds, food bowls, or something else for your pet?',
         });
       }
 

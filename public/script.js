@@ -85,7 +85,7 @@ document.getElementById('login-btn').addEventListener('click', async () => {
     // Mensaje de bienvenida automático en inglés
     setTimeout(() => {
       addMessage(
-        "Hello! Welcome to our Pet Accessories Store! 🐾 I'm here to help you find the perfect products for your furry friend. How can I assist you today?",
+        'Hello! Welcome to our Pet Accessories Store! 🐾 I\'m here to help you find the perfect products for your furry friend. How can I assist you today?',
         'bot-message'
       );
     }, 500);

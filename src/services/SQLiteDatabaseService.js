@@ -42,7 +42,7 @@ class SQLiteDatabaseService {
       if (!this.db) await this.connect();
 
       return new Promise((resolve, reject) => {
-        this.db.get("SELECT datetime('now') as now", (err, row) => {
+        this.db.get('SELECT datetime(\'now\') as now', (err, row) => {
           if (err) {
             // eslint-disable-next-line no-console
             console.error('❌ Error en test de conexión SQLite:', err);
@@ -255,7 +255,7 @@ class SQLiteDatabaseService {
   }
 
   async deleteExpiredTokens() {
-    const sql = "DELETE FROM user_sessions WHERE expires_at <= datetime('now')";
+    const sql = 'DELETE FROM user_sessions WHERE expires_at <= datetime(\'now\')';
     const result = await this.query(sql);
     return result;
   }
@@ -263,7 +263,7 @@ class SQLiteDatabaseService {
   // 🧹 MEJORA: Limpiar códigos de reset expirados
   async deleteExpiredPasswordResets() {
     const sql =
-      "DELETE FROM password_resets WHERE expires_at <= datetime('now')";
+      'DELETE FROM password_resets WHERE expires_at <= datetime(\'now\')';
     const result = await this.query(sql);
     return result;
   }
