@@ -38,16 +38,16 @@ class ChatService {
     let knowledge = [];
     try {
       const raw = JSON.parse(fs.readFileSync(knowledgePath, 'utf8'));
-      // Si knowledge.json tiene un array bajo 'faqs', úsalo
+      // If Knowledge.json has an array under 'faqs', use it
       knowledge = Array.isArray(raw.faqs) ? raw.faqs : [];
       return knowledge;
     } catch (err) {
       // eslint-disable-next-line no-console
-      console.error('No se pudo cargar knowledge.json:', err);
+      console.error('Could not load knowledge.json:', err);
     }
   }
 
-  // Recargar knowledge base y actualizar Fuse
+  // Recharge the knowledge base and update Fuse
   reloadKnowledge() {
     this.knowledge = this._loadKnowledgeData();
     this.fuse.setCollection(this.knowledge);
@@ -112,18 +112,18 @@ class ChatService {
     return result;
   }
 
-  // Método mejorado para búsqueda de coincidencias por palabras clave
+  // Improved method for keyword matching search
   findKeywordMatch(userQuestion) {
     const userWords = userQuestion.toLowerCase().split(/\s+/).filter(w => w.length > 2);
     if (userWords.length === 0) return null;
 
-    // Primero intentar con Fuse.js
+    // First try with Fuse.js
     const fuseResults = this.fuse.search(userQuestion);
     if (fuseResults.length > 0 && fuseResults[0].score < 0.4) {
       return fuseResults[0].item;
     }
 
-    // Si Fuse.js no encuentra buenos resultados, usar búsqueda personalizada
+    // If Fuse.js doesn't find good results, use custom search.
     let bestMatch = null;
     let maxScore = 0;
 
@@ -135,16 +135,16 @@ class ChatService {
       let lastMatchIndex = -1;
       let consecutiveMatches = 0;
       
-      // Evaluar coincidencias de palabras completas y proximidad
+      // Evaluate matches of complete words and proximity
       for (const userWord of userWords) {
-        // Buscar coincidencias exactas primero
+        // Find exact matches first
         let found = false;
         questionWords.forEach((qWord, index) => {
           if (qWord === userWord) {
             score += 3;
             found = true;
             
-            // Bonus por palabras consecutivas
+            // Bonus for consecutive words
             if (lastMatchIndex !== -1 && index === lastMatchIndex + 1) {
               consecutiveMatches++;
               score += consecutiveMatches * 2;
@@ -153,12 +153,12 @@ class ChatService {
           }
         });
 
-        // Si no hay coincidencia exacta, buscar coincidencias parciales
+        // If there is no exact match, look for partial matches.
         if (!found) {
           if (itemText.includes(userWord)) {
             score += 2;
           } else {
-            // Buscar coincidencias parciales con un umbral mínimo
+            // Search for partial matches with a minimum threshold
             const similarWords = questionWords.filter(qWord => 
               qWord.includes(userWord) || userWord.includes(qWord)
             );
@@ -169,11 +169,11 @@ class ChatService {
         }
       }
 
-      // Bonus por coincidencia de frase completa
+      // Bonus for full phrase match
       const phraseBonus = itemText.includes(userQuestion.toLowerCase()) ? 5 : 0;
       score += phraseBonus;
 
-      // Factor de longitud - preferir coincidencias más específicas
+      // Length factor - prefer more specific matches
       score *= (1 + Math.min(userWords.length / 10, 0.5));
 
       if (score > maxScore) {
@@ -182,7 +182,7 @@ class ChatService {
       }
     }
 
-    // Solo retornar si el puntaje es suficientemente alto
+    // Only return if the score is high enough
     return maxScore >= Math.max(2, userWords.length) ? bestMatch : null;
   }
 
@@ -299,27 +299,31 @@ class ChatService {
   getRouter() {
     const router = express.Router();
 
-    // Recargar knowledge base al iniciar
+
+    // Reload knowledge base on startup
     this.reloadKnowledge();
 
     router.post('/', async (req, res) => {
       const { question } = req.body;
       if (!question) {
-        return res.json({ answer: 'Por favor, escribe una pregunta.' });
+        return res.json({ answer: 'Please write a question.' });
       }
 
-      // eslint-disable-next-line no-console
-      console.log(`💬 Pregunta recibida: "${question}"`);
 
-      // Usar la nueva lógica de búsqueda mejorada
+      // eslint-disable-next-line no-console
+      console.log(`💬 Question received: "${question}"`);
+
+
+      // Use the new improved search logic
       const { prompt, answer, found, matchedQuestion, type } =
         this.buildPrompt(question);
 
+
       if (found) {
-        // Si encontró coincidencia en knowledge base, responder directamente
+        // If a match was found in the knowledge base, respond directly
         // eslint-disable-next-line no-console
         console.log(
-          `✅ Respondiendo desde knowledge base (${type}): ${matchedQuestion}`
+          `✅ Responding from knowledge base (${type}): ${matchedQuestion}`
         );
         return res.json({
           answer: answer.replace(/\\n/g, '\n'),
@@ -329,11 +333,12 @@ class ChatService {
         });
       }
 
-      // Si no encontró nada, usar LLM solo si es relevante
+
+      // If nothing was found, use LLM only if it is relevant
       if (!this.isRelevantQuestion(question)) {
         // eslint-disable-next-line no-console
         console.log(
-          `❌ Pregunta no relevante para tienda de mascotas: ${question}`
+          `❌ Question not relevant for pet store: ${question}`
         );
         return res.json({
           answer:
@@ -341,10 +346,12 @@ class ChatService {
         });
       }
 
-      // Usar LLM para pregunta relevante
+
+      // Use LLM for relevant question
       // eslint-disable-next-line no-console
-      console.log(`🤖 Consultando LLM para pregunta relevante: ${question}`);
+      console.log(`🤖 Querying LLM for relevant question: ${question}`);
       const aiAnswer = await this.callLLM(prompt);
+
 
       // Add the new question/answer to the knowledge base
       this.addToKnowledge(question, aiAnswer);
