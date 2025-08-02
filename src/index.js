@@ -1,11 +1,15 @@
 /* c8 ignore file */
 const express = require('express');
+const session = require('express-session');
+const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const path = require('path'); // Importante para manejar rutas
 const bodyParser = require('body-parser');
 const app = express();
 const port = process.env.PORT || 3000;
 
+const authProvider = require('./sso/AuthProvider');
+const { REDIRECT_URI, POST_LOGOUT_REDIRECT_URI } = require('./sso/authConfig');
 // 📄 Configuración con SQLite persistente
 const SQLiteDatabaseService = require('./services/SQLiteDatabaseService');
 const databaseService = new SQLiteDatabaseService();
@@ -13,6 +17,17 @@ const UserService = require('./services/UserService');
 const userService = new UserService(databaseService);
 const ChatService = require('./services/ChatService');
 const chatService = new ChatService();
+
+app.use(session({
+  secret: process.env.EXPRESS_SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: false, // set this to true on production
+  }
+}));
+app.use(cookieParser());
 
 app.set('views', './src/views');
 app.set('view engine', 'pug');
@@ -26,6 +41,14 @@ app.use(express.static(uiPath));
 
 // Middleware para validar token JWT
 function authenticateToken(req, res, next) {
+
+  const isSsoAuthenticated = req.session.isAuthenticated;
+
+  if (isSsoAuthenticated) {
+    next();
+    return;
+  }
+
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   if (!token) {
@@ -141,6 +164,24 @@ app.delete('/logout', async (req, res) => {
 // Ruta protegida de chat
 app.use('/chat', authenticateToken, chatService.getRouter());
 
+// AZURE SSO
+app.post('/auth/redirect', authProvider.handleRedirect());
+
+app.get('/signin', express.urlencoded(), authProvider.login({
+  scopes: [],
+  redirectUri: REDIRECT_URI,
+  successRedirect: '/'
+}));
+
+app.post('/ssoauthenticated', (req, res) => {
+  const isAuthenticated = req.session.isAuthenticated;
+  return res.sendStatus(isAuthenticated ? 202 : 401);
+});
+
+app.get('/signout', authProvider.logout({
+  postLogoutRedirectUri: POST_LOGOUT_REDIRECT_URI
+}));
+
 // 🚀 Iniciar servidor con inicialización de base de datos
 async function startServer() {
   try {
@@ -193,5 +234,7 @@ async function createTestUsers() {
     }
   }
 }
+
+
 
 startServer();
