@@ -63,12 +63,10 @@ jobs:
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
             --name ollama-service \
             --image iapocchallenge.azurecr.io/ollama:latest \
-            --dns-name-label ollama-service-grupo70 \
-            --ports 11434 \
-            --cpu 1 \
-            --memory 2 \
-            --cpu-request 0.5 \
-            --memory-request 1 \
+            --dns-name-label ollamaservicerggrupo70 \
+            --ports 11434  \
+            --cpu 2  \
+            ---memory 4  \
             --os-type Linux \
             --registry-login-server iapocchallenge.azurecr.io \
             --registry-username iapocchallenge \
