@@ -13,7 +13,7 @@ module.exports = {
   rules: {
     // Reglas de calidad de código
     'no-console': 'warn',
-    'no-unused-vars': ["error", { "argsIgnorePattern": "^_", "destructuredArrayIgnorePattern": "^_", "varsIgnorePattern": "^_", "caughtErrorsIgnorePattern": "^_" }],
+    'no-unused-vars': ['error', { 'argsIgnorePattern': '^_', 'destructuredArrayIgnorePattern': '^_', 'varsIgnorePattern': '^_', 'caughtErrorsIgnorePattern': '^_' }],
     'no-var': 'error',
     'prefer-const': 'error',
     'prefer-arrow-callback': 'error',

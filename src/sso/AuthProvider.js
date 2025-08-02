@@ -8,7 +8,7 @@ class AuthProvider {
   cryptoProvider;
 
   constructor(msalConfig) {
-    this.msalConfig = msalConfig
+    this.msalConfig = msalConfig;
     this.cryptoProvider = new msal.CryptoProvider();
   };
 
@@ -151,11 +151,11 @@ class AuthProvider {
       } catch (error) {
         next(error);
       }
-    }
+    };
   }
 
   logout(options = {}) {
-    return (req, res, next) => {
+    return (req, res, _next) => {
 
       /**
        * Construct a logout URI and redirect the user to end the
@@ -171,7 +171,7 @@ class AuthProvider {
       req.session.destroy(() => {
         res.redirect(logoutUri);
       });
-    }
+    };
   }
 
   /**
@@ -204,7 +204,7 @@ class AuthProvider {
 
       if (req.session.pkceCodes === undefined) {
         req.session.pkceCodes = {};
-      } 
+      }
       req.session.pkceCodes = {
         challengeMethod: 'S256',
         verifier: verifier,
@@ -255,6 +255,8 @@ class AuthProvider {
 
       return await response.data;
     } catch (error) {
+      // eslint-disable-next-line no-console
+      console.log(error);
       throw error;
     }
   }
@@ -270,6 +272,7 @@ class AuthProvider {
       const response = await axios.get(endpoint);
       return await response.data;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.log(error);
     }
   }

@@ -55,7 +55,7 @@ class MockDatabseService {
 
   async removeRefreshToken(refreshToken) {
     this.refreshTokens = this.refreshTokens.filter(
-      tokenItem => tokenItem.token !== token
+      tokenItem => tokenItem.token !== refreshToken
     );
   }
 }

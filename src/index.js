@@ -1,7 +1,6 @@
 /* c8 ignore file */
 const express = require('express');
 const session = require('express-session');
-const createError = require('http-errors');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const path = require('path'); // Importante para manejar rutas
@@ -46,7 +45,7 @@ function authenticateToken(req, res, next) {
   const isSsoAuthenticated = req.session.isAuthenticated;
 
   if (isSsoAuthenticated) {
-    next()
+    next();
     return;
   }
 
@@ -180,7 +179,7 @@ app.post('/ssoauthenticated', (req, res) => {
 });
 
 app.get('/signout', authProvider.logout({
-    postLogoutRedirectUri: POST_LOGOUT_REDIRECT_URI
+  postLogoutRedirectUri: POST_LOGOUT_REDIRECT_URI
 }));
 
 // 🚀 Iniciar servidor con inicialización de base de datos
