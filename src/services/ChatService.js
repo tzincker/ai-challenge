@@ -25,11 +25,11 @@ class ChatService {
     // Initialize Fuse.js for fuzzy similarity
     this.fuse = new Fuse(this.knowledge, {
       keys: [
-        { name: 'question', weight: 0.7 },
-        { name: 'answer', weight: 0.3 },
+        { name: 'question', weight: 0.8 },
+        { name: 'answer', weight: 0.2 },
       ],
-      threshold: 0.2, // Mucho más estricto para mejor precisión
-      distance: 50, // Reducir el rango de coincidencias
+      threshold: 0.1, // Aún más estricto para mejor precisión
+      distance: 30, // Reducir más el rango de coincidencias
       ignoreLocation: true,
       includeScore: true,
       minMatchCharLength: 3,
@@ -212,7 +212,7 @@ class ChatService {
       // Try with OpenAI first
       try {
         // eslint-disable-next-line no-console
-        console.log('🤖 Trying OpenAI...');
+        console.log('🔄 Intentando con OpenAI API...');
         const completion = await this.openai.chat.completions.create({
           model: 'gpt-3.5-turbo',
           messages: [
@@ -225,7 +225,7 @@ class ChatService {
         });
         answer = completion.choices[0].message.content.trim();
         // eslint-disable-next-line no-console
-        console.log('✅ OpenAI responded successfully');
+        console.log('✅ Respuesta de OpenAI:', answer.substring(0, 50) + '...');
         return answer;
       } catch (openAiError) {
         // eslint-disable-next-line no-console
@@ -235,15 +235,15 @@ class ChatService {
       // Try with Ollama if enabled
       if (!answer && this.ollamaHost && process.env.OLLAMA_ENABLED === 'true') {
         try {
-          // Create a timeout promise (90 seconds)
+          // Create a timeout promise (3 minutes)
           const timeout = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Ollama timeout after 90 seconds')), 90000);
+            setTimeout(() => reject(new Error('Ollama timeout after 3 minutes')), 180000);
           });
 
           // Create the Ollama request promise
           const ollamaRequest = async () => {
             // eslint-disable-next-line no-console
-            console.log('🤖 Trying Ollama...');
+            console.log('🔄 Intentando con Ollama...');
             const response = await fetch(`${this.ollamaHost}/api/chat`, {
               method: 'POST',
               headers: {
@@ -277,7 +277,7 @@ class ChatService {
             // Race between the request and the timeout
             answer = await Promise.race([ollamaRequest(), timeout]);
             // eslint-disable-next-line no-console
-            console.log('✅ Ollama responded successfully');
+            console.log('✅ Respuesta de Ollama:', answer.substring(0, 50) + '...');
             return answer;
           } catch (ollamaError) {
             // eslint-disable-next-line no-console
@@ -330,27 +330,30 @@ class ChatService {
       return false;
     }
 
-    const petKeywords = [
-      'pet',
-      'dog',
-      'cat',
-      'collar',
-      'food',
-      'toy',
-      'leash',
-      'bowl',
-      'animal',
-      'mascota',
-      'perro',
-      'gato',
-      'juguete',
-      'comida',
-      'bebida',
-      'agua',
-      'jaula',
-      'casa', 
-      'cama'
-    ];
+    const petKeywords = {
+      general: ['pet', 'animal', 'mascota'],
+      dog: ['dog', 'perro', 'cachorro', 'puppy'],
+      cat: ['cat', 'gato', 'gatito', 'kitten'],
+      products: [
+        'collar', 'food', 'toy', 'leash', 'bowl',
+        'juguete', 'comida', 'bebida', 'agua', 'jaula', 'casa', 'cama',
+        'arena', 'litter', 'scratching', 'rascador'
+      ]
+    };
+    
+    // Si la pregunta menciona específicamente gatos, solo buscar en keywords de gatos
+    const questionLower = question.toLowerCase();
+    if (petKeywords.cat.some(word => questionLower.includes(word))) {
+      return true;
+    }
+    
+    // Si la pregunta menciona específicamente perros, solo buscar en keywords de perros
+    if (petKeywords.dog.some(word => questionLower.includes(word))) {
+      return true;
+    }
+    
+    // Si no menciona específicamente ni gatos ni perros, buscar en todos los keywords
+    return [...petKeywords.general, ...petKeywords.products].some(keyword => questionLower.includes(keyword));
     const irrelevantWords = ['hello', 'hi', 'hey', 'test', 'hola'];
 
     question = question.toLowerCase();
