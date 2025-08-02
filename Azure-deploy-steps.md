@@ -27,7 +27,7 @@ identidad se usará para asignar permisos a los recursos.
 Ejecuta en la consola:
 
 ```bash
-az ad sp create-for-rbac --name IArg70Cluster --role "Contributor" --scope /subscriptions/e40e28d8-f53d-43b8-898b-2c93dc9ef814/resourceGroups/rg_grupo70 --sdk-auth --output json
+az ad sp create-for-rbac --name IACHALLENGE70 --role "Contributor" --scope /subscriptions/e40e28d8-f53d-43b8-898b-2c93dc9ef814/resourceGroups/rg_grupo70 --sdk-auth --output json
 ```
 
 Guarda el JSON que te devuelve este comando.
@@ -115,14 +115,14 @@ jobs:
       - name: Configure Azure Web App to use Docker image
         run: |
           az webapp config container set \
-            --name IArg70Cluster \
+            --name IACHALLENGE70 \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
             --docker-custom-image-name iapocchallenge.azurecr.io/myapp:${{ github.sha }}
 
       - name: Restart Azure Web App
         run: |
           az webapp restart \
-            --name IArg70Cluster \
+            --name IACHALLENGE70 \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }}
 ```
 
@@ -130,5 +130,5 @@ jobs:
 
 ## 8. Agregar el puerto en la WebApp
 
-IR a webapp: IArg70Cluster Ir a setting: Ir a Environment variables Agregar WEBSITES_PORT y el
+IR a webapp: IACHALLENGE70 Ir a setting: Ir a Environment variables Agregar WEBSITES_PORT y el
 puerto de escucha (3000) o el 8080
