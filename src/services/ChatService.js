@@ -25,17 +25,17 @@ class ChatService {
     // Initialize Fuse.js for fuzzy similarity
     this.fuse = new Fuse(this.knowledge, {
       keys: [
-        { name: 'question', weight: 0.8 },
-        { name: 'answer', weight: 0.2 },
+        { name: 'question', weight: 0.9 },
+        { name: 'answer', weight: 0.1 },
       ],
-      threshold: 0.1, // Aún más estricto para mejor precisión
-      distance: 30, // Reducir más el rango de coincidencias
+      threshold: 0.05, // Extremely strict matching
+      distance: 10, // Very short distance for matches
       ignoreLocation: true,
       includeScore: true,
-      minMatchCharLength: 3,
+      minMatchCharLength: 4, // Require longer matches
       shouldSort: true,
-      findAllMatches: true,
-      useExtendedSearch: true, // Habilita búsqueda avanzada
+      findAllMatches: false,
+      useExtendedSearch: true,
     });
   }
 
@@ -137,7 +137,8 @@ class ChatService {
 
     // First try with Fuse.js
     const fuseResults = this.fuse.search(userQuestion);
-    if (fuseResults.length > 0 && fuseResults[0].score < 0.4) {
+    // Hacer la coincidencia extremadamente estricta
+    if (fuseResults.length > 0 && fuseResults[0].score < 0.1) {
       return fuseResults[0].item;
     }
 
@@ -243,27 +244,31 @@ class ChatService {
           // Create the Ollama request promise
           const ollamaRequest = async () => {
             // eslint-disable-next-line no-console
-            console.log('🔄 Intentando con Ollama...');
-            const response = await fetch(`${this.ollamaHost}/api/chat`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                model: process.env.OLLAMA_MODEL || 'gemma:2b',
-                messages: [
-                  {
-                    role: 'system',
-                    content: 'You are a helpful assistant for a pet accessories store.',
-                  },
-                  {
-                    role: 'user',
-                    content: prompt,
-                  },
-                ],
-                stream: false,
-              }),
-            });
+            console.log('🔄 Intentando con Ollama en:', this.ollamaHost);
+            try {
+              const response = await fetch(`${this.ollamaHost}/api/chat`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  model: process.env.OLLAMA_MODEL || 'mistral',
+                  messages: [
+                    {
+                      role: 'system',
+                      content: 'You are a helpful assistant for a pet accessories store.',
+                    },
+                    {
+                      role: 'user',
+                      content: prompt,
+                    },
+                  ],
+                  stream: false,
+                }),
+              }).catch(error => {
+                console.error('❌ Error de red al conectar con Ollama:', error.message);
+                throw error;
+              });
 
             if (!response.ok) {
               throw new Error(`Ollama responded with status: ${response.status}`);
