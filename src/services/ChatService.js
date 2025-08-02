@@ -341,28 +341,26 @@ class ChatService {
       ]
     };
     
-    // Si la pregunta menciona específicamente gatos, solo buscar en keywords de gatos
+    const irrelevantWords = ['hello', 'hi', 'hey', 'test', 'hola'];
     const questionLower = question.toLowerCase();
+    
+    // Primero verificar si no es una palabra irrelevante
+    if (irrelevantWords.some(word => questionLower.includes(word))) {
+      return false;
+    }
+    
+    // Si la pregunta menciona específicamente gatos
     if (petKeywords.cat.some(word => questionLower.includes(word))) {
       return true;
     }
     
-    // Si la pregunta menciona específicamente perros, solo buscar en keywords de perros
+    // Si la pregunta menciona específicamente perros
     if (petKeywords.dog.some(word => questionLower.includes(word))) {
       return true;
     }
     
-    // Si no menciona específicamente ni gatos ni perros, buscar en todos los keywords
+    // Si no menciona específicamente ni gatos ni perros, buscar en keywords generales y productos
     return [...petKeywords.general, ...petKeywords.products].some(keyword => questionLower.includes(keyword));
-    const irrelevantWords = ['hello', 'hi', 'hey', 'test', 'hola'];
-
-    question = question.toLowerCase();
-
-    if (irrelevantWords.some(word => question.includes(word))) {
-      return false;
-    }
-
-    return petKeywords.some(keyword => question.includes(keyword));
   }
 
   // Add a new question/answer to the knowledge base only if it is relevant and does not already exist.
