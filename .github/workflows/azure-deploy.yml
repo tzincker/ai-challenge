@@ -67,8 +67,6 @@ jobs:
             --ports 11434 \
             --cpu 1 \
             --memory 2 \
-            --cpu-request 0.5 \
-            --memory-request 1 \
             --os-type Linux \
             --registry-login-server iapocchallenge.azurecr.io \
             --registry-username iapocchallenge \
