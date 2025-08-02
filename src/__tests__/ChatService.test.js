@@ -10,6 +10,7 @@ describe('ChatService', () => {
   let chatService;
   let mockKnowledge;
   let consoleErrorSpy;
+  let consoleLogSpy;
 
   beforeEach(() => {
     mockKnowledge = [
@@ -19,12 +20,14 @@ describe('ChatService', () => {
     fs.readFileSync.mockReturnValue(JSON.stringify({ faqs: mockKnowledge }));
     chatService = new ChatService(mockKnowledge);
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
   });
 
   afterEach(() => {
     jest.clearAllMocks();
     jest.restoreAllMocks();
     consoleErrorSpy.mockRestore();
+    consoleLogSpy.mockRestore();
   });
 
   describe('buildPrompt', () => {

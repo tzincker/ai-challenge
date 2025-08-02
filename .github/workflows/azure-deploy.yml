@@ -67,6 +67,13 @@ jobs:
                         SALT_ROUNDS=${{ secrets.SALT_ROUNDS }}
                         API_BASE_URL=${{ secrets.API_BASE_URL }}
                         OPENAI_API_KEY=${{secrets.OPENAI_API_KEY}}
+                        TENANT_SUBDOMAIN=${{secrets.TENANT_SUBDOMAIN}}
+                        CLOUD_INSTANCE=${{secrets.CLOUD_INSTANCE}}
+                        REDIRECT_URI=${{secrets.REDIRECT_URI}}
+                        POST_LOGOUT_REDIRECT_URI=${{secrets.POST_LOGOUT_REDIRECT_URI}}
+                        GRAPH_API_ENDPOINT=${{secrets.GRAPH_API_ENDPOINT}}
+                        EXPRESS_SESSION_SECRET=${{secrets.EXPRESS_SESSION_SECRET}}
+
 
       - name: Restart Azure Web App
         run: az webapp restart --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name IACHALLENGE70
