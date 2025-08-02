@@ -43,7 +43,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t iapocchallenge.azurecr.io/appOllama:${{ github.sha }} .
+          docker build -t iapocchallenge.azurecr.io/appollama:${{ github.sha }} .
 
       - name: Login to Azure Container Registry
         run: az acr login --name iapocchallenge
@@ -55,7 +55,7 @@ jobs:
 
       - name: Push Docker image to ACR
         run: |
-          docker push iapocchallenge.azurecr.io/appOllama:${{ github.sha }}
+          docker push iapocchallenge.azurecr.io/appollama:${{ github.sha }}
 
       - name: Create or update Ollama Container Instance
         run: |
@@ -80,7 +80,7 @@ jobs:
           az webapp config container set \
             --name IArg70Cluster \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --container-image-name iapocchallenge.azurecr.io/appOllama:${{ github.sha }}
+            --container-image-name iapocchallenge.azurecr.io/appollama:${{ github.sha }}
 
           # Configure environment variables
           az webapp config appsettings set \
