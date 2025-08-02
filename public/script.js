@@ -149,6 +149,10 @@ async function sendChatMessage() {
   const message = document.getElementById('chat-message').value;
   if (!message.trim()) return;
 
+  const sendBtn = document.getElementById('send-btn');
+  sendBtn.disabled = true;
+  sendBtn.innerHTML = '⌛ Thinking...';
+
   addMessage(message, 'user-message');
   document.getElementById('chat-message').value = '';
 
@@ -179,6 +183,10 @@ async function sendChatMessage() {
     addMessage(data.answer || 'No response from bot', 'bot-message');
   } catch (err) {
     addMessage('Error contacting chatbot', 'bot-message');
+  } finally {
+    const sendBtn = document.getElementById('send-btn');
+    sendBtn.disabled = false;
+    sendBtn.innerHTML = 'Send';
   }
 }
 

@@ -282,10 +282,14 @@ class ChatService {
 
           try {
             // Race between the request and the timeout
-            answer = await Promise.race([ollamaRequest(), timeout]);
+            const ollamaAnswer = await Promise.race([ollamaRequest(), timeout]);
             // eslint-disable-next-line no-console
-            console.log('✅ Respuesta de Ollama:', answer.substring(0, 50) + '...');
-            return answer;
+            console.log('✅ Respuesta de Ollama:', ollamaAnswer.substring(0, 50) + '...');
+            
+            // Guardar la respuesta en el knowledge base
+            await this.addToKnowledge(prompt, ollamaAnswer);
+            
+            return ollamaAnswer;
           } catch (ollamaError) {
             // eslint-disable-next-line no-console
             console.log('❌ Ollama failed:', ollamaError.message);
@@ -473,8 +477,11 @@ class ChatService {
       console.log(`🤖 Querying LLM for relevant question: ${question}`);
       const aiAnswer = await this.callLLM(prompt);
 
-      // Add the new question/answer to the knowledge base
-      this.addToKnowledge(question, aiAnswer);
+      // Add the new question/answer to the knowledge base if it came from OpenAI
+      // (Las respuestas de Ollama ya se guardan en callLLM)
+      if (!this.ollamaHost || process.env.OLLAMA_ENABLED !== 'true') {
+        await this.addToKnowledge(question, aiAnswer);
+      }
 
       return res.json({
         answer: aiAnswer,
