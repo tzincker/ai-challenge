@@ -243,9 +243,9 @@ class ChatService {
 
           // Create the Ollama request promise
           const ollamaRequest = async () => {
-            // eslint-disable-next-line no-console
-            console.log('🔄 Intentando con Ollama en:', this.ollamaHost);
             try {
+              // eslint-disable-next-line no-console
+              console.log('🔄 Intentando con Ollama en:', this.ollamaHost);
               const response = await fetch(`${this.ollamaHost}/api/chat`, {
                 method: 'POST',
                 headers: {
@@ -271,12 +271,13 @@ class ChatService {
                 throw new Error(`Ollama responded with status: ${response.status}`);
               }
 
-            if (!response.ok) {
-              throw new Error(`Ollama responded with status: ${response.status}`);
+              const data = await response.json();
+              return data.message.content.trim();
+            } catch (error) {
+              // eslint-disable-next-line no-console
+              console.error('❌ Error en la petición a Ollama:', error.message);
+              throw error;
             }
-
-            const data = await response.json();
-            return data.message.content.trim();
           };
 
           try {

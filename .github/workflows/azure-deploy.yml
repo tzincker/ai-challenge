@@ -20,21 +20,21 @@ jobs:
           node-version: 18
           cache: 'npm'
 
-      # - name: Install backend dependencies
-      #   run: npm install
+      - name: Install backend dependencies
+        run: npm install
 
-      # - name: Lint code
-      #   run: npm run lint
+      - name: Lint code
+        run: npm run lint
 
-      # - name: Run backend tests
-      #   run: npm test
+      - name: Run backend tests
+        run: npm test
 
-      # - name: Upload coverage reports
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: coverage-report
-      #     path: coverage/
-      #     retention-days: 5
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 5
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -73,40 +73,40 @@ jobs:
             --registry-username iapocchallenge \
             --registry-password ${{ secrets.AZURE_REGISTRY_PASSWORD }}
 
-      # - name: Configure Azure Web App to use Docker image and set environment variables
-      #   run: |
-      #     # Get Ollama service FQDN
-      #     OLLAMA_HOST="http://ollamaservicerggrupo70.westeurope.azurecontainer.io:11434"
+      - name: Configure Azure Web App to use Docker image and set environment variables
+        run: |
+          # Get Ollama service FQDN
+          OLLAMA_HOST="http://ollamaservicerggrupo70.westeurope.azurecontainer.io:11434"
 
-      #     az webapp config container set \
-      #       --name IACHALLENGE70 \
-      #       --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-      #       --container-image-name iapocchallenge.azurecr.io/appollama:${{ github.sha }}
+          az webapp config container set \
+            --name IACHALLENGE70 \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --container-image-name iapocchallenge.azurecr.io/appollama:${{ github.sha }}
 
-      #     # Configure environment variables
-      #     az webapp config appsettings set \
-      #       --name IACHALLENGE70 \
-      #       --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-      #       --settings \
-      #         OLLAMA_ENABLED=true \
-      #         OLLAMA_HOST=$OLLAMA_HOST \
-      #         OLLAMA_MODEL=mistral
+          # Configure environment variables
+          az webapp config appsettings set \
+            --name IACHALLENGE70 \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --settings \
+              OLLAMA_ENABLED=true \
+              OLLAMA_HOST=$OLLAMA_HOST \
+              OLLAMA_MODEL=mistral
 
-      #     az webapp config appsettings set \
-      #       --name IACHALLENGE70 \
-      #       --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-      #       --settings ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }} \
-      #                   REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }} \
-      #                   SALT_ROUNDS=${{ secrets.SALT_ROUNDS }}
-      #                   API_BASE_URL=${{ secrets.API_BASE_URL }}
-      #                   OPENAI_API_KEY=${{secrets.OPENAI_API_KEY}}
-      #                   TENANT_SUBDOMAIN=${{secrets.TENANT_SUBDOMAIN}}
-      #                   CLOUD_INSTANCE=${{secrets.CLOUD_INSTANCE}}
-      #                   REDIRECT_URI=${{secrets.REDIRECT_URI}}
-      #                   POST_LOGOUT_REDIRECT_URI=${{secrets.POST_LOGOUT_REDIRECT_URI}}
-      #                   GRAPH_API_ENDPOINT=${{secrets.GRAPH_API_ENDPOINT}}
-      #                   EXPRESS_SESSION_SECRET=${{secrets.EXPRESS_SESSION_SECRET}}
+          az webapp config appsettings set \
+            --name IACHALLENGE70 \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --settings ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }} \
+                        REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }} \
+                        SALT_ROUNDS=${{ secrets.SALT_ROUNDS }}
+                        API_BASE_URL=${{ secrets.API_BASE_URL }}
+                        OPENAI_API_KEY=${{secrets.OPENAI_API_KEY}}
+                        TENANT_SUBDOMAIN=${{secrets.TENANT_SUBDOMAIN}}
+                        CLOUD_INSTANCE=${{secrets.CLOUD_INSTANCE}}
+                        REDIRECT_URI=${{secrets.REDIRECT_URI}}
+                        POST_LOGOUT_REDIRECT_URI=${{secrets.POST_LOGOUT_REDIRECT_URI}}
+                        GRAPH_API_ENDPOINT=${{secrets.GRAPH_API_ENDPOINT}}
+                        EXPRESS_SESSION_SECRET=${{secrets.EXPRESS_SESSION_SECRET}}
 
 
-      # - name: Restart Azure Web App
-      #   run: az webapp restart --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name IACHALLENGE70
+      - name: Restart Azure Web App
+        run: az webapp restart --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name IACHALLENGE70
