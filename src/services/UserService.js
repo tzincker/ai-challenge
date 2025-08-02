@@ -138,6 +138,7 @@ class UserService {
       } catch (removeError) {
         // eslint-disable-next-line no-console
         console.error('Error removing invalid token:', removeError);
+        return { error: 'Error removing invalid token', status: 403 };
       }
 
       return { error: 'Invalid or expired token', status: 403 };

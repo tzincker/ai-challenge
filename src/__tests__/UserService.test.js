@@ -52,11 +52,19 @@ class MockDatabseService {
       tokenItem => tokenItem.token !== token
     );
   }
+
+  async removeRefreshToken(refreshToken) {
+    this.refreshTokens = this.refreshTokens.filter(
+      tokenItem => tokenItem.token !== refreshToken
+    );
+  }
 }
 
 describe('UserService', () => {
   let userService;
   let mockDatabaseService;
+  let consoleErrorSpy;
+  let consoleLogSpy;
 
   beforeEach(() => {
     process.env.ACCESS_TOKEN_SECRET = 'test_access_secret';
@@ -68,6 +76,8 @@ describe('UserService', () => {
 
     jest.resetModules();
     jest.clearAllMocks();
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
+    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => { });
   });
 
   afterEach(() => {
@@ -75,29 +85,23 @@ describe('UserService', () => {
     delete process.env.ACCESS_TOKEN_SECRET;
     delete process.env.REFRESH_TOKEN_SECRET;
     delete process.env.SALT_ROUNDS;
+    consoleErrorSpy.mockRestore();
+    consoleLogSpy.mockRestore();
   });
 
   describe('login', () => {
     it('should return null if user not found', async () => {
-      const consoleErrorSpy = jest
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
       const result = await userService.login('baduser', 'password');
       expect(result).toBeNull();
-      consoleErrorSpy.mockRestore();
     });
 
     it('should return null if password does not match', async () => {
-      const consoleErrorSpy = jest
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
       const spy = jest
         .spyOn(userService, '_comparePassword')
         .mockReturnValue(false);
       const result = await userService.login('user1', 'wrongpass');
       expect(result).toBeNull();
       expect(spy).toHaveBeenCalled();
-      consoleErrorSpy.mockRestore();
       spy.mockRestore();
     });
 
@@ -135,9 +139,6 @@ describe('UserService', () => {
     });
 
     it('should return undefined if login fails', async () => {
-      const consoleErrorSpy = jest
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
       userService = new UserService(mockDatabaseService);
       const spy = jest
         .spyOn(userService, '_comparePassword')
@@ -149,7 +150,6 @@ describe('UserService', () => {
       expect(result).toBeUndefined();
       expect(spy).toHaveBeenCalled();
       expect(consoleErrorSpy).toHaveBeenCalledWith('Unable to login user: ', expect.any(Error));
-      consoleErrorSpy.mockRestore();
     });
   });
 
@@ -160,6 +160,15 @@ describe('UserService', () => {
       userService = new UserService(mockDatabaseService);
       const result = await userService.refreshToken('notfound');
       expect(result).toEqual({ error: 'Invalid token', status: 403 });
+    });
+
+    it('should return error object if refresh token fails to be removed', async () => {
+      mockDatabaseService = new MockDatabseService();
+      jwt.verify.mockImplementation(() => { throw new Error('fail'); });
+      mockDatabaseService.removeRefreshToken = jest.fn().mockImplementation(() => { throw new Error('fail'); });
+      userService = new UserService(mockDatabaseService);
+      const result = await userService.refreshToken('token1');
+      expect(result).toEqual({ error: 'Error removing invalid token', status: 403 });
     });
 
     it('should return new access token if refresh token is valid', async () => {
@@ -177,7 +186,6 @@ describe('UserService', () => {
 
     it('should return error object if jwt.verify fails', async () => {
       mockDatabaseService = new MockDatabseService();
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
       mockDatabaseService.tokenExists = jest.fn().mockResolvedValue(true);
       mockDatabaseService.removeRefreshToken = jest.fn();
       userService = new UserService(mockDatabaseService);
@@ -186,7 +194,6 @@ describe('UserService', () => {
       });
       const result = await userService.refreshToken('validtoken');
       expect(consoleErrorSpy).toHaveBeenCalledWith('Unable to verify token: ', 'fail');
-      consoleErrorSpy.mockRestore();
       expect(result).toEqual({
         error: 'Invalid or expired token',
         status: 403,
@@ -245,9 +252,6 @@ describe('UserService', () => {
     });
 
     it('should return false if addUser fails', async () => {
-      const consoleErrorSpy = jest
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
       mockDatabaseService = new MockDatabseService();
       mockDatabaseService.addUser = jest.fn();
       mockDatabaseService.addUser.mockImplementation(() =>
@@ -266,14 +270,12 @@ describe('UserService', () => {
       });
       expect(spy).toHaveBeenCalled();
       expect(consoleErrorSpy).toHaveBeenCalledWith('Unable to register user: ', expect.any(Error));
-      consoleErrorSpy.mockRestore();
       await expect(mockDatabaseService.addUser()).rejects.toThrow('fail');
     });
 
     it('should handle errors and return false', async () => {
       // Mock console.error to prevent output during test
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
-      
+
       mockDatabaseService = new MockDatabseService();
       mockDatabaseService.getUser = jest.fn();
       mockDatabaseService.getUser.mockResolvedValue(null);
@@ -288,15 +290,115 @@ describe('UserService', () => {
       });
       expect(spy).toHaveBeenCalled();
       expect(consoleErrorSpy).toHaveBeenCalledWith('Unable to register user: ', expect.any(Error));
-      
-      // Restore console.error
-      consoleErrorSpy.mockRestore();
     });
   });
 
   // Nuevas pruebas para métodos privados y casos edge
+
+  describe('validateUsername', () => {
+    it('should fail if username is missing', () => {
+      expect(userService.validateUsername('')).toEqual({ valid: false, message: 'Username is required' });
+    });
+    it('should fail if username is too short', () => {
+      expect(userService.validateUsername('ab')).toEqual({ valid: false, message: 'Username must be at least 3 characters long' });
+    });
+    it('should fail if username is too long', () => {
+      expect(userService.validateUsername('a'.repeat(21))).toEqual({ valid: false, message: 'Username cannot be longer than 20 characters' });
+    });
+    it('should fail if username has invalid chars', () => {
+      expect(userService.validateUsername('user!')).toEqual({ valid: false, message: 'Username can only contain letters, numbers and underscores' });
+    });
+    it('should pass for valid username', () => {
+      expect(userService.validateUsername('user_123')).toEqual({ valid: true });
+    });
+  });
+
+  describe('validatePassword', () => {
+    it('should fail if password is missing', () => {
+      expect(userService.validatePassword('')).toEqual({ valid: false, message: 'Password is required' });
+    });
+    it('should fail if password is too short', () => {
+      expect(userService.validatePassword('Ab1')).toEqual({ valid: false, message: 'Password must be at least 6 characters long' });
+    });
+    it('should fail if password is too long', () => {
+      expect(userService.validatePassword('A'.repeat(51) + 'b1')).toEqual({ valid: false, message: 'Password cannot be longer than 50 characters' });
+    });
+    it('should fail if password does not meet complexity', () => {
+      expect(userService.validatePassword('abcdef')).toEqual({ valid: false, message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number' });
+    });
+    it('should fail if password is too common', () => {
+      expect(userService.validatePassword('Password123')).toEqual({ valid: false, message: 'Password is too common. Please choose a more secure one' });
+    });
+    it('should pass for valid password', () => {
+      expect(userService.validatePassword('Valid123')).toEqual({ valid: true });
+    });
+  });
+
+  describe('requestPasswordReset', () => {
+    it('should return generic message if user does not exist', async () => {
+      mockDatabaseService.getUser = jest.fn().mockResolvedValue(null);
+      const result = await userService.requestPasswordReset('nouser');
+      expect(result.success).toBe(true);
+      expect(result.message).toMatch(/Si el usuario existe/);
+    });
+    it('should store reset code and return generic message if user exists', async () => {
+      mockDatabaseService.getUser = jest.fn().mockResolvedValue({ id: 1, username: 'user' });
+      mockDatabaseService.deletePasswordResetCode = jest.fn().mockResolvedValue();
+      mockDatabaseService.storePasswordResetCode = jest.fn().mockResolvedValue();
+      const result = await userService.requestPasswordReset('user');
+      expect(mockDatabaseService.deletePasswordResetCode).toHaveBeenCalledWith(1);
+      expect(mockDatabaseService.storePasswordResetCode).toHaveBeenCalled();
+      expect(result.success).toBe(true);
+      expect(result.message).toMatch(/Si el usuario existe/);
+    });
+    it('should handle error and return failure', async () => {
+      mockDatabaseService.getUser = jest.fn().mockResolvedValue({ id: 1, username: 'user' });
+      mockDatabaseService.deletePasswordResetCode = jest.fn().mockRejectedValue(new Error('fail'));
+      const result = await userService.requestPasswordReset('user');
+      expect(result.success).toBe(false);
+      expect(result.message).toMatch(/Error interno/);
+    });
+  });
+
+  describe('resetPassword', () => {
+    it('should fail for invalid username', async () => {
+      const result = await userService.resetPassword('', 'Valid123');
+      expect(result.success).toBe(false);
+      expect(result.message).toMatch(/Invalid username/);
+    });
+    it('should fail for invalid password', async () => {
+      const result = await userService.resetPassword('user', 'abc');
+      expect(result.success).toBe(false);
+      expect(result.message).toMatch(/Password must be at least 6 characters/);
+    });
+    it('should fail if user not found', async () => {
+      mockDatabaseService.getUser = jest.fn().mockResolvedValue(null);
+      const result = await userService.resetPassword('user', 'Valid123');
+      expect(result.success).toBe(false);
+      expect(result.message).toMatch(/User not found/);
+    });
+    it('should update password and remove tokens for valid input', async () => {
+      mockDatabaseService.getUser = jest.fn().mockResolvedValue({ id: 1, username: 'user' });
+      bcrypt.hash.mockResolvedValue('hashed');
+      mockDatabaseService.updateUserPasswordById = jest.fn().mockResolvedValue();
+      mockDatabaseService.removeAllUserRefreshTokens = jest.fn().mockResolvedValue();
+      const result = await userService.resetPassword('user', 'Valid123');
+      expect(mockDatabaseService.updateUserPasswordById).toHaveBeenCalledWith(1, 'hashed');
+      expect(mockDatabaseService.removeAllUserRefreshTokens).toHaveBeenCalledWith(1);
+      expect(result.success).toBe(true);
+      expect(result.message).toMatch(/Password successfully updated/);
+    });
+    it('should handle error and return failure', async () => {
+      mockDatabaseService.getUser = jest.fn().mockResolvedValue({ id: 1, username: 'user' });
+      bcrypt.hash.mockRejectedValue(new Error('fail'));
+      const result = await userService.resetPassword('user', 'Valid123');
+      expect(result.success).toBe(false);
+      expect(result.message).toMatch(/Error interno/);
+    });
+  });
   describe('_hashPassword', () => {
     it('should hash password successfully', async () => {
+      bcrypt.hash.mockResolvedValue('hashedPassword');
       const password = 'testpass123';
       const hashedPassword = await userService._hashPassword(password);
       expect(hashedPassword).toBeDefined();
@@ -358,16 +460,10 @@ describe('UserService', () => {
 
   describe('Edge cases and error handling', () => {
     it('should handle database connection errors gracefully', async () => {
-      const consoleErrorSpy = jest
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
-
       // Test that the service handles errors gracefully
       // This test validates the error handling behavior
       const result = await userService.login('nonexistent', 'password');
       expect(result).toBeNull();
-
-      consoleErrorSpy.mockRestore();
     });
 
     it('should handle invalid token formats in refresh', async () => {

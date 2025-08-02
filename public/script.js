@@ -4,8 +4,38 @@ let accessToken = null;
 let refreshToken = null;
 const API_BASE_URL = CONFIG.API_BASE_URL;
 
+async function isSSoAuthenticated() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/ssoauthenticated`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!res.ok) {
+      return;
+    }
+
+    const isSsoAuthenticated = res.status === 202;
+    document.getElementById('login-section').classList.add('hidden');
+    document.getElementById('chat-section').classList.remove('hidden');
+
+    // Mensaje de bienvenida automático en inglés
+    setTimeout(() => {
+      addMessage(
+        'Hello! Welcome to our Pet Accessories Store! 🐾 I\'m here to help you find the perfect products for your furry friend. How can I assist you today?',
+        'bot-message'
+      );
+    }, 500);
+    return isSsoAuthenticated;
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn('Error connecting to server attempting auth token');
+    return false;
+  }
+}
+
 // Ocultar chat al cargar y verificar auto-login
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('chat-section').classList.add('hidden');
 
   // Add Enter key listener for login
@@ -22,24 +52,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  const isSsoAuthenticated = await isSSoAuthenticated();
+
   // Verificar si viene del registro con tokens temporales
-  const tempAccessToken = localStorage.getItem('tempAccessToken');
-  const tempRefreshToken = localStorage.getItem('tempRefreshToken');
-  const autoLoginUsername = localStorage.getItem('autoLoginUsername');
+  const accessToken = localStorage.getItem('accessToken');
+  const refreshToken = localStorage.getItem('refreshToken');
 
-  if (tempAccessToken && tempRefreshToken && autoLoginUsername) {
+  if (accessToken && refreshToken && !isSsoAuthenticated) {
     // Limpiar storage temporal
-    localStorage.removeItem('tempAccessToken');
-    localStorage.removeItem('tempRefreshToken');
-    localStorage.removeItem('autoLoginUsername');
-
-    // Configurar tokens y mostrar chat
-    accessToken = tempAccessToken;
-    refreshToken = tempRefreshToken;
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
 
     // Mostrar mensaje de bienvenida
     const loginMessage = document.getElementById('login-message');
-    loginMessage.textContent = `Welcome ${autoLoginUsername}! Your account has been created successfully.`;
+    loginMessage.textContent = 'Welcome Your account has been created successfully.';
     loginMessage.className = 'success';
 
     // Ocultar login y mostrar chat
@@ -49,12 +75,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Mensaje de bienvenida en el chat
       addMessage(
-        `Hello ${autoLoginUsername}! Your account has been created successfully. Welcome to our Pet Accessories Store! 🐾 I'm excited to help you find amazing products for your pet. What can I help you with today?`,
+        'Hello! Your account has been logged in successfully. Welcome to our Pet Accessories Store! 🐾 I\'m excited to help you find amazing products for your pet. What can I help you with today?',
         'bot-message'
       );
     }, 2000);
   }
 });
+
 
 // LOGIN
 document.getElementById('login-btn').addEventListener('click', async () => {
@@ -78,6 +105,8 @@ document.getElementById('login-btn').addEventListener('click', async () => {
     const data = await res.json();
     accessToken = data.accessToken;
     refreshToken = data.refreshToken;
+    localStorage.setItem('refreshToken', refreshToken);
+    localStorage.setItem('accessToken', accessToken);
 
     document.getElementById('login-section').classList.add('hidden');
     document.getElementById('chat-section').classList.remove('hidden');
@@ -128,7 +157,7 @@ async function sendChatMessage() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken || ''}`,
       },
       body: JSON.stringify({ question: message }),
     });
@@ -140,7 +169,7 @@ async function sendChatMessage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken || ''}`,
         },
         body: JSON.stringify({ question: message }),
       });
@@ -166,13 +195,43 @@ document.getElementById('chat-message').addEventListener('keydown', e => {
 // LOGOUT
 document.getElementById('logout-btn').addEventListener('click', logout);
 
+async function signout() {
+  try {
+    await fetch(`${API_BASE_URL}/signout`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+
+    });
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Error during logout', err);
+  }
+
+  accessToken = null;
+  refreshToken = null;
+}
+
+async function logoff() {
+  await fetch(`${API_BASE_URL}/logout`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: refreshToken }),
+  });
+
+}
+
 async function logout() {
   try {
-    await fetch(`${API_BASE_URL}/logout`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: refreshToken }),
-    });
+
+    const isSsoAuthenticated = await isSSoAuthenticated();
+    if (isSsoAuthenticated) {
+      await signout();
+    }
+    await logoff();
+
+    document.getElementById('chat-section').classList.add('hidden');
+    document.getElementById('login-section').classList.remove('hidden');
+
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error('Error during logout', err);
@@ -187,7 +246,7 @@ async function logout() {
 function addMessage(text, className) {
   const chatBox = document.getElementById('chat-box');
   const msgDiv = document.createElement('div');
-  
+
   // Convert Markdown-style formatting and handle newlines
   const formattedText = text
     .replace(/\n\n/g, '<br><br>') // Double newlines to double breaks
