@@ -41,9 +41,9 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # - name: Build Docker image
-      #   run: |
-      #     docker build -t iapocchallenge.azurecr.io/appollama:${{ github.sha }} .
+      - name: Build Docker image
+        run: |
+          docker build -t iapocchallenge.azurecr.io/appollama:${{ github.sha }} .
 
       - name: Login to Azure Container Registry
         run: az acr login --name iapocchallenge

@@ -265,10 +265,11 @@ class ChatService {
                   ],
                   stream: false,
                 }),
-              }).catch(error => {
-                console.error('❌ Error de red al conectar con Ollama:', error.message);
-                throw error;
               });
+
+              if (!response.ok) {
+                throw new Error(`Ollama responded with status: ${response.status}`);
+              }
 
             if (!response.ok) {
               throw new Error(`Ollama responded with status: ${response.status}`);
