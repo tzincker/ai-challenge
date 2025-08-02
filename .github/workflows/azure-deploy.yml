@@ -64,11 +64,16 @@ jobs:
             --name ollama-service \
             --image iapocchallenge.azurecr.io/ollama:latest \
             --dns-name-label ollamaservicerggrupo70 \
-            --ports 11434  \
-            --cpu 4  \
-            --memory 8  \
+            --ports 11434 \
+            --cpu 8 \
+            --memory 16 \
             --os-type Linux \
             --restart-policy OnFailure \
+            --environment-variables \
+              OLLAMA_CONTEXT_LENGTH=512 \
+              OLLAMA_NUM_GPU=0 \
+              OLLAMA_NUM_THREADS=8 \
+              OLLAMA_NUM_BATCH=512 \
             --registry-login-server iapocchallenge.azurecr.io \
             --registry-username iapocchallenge \
             --registry-password ${{ secrets.AZURE_REGISTRY_PASSWORD }}
