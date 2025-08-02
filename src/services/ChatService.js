@@ -1,34 +1,41 @@
 const fs = require('fs');
 const path = require('path');
-
 const express = require('express');
-
 const Fuse = require('fuse.js');
 const { OpenAI } = require('openai');
-
 const knowledgePath = path.join(__dirname, '../knowledge.json');
 
 class ChatService {
   constructor(overrideKnowledge) {
+    // Set knowledge path
+    this.knowledgePath = knowledgePath;
+
     // Initialize OpenAI
     this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+    // Initialize Ollama host if configured
+    if (process.env.OLLAMA_ENABLED === 'true') {
+      this.ollamaHost = process.env.OLLAMA_HOST || 'http://localhost:11434';
+    }
+
     /* v8 ignore start */
     this.knowledge = overrideKnowledge || this._loadKnowledgeData();
     /* v8 ignore stop */
+
     // Initialize Fuse.js for fuzzy similarity
     this.fuse = new Fuse(this.knowledge, {
       keys: [
-        { name: 'question', weight: 0.7 },
-        { name: 'answer', weight: 0.3 },
+        { name: 'question', weight: 0.9 },
+        { name: 'answer', weight: 0.1 },
       ],
-      threshold: 0.4, // Más estricto para mejor precisión
-      distance: 100, // Permite coincidencias en un rango más amplio
+      threshold: 0.05, // Extremely strict matching
+      distance: 10, // Very short distance for matches
       ignoreLocation: true,
       includeScore: true,
-      minMatchCharLength: 3,
+      minMatchCharLength: 4, // Require longer matches
       shouldSort: true,
-      findAllMatches: true,
-      useExtendedSearch: true // Habilita búsqueda avanzada
+      findAllMatches: false,
+      useExtendedSearch: true,
     });
   }
 
@@ -76,6 +83,8 @@ class ChatService {
     if (exactMatch) {
       result.found = true;
       result.answer = exactMatch.answer;
+      result.type = 'exact_match';
+      result.matchedQuestion = exactMatch.question;
       result.prompt = `Context: ${exactMatch.answer}\n\nAnswer the customer's question about: "${userQuestion}"`;
       // eslint-disable-next-line no-console
       console.log('✓ Exact match found:', userQuestion);
@@ -87,6 +96,8 @@ class ChatService {
     if (fuzzyMatch) {
       result.found = true;
       result.answer = fuzzyMatch.answer;
+      result.type = 'fuzzy_match';
+      result.matchedQuestion = fuzzyMatch.question;
       result.prompt = `Context: ${fuzzyMatch.answer}\n\nThe customer asked about: "${userQuestion}". Use the context to provide a helpful and relevant response.`;
       // eslint-disable-next-line no-console
       console.log('✓ Fuzzy match found:', fuzzyMatch.question);
@@ -96,13 +107,17 @@ class ChatService {
     // If no match found, try to find partial matches in the knowledge base
     const fuseResults = this.fuse.search(userQuestion);
     if (fuseResults.length > 0) {
-      const topMatches = fuseResults.slice(0, 2)
+      const topMatches = fuseResults
+        .slice(0, 2)
         .filter(r => r.score < 0.6)
         .map(r => r.item.answer)
         .join('\n\n');
-        
+
       if (topMatches) {
         result.found = true;
+        result.type = 'partial_match';
+        result.answer = topMatches;
+        result.matchedQuestion = fuseResults[0].item.question;
         result.prompt = `Context: ${topMatches}\n\nThe customer asked: "${userQuestion}". Use the context to provide a helpful response, focusing on the most relevant information.`;
         // eslint-disable-next-line no-console
         console.log('✓ Partial matches found');
@@ -114,12 +129,16 @@ class ChatService {
 
   // Improved method for keyword matching search
   findKeywordMatch(userQuestion) {
-    const userWords = userQuestion.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+    const userWords = userQuestion
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(w => w.length > 2);
     if (userWords.length === 0) return null;
 
     // First try with Fuse.js
     const fuseResults = this.fuse.search(userQuestion);
-    if (fuseResults.length > 0 && fuseResults[0].score < 0.4) {
+    // Hacer la coincidencia extremadamente estricta
+    if (fuseResults.length > 0 && fuseResults[0].score < 0.1) {
       return fuseResults[0].item;
     }
 
@@ -130,11 +149,11 @@ class ChatService {
     for (const item of this.knowledge) {
       const itemText = (item.question + ' ' + item.answer).toLowerCase();
       const questionWords = item.question.toLowerCase().split(/\s+/);
-      
+
       let score = 0;
       let lastMatchIndex = -1;
       let consecutiveMatches = 0;
-      
+
       // Evaluate matches of complete words and proximity
       for (const userWord of userWords) {
         // Find exact matches first
@@ -143,7 +162,7 @@ class ChatService {
           if (qWord === userWord) {
             score += 3;
             found = true;
-            
+
             // Bonus for consecutive words
             if (lastMatchIndex !== -1 && index === lastMatchIndex + 1) {
               consecutiveMatches++;
@@ -159,8 +178,8 @@ class ChatService {
             score += 2;
           } else {
             // Search for partial matches with a minimum threshold
-            const similarWords = questionWords.filter(qWord => 
-              qWord.includes(userWord) || userWord.includes(qWord)
+            const similarWords = questionWords.filter(
+              qWord => qWord.includes(userWord) || userWord.includes(qWord)
             );
             if (similarWords.length > 0) {
               score += 1;
@@ -174,7 +193,7 @@ class ChatService {
       score += phraseBonus;
 
       // Length factor - prefer more specific matches
-      score *= (1 + Math.min(userWords.length / 10, 0.5));
+      score *= 1 + Math.min(userWords.length / 10, 0.5);
 
       if (score > maxScore) {
         maxScore = score;
@@ -186,23 +205,125 @@ class ChatService {
     return maxScore >= Math.max(2, userWords.length) ? bestMatch : null;
   }
 
-  // Call the OpenAI LLM
+  // Call the LLM with fallback options
   async callLLM(prompt) {
     try {
-      const completion = await this.openai.chat.completions.create({
-        messages: [{ role: 'user', content: prompt }],
-        model: 'gpt-3.5-turbo',
-      });
+      let answer = null;
 
-      if (!completion?.choices?.[0]?.message?.content) {
-        return 'I\'m sorry, I\'m having trouble processing your request right now. Please try again.';
+      // Try with OpenAI first
+      try {
+        // eslint-disable-next-line no-console
+        console.log('🔄 Intentando con OpenAI API...');
+        const completion = await this.openai.chat.completions.create({
+          model: 'gpt-3.5-turbo',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a helpful assistant for a pet accessories store.',
+            },
+            { role: 'user', content: prompt },
+          ],
+        });
+        answer = completion.choices[0].message.content.trim();
+        // eslint-disable-next-line no-console
+        console.log('✅ Respuesta de OpenAI:', answer.substring(0, 50) + '...');
+        return answer;
+      } catch (openAiError) {
+        // eslint-disable-next-line no-console
+        console.error('Error calling OpenAI:', openAiError);
       }
 
-      // Ensure newlines are properly escaped for the frontend
-      return completion.choices[0].message.content.replace(/\\n/g, '\n');
+      // Try with Ollama if enabled
+      if (!answer && this.ollamaHost && process.env.OLLAMA_ENABLED === 'true') {
+        try {
+          // Create a timeout promise (3 minutes)
+          const timeout = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Ollama timeout after 3 minutes')), 180000);
+          });
+
+          // Create the Ollama request promise
+          const ollamaRequest = async () => {
+            try {
+              // eslint-disable-next-line no-console
+              console.log('🔄 Intentando con Ollama en:', this.ollamaHost);
+              const response = await fetch(`${this.ollamaHost}/api/chat`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  model: process.env.OLLAMA_MODEL || 'mistral',
+                  messages: [
+                    {
+                      role: 'system',
+                      content: 'You are a helpful assistant for a pet accessories store.',
+                    },
+                    {
+                      role: 'user',
+                      content: prompt,
+                    },
+                  ],
+                  stream: false,
+                }),
+              });
+
+              if (!response.ok) {
+                throw new Error(`Ollama responded with status: ${response.status}`);
+              }
+
+              const data = await response.json();
+              return data.message.content.trim();
+            } catch (error) {
+              // eslint-disable-next-line no-console
+              console.error('❌ Error en la petición a Ollama:', error.message);
+              throw error;
+            }
+          };
+
+          try {
+            // Race between the request and the timeout
+            const ollamaAnswer = await Promise.race([ollamaRequest(), timeout]);
+            // eslint-disable-next-line no-console
+            console.log('✅ Respuesta de Ollama:', ollamaAnswer.substring(0, 50) + '...');
+            
+            // Guardar la respuesta en el knowledge base
+            await this.addToKnowledge(prompt, ollamaAnswer);
+            
+            return ollamaAnswer;
+          } catch (ollamaError) {
+            // eslint-disable-next-line no-console
+            console.log('❌ Ollama failed:', ollamaError.message);
+          }
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.log('❌ Ollama request failed:', error.message);
+        }
+      }
+
+      // Try with knowledge base as last resort
+      if (!answer) {
+        // eslint-disable-next-line no-console
+        console.log('🔍 Searching in knowledge base...');
+        const matches = this.fuse.search(prompt);
+        if (matches.length > 0 && matches[0].score < 0.3) {
+          answer = matches[0].item.answer;
+          // eslint-disable-next-line no-console
+          console.log('✅ Found answer in knowledge base');
+          return answer;
+        }
+        // eslint-disable-next-line no-console
+        console.log('❌ No match found in knowledge base');
+      }
+
+      // If all attempts failed
+      if (!answer) {
+        return 'I\'m sorry, I\'m having trouble processing your request right now. Please try asking about our pet products again!';
+      }
+
+      return answer;
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error('Error calling OpenAI:', error);
+      console.error('❌ Error processing question:', error.message);
       return 'I\'m sorry, I\'m having trouble processing your request right now. Please try asking about our pet products again!';
     }
   }
@@ -220,25 +341,37 @@ class ChatService {
       return false;
     }
 
-    const petKeywords = [
-      'pet',
-      'dog',
-      'cat',
-      'collar',
-      'food',
-      'toy',
-      'leash',
-      'bowl',
-    ];
-    const irrelevantWords = ['hello', 'hi', 'hey', 'test'];
-
-    question = question.toLowerCase();
-
-    if (irrelevantWords.some(word => question.includes(word))) {
+    const petKeywords = {
+      general: ['pet', 'animal', 'mascota'],
+      dog: ['dog', 'perro', 'cachorro', 'puppy'],
+      cat: ['cat', 'gato', 'gatito', 'kitten'],
+      products: [
+        'collar', 'food', 'toy', 'leash', 'bowl',
+        'juguete', 'comida', 'bebida', 'agua', 'jaula', 'casa', 'cama',
+        'arena', 'litter', 'scratching', 'rascador'
+      ]
+    };
+    
+    const irrelevantWords = ['hello', 'hi', 'hey', 'test', 'hola'];
+    const questionLower = question.toLowerCase();
+    
+    // Primero verificar si no es una palabra irrelevante
+    if (irrelevantWords.some(word => questionLower.includes(word))) {
       return false;
     }
-
-    return petKeywords.some(keyword => question.includes(keyword));
+    
+    // Si la pregunta menciona específicamente gatos
+    if (petKeywords.cat.some(word => questionLower.includes(word))) {
+      return true;
+    }
+    
+    // Si la pregunta menciona específicamente perros
+    if (petKeywords.dog.some(word => questionLower.includes(word))) {
+      return true;
+    }
+    
+    // Si no menciona específicamente ni gatos ni perros, buscar en keywords generales y productos
+    return [...petKeywords.general, ...petKeywords.products].some(keyword => questionLower.includes(keyword));
   }
 
   // Add a new question/answer to the knowledge base only if it is relevant and does not already exist.
@@ -299,7 +432,6 @@ class ChatService {
   getRouter() {
     const router = express.Router();
 
-
     // Reload knowledge base on startup
     this.reloadKnowledge();
 
@@ -309,15 +441,12 @@ class ChatService {
         return res.json({ answer: 'Please write a question.' });
       }
 
-
       // eslint-disable-next-line no-console
       console.log(`💬 Question received: "${question}"`);
-
 
       // Use the new improved search logic
       const { prompt, answer, found, matchedQuestion, type } =
         this.buildPrompt(question);
-
 
       if (found) {
         // If a match was found in the knowledge base, respond directly
@@ -333,28 +462,26 @@ class ChatService {
         });
       }
 
-
       // If nothing was found, use LLM only if it is relevant
       if (!this.isRelevantQuestion(question)) {
         // eslint-disable-next-line no-console
-        console.log(
-          `❌ Question not relevant for pet store: ${question}`
-        );
+        console.log(`❌ Question not relevant for pet store: ${question}`);
         return res.json({
           answer:
             'Hello! I\'m a specialized assistant for pet accessories and products. I\'d love to help you find something amazing for your furry friend! 🐾 Are you looking for collars, toys, beds, food bowls, or something else for your pet?',
         });
       }
 
-
       // Use LLM for relevant question
       // eslint-disable-next-line no-console
       console.log(`🤖 Querying LLM for relevant question: ${question}`);
       const aiAnswer = await this.callLLM(prompt);
 
-
-      // Add the new question/answer to the knowledge base
-      this.addToKnowledge(question, aiAnswer);
+      // Add the new question/answer to the knowledge base if it came from OpenAI
+      // (Las respuestas de Ollama ya se guardan en callLLM)
+      if (!this.ollamaHost || process.env.OLLAMA_ENABLED !== 'true') {
+        await this.addToKnowledge(question, aiAnswer);
+      }
 
       return res.json({
         answer: aiAnswer,

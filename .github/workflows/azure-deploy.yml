@@ -43,21 +43,59 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t iapocchallenge.azurecr.io/myapp:${{ github.sha }} .
+          docker build -t iapocchallenge.azurecr.io/appollama:${{ github.sha }} .
 
       - name: Login to Azure Container Registry
         run: az acr login --name iapocchallenge
 
+      - name: Build and Push Ollama Docker image
+        run: |
+          docker build -t iapocchallenge.azurecr.io/ollama:latest ./ollama
+          docker push iapocchallenge.azurecr.io/ollama:latest
+
       - name: Push Docker image to ACR
         run: |
-          docker push iapocchallenge.azurecr.io/myapp:${{ github.sha }}
+          docker push iapocchallenge.azurecr.io/appollama:${{ github.sha }}
+
+      - name: Create or update Ollama Container Instance
+        run: |
+          az container create \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --name ollama-service \
+            --image iapocchallenge.azurecr.io/ollama:latest \
+            --dns-name-label ollamaservicerggrupo70 \
+            --ports 11434 \
+            --cpu 8 \
+            --memory 16 \
+            --os-type Linux \
+            --restart-policy OnFailure \
+            --environment-variables \
+              OLLAMA_CONTEXT_LENGTH=512 \
+              OLLAMA_NUM_GPU=0 \
+              OLLAMA_NUM_THREADS=8 \
+              OLLAMA_NUM_BATCH=512 \
+            --registry-login-server iapocchallenge.azurecr.io \
+            --registry-username iapocchallenge \
+            --registry-password ${{ secrets.AZURE_REGISTRY_PASSWORD }}
 
       - name: Configure Azure Web App to use Docker image and set environment variables
         run: |
+          # Get Ollama service FQDN
+          OLLAMA_HOST="http://ollamaservicerggrupo70.westeurope.azurecontainer.io:11434"
+
           az webapp config container set \
             --name IACHALLENGE70 \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --container-image-name iapocchallenge.azurecr.io/myapp:${{ github.sha }}
+            --container-image-name iapocchallenge.azurecr.io/appollama:${{ github.sha }}
+
+          # Configure environment variables
+          az webapp config appsettings set \
+            --name IACHALLENGE70 \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --settings \
+              OLLAMA_ENABLED=true \
+              OLLAMA_HOST=$OLLAMA_HOST \
+              OLLAMA_MODEL=mistral
 
           az webapp config appsettings set \
             --name IACHALLENGE70 \

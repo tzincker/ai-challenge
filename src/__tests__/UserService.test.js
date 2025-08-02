@@ -149,7 +149,11 @@ describe('UserService', () => {
       const result = await userService.login('user1', 'plain');
       expect(result).toBeUndefined();
       expect(spy).toHaveBeenCalled();
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Unable to login user: ', expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Unable to login user: ',
+        expect.any(Error)
+      );
+      consoleErrorSpy.mockRestore();
     });
   });
 
@@ -193,7 +197,11 @@ describe('UserService', () => {
         throw new Error('fail');
       });
       const result = await userService.refreshToken('validtoken');
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Unable to verify token: ', 'fail');
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Unable to verify token: ',
+        'fail'
+      );
+      consoleErrorSpy.mockRestore();
       expect(result).toEqual({
         error: 'Invalid or expired token',
         status: 403,
@@ -269,12 +277,17 @@ describe('UserService', () => {
         message: 'Error interno del servidor',
       });
       expect(spy).toHaveBeenCalled();
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Unable to register user: ', expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Unable to register user: ',
+        expect.any(Error)
+      );
+      consoleErrorSpy.mockRestore();
       await expect(mockDatabaseService.addUser()).rejects.toThrow('fail');
     });
 
     it('should handle errors and return false', async () => {
       // Mock console.error to prevent output during test
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
 
       mockDatabaseService = new MockDatabseService();
       mockDatabaseService.getUser = jest.fn();
@@ -289,7 +302,13 @@ describe('UserService', () => {
         message: 'Error interno del servidor',
       });
       expect(spy).toHaveBeenCalled();
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Unable to register user: ', expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Unable to register user: ',
+        expect.any(Error)
+      );
+
+      // Restore console.error
+      consoleErrorSpy.mockRestore();
     });
   });
 
