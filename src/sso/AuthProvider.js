@@ -138,9 +138,11 @@ class AuthProvider {
         if (req.session.tokenCache) {
           msalInstance.getTokenCache().deserialize(req.session?.tokenCache);
         }
-
+        // eslint-disable-next-line no-console
+        console.log('before token code');
         const tokenResponse = await msalInstance.acquireTokenByCode(authCodeRequest, req.body);
-
+        // eslint-disable-next-line no-console
+        console.log('after token code');
         req.session.tokenCache = msalInstance.getTokenCache().serialize();
         req.session.idToken = tokenResponse.idToken;
         req.session.account = tokenResponse.account;
@@ -149,6 +151,8 @@ class AuthProvider {
         const state = JSON.parse(this.cryptoProvider.base64Decode(req.body.state));
         res.redirect(state.successRedirect);
       } catch (error) {
+        // eslint-disable-next-line no-console
+        console.log(error);
         next(error);
       }
     };
